@@ -1,5 +1,3 @@
-using Core = AzureFirewallCalculator.Core;
-
 namespace AzureFirewallCalculator.Core.PowershellSource;
 
 public record struct Firewall
