@@ -1,0 +1,2 @@
+namespace AzureFirewallCalculator.Core.PowershellSource;
+
