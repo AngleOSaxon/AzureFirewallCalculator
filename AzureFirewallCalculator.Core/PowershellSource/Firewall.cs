@@ -1,3 +1,5 @@
+using AzureFirewallCalculator.Core.Dns;
+
 namespace AzureFirewallCalculator.Core.PowershellSource;
 
 public record struct Firewall
@@ -8,7 +10,7 @@ public record struct Firewall
 
     public ApplicationRuleCollection[] ApplicationRuleCollections { get; set; }
 
-    public readonly Core.Firewall ConvertToFirewall(Dictionary<string, IpGroup> ipGroups)
+    public readonly Core.Firewall ConvertToFirewall(Dictionary<string, IpGroup> ipGroups, IDnsResolver resolver)
     {
         return new Core.Firewall
         (
@@ -31,9 +33,11 @@ public record struct Firewall
                             destinationIps: item.DestinationIpGroups
                                 .SelectMany(item => ipGroups[item].IpAddresses)
                                 .Concat(item.DestinationAddresses)
-                                .Select(item => RuleIpRange.Parse(item)!)
+                                .Select(item => RuleIpRange.Parse(item))
                                 .Where(item => item is not null)
                                 .Cast<RuleIpRange>()
+                                // TODO: Fix .Result usage.  Probably time to make a more typical imperative structure
+                                .Concat(item.DestinationFqdns.Select(item => resolver.ResolveAddress(item).Result).SelectMany(item => item.Select(item => new RuleIpRange(start: item, end: item))))
                                 .ToArray(),
                             destinationPorts: item.DestinationPorts
                                 .Select(item => RulePortRange.Parse(item)!)
