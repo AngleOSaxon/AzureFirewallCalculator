@@ -14,7 +14,7 @@ public readonly record struct ApplicationRequest
     public ApplicationRequest(uint sourceIp, string destinationFqdn, ApplicationProtocolPort protocol)
     {
         SourceIp = sourceIp;
-        DestinationFqdn = destinationFqdn;
+        DestinationFqdn = destinationFqdn.ToLower();
         Protocol  = protocol;
     }
 
