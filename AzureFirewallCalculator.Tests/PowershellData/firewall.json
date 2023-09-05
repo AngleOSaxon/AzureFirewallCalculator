@@ -558,14 +558,35 @@
           "SourceAddresses": [],
           "DestinationAddresses": [],
           "SourceIpGroups": [
-            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/WebNetwork_AppServices",
-            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/WebNetwork_Containers",
-            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/WebNetwork_VMs"
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/ProcessesNetwork_Containers",
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/ProcessesNetwork_VMs",
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/ProcessesNetwork_AppServices"
           ],
           "DestinationIpGroups": [],
           "DestinationFqdns": [
             "customer.example.com"
           ],
+          "DestinationPorts": [
+            "443"
+          ]
+        },
+        {
+          "Name": "ProcessesToAzureMonitor",
+          "Description": null,
+          "Protocols": [
+            "TCP"
+          ],
+          "SourceAddresses": [],
+          "DestinationAddresses": [
+            "AzureMonitor"
+          ],
+          "SourceIpGroups": [
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/ProcessesNetwork_Containers",
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/ProcessesNetwork_VMs",
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/ProcessesNetwork_AppServices"
+          ],
+          "DestinationIpGroups": [],
+          "DestinationFqdns": [],
           "DestinationPorts": [
             "443"
           ]

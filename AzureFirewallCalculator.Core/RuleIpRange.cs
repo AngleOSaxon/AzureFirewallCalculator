@@ -1,4 +1,5 @@
 using System.Net;
+using AzureFirewallCalculator.Core.Tags;
 
 namespace AzureFirewallCalculator.Core;
 
@@ -20,6 +21,26 @@ public readonly record struct RuleIpRange
         var end = new IPAddress(BitConverter.GetBytes(End).Reverse().ToArray());
 
         return $"{start} - {end}";
+    }
+
+    public static RuleIpRange[] Parse(string source, ServiceTags serviceTags)
+    {
+        var result = Parse(source);
+        if (result != null)
+        {
+            return new RuleIpRange[] { result.Value };
+        }
+
+        var serviceTag = serviceTags.Values.FirstOrDefault(item => item.Name.Equals(source, StringComparison.CurrentCultureIgnoreCase));
+        if (serviceTag == null)
+        {
+            return Array.Empty<RuleIpRange>();
+        }
+
+        return serviceTag.Properties.AddressPrefixes.Select(Parse)
+            .Where(item => item != null)
+            .Cast<RuleIpRange>()
+            .ToArray();
     }
 
     public static RuleIpRange? Parse(string source)
@@ -54,6 +75,13 @@ public readonly record struct RuleIpRange
             }
 
             var startIp = ip.ConvertToUint();
+
+            // Can't shift by more than n
+            if (maskSize == 32)
+            {
+                return new RuleIpRange(startIp, startIp);
+            }
+
             var bitMask = uint.MaxValue >> maskSize;
             var maxIp = startIp | bitMask;
             return new RuleIpRange(startIp, maxIp);

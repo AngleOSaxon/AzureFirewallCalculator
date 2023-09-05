@@ -24,7 +24,7 @@ public class ImportedDataFixture : IDisposable
             ["authserver2.antiwizard.net"] = new IPAddress[] { IPAddress.Parse("10.3.0.36") }
         }), new DynamicResolver());
         
-        Firewall = parsedFirewall.ConvertToFirewall(ipGroups, dnsResolver);
+        Firewall = parsedFirewall.ConvertToFirewall(ipGroups, dnsResolver).Result;
         RuleProcessor = new RuleProcessor(dnsResolver, Firewall);
     }
 
