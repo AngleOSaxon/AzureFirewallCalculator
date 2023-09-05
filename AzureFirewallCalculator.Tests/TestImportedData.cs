@@ -1,7 +1,6 @@
 using System.Net;
 using AzureFirewallCalculator.Core;
 using AzureFirewallCalculator.Core.Dns;
-using AzureFirewallCalculator.Test;
 using PowershellSource = AzureFirewallCalculator.Core.PowershellSource;
 
 namespace AzureFirewallCalculator.Tests;

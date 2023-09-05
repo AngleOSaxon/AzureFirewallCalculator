@@ -3,7 +3,7 @@ using AzureFirewallCalculator.Core;
 using AzureFirewallCalculator.Core.Dns;
 using PowershellSource = AzureFirewallCalculator.Core.PowershellSource;
 
-namespace AzureFirewallCalculator.Test;
+namespace AzureFirewallCalculator.Tests;
 
 public class ImportedDataFixture : IDisposable
 {

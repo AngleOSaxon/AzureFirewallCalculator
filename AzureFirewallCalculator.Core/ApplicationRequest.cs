@@ -9,8 +9,6 @@ public readonly record struct ApplicationRequest
 
     public string DestinationFqdn { get; }
 
-    public ushort DestinationPort { get; }
-
     public ApplicationProtocolPort Protocol { get; }
 
     public ApplicationRequest(uint sourceIp, string destinationFqdn, ApplicationProtocolPort protocol)
