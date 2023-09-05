@@ -19,7 +19,9 @@ public class ImportedDataFixture : IDisposable
         {
             ["sqlserver.antiwizard.net"] = new IPAddress[] { IPAddress.Parse("10.3.0.33") },
             ["mysql.antiwizard.net"] = new IPAddress[] { IPAddress.Parse("10.3.0.35") },
-            ["cosmos.antiwizard.net"] = new IPAddress[] { IPAddress.Parse("10.3.0.37") }
+            ["cosmosdb.antiwizard.net"] = new IPAddress[] { IPAddress.Parse("10.3.0.37") },
+            ["authserver1.antiwizard.net"] = new IPAddress[] { IPAddress.Parse("10.3.0.34") },
+            ["authserver2.antiwizard.net"] = new IPAddress[] { IPAddress.Parse("10.3.0.36") }
         }), new DynamicResolver());
         
         Firewall = parsedFirewall.ConvertToFirewall(ipGroups, dnsResolver);

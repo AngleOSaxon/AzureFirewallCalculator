@@ -10,21 +10,45 @@ public class TestImportedData : IClassFixture<ImportedDataFixture>
 {
     private readonly ImportedDataFixture importedDataFixture;
 
+    public static IEnumerable<object[]> ApplicationRuleTests()
+    {
+        yield return new object[] { new ApplicationRequest("10.10.0.1", "google.com", new ApplicationProtocolPort(ApplicationProtocol.Https, 443)) };
+        yield return new object[] { new ApplicationRequest("10.10.10.1", "sqlserver.antiwizard.net", new ApplicationProtocolPort(ApplicationProtocol.Mssql, 1433)) };
+        yield return new object[] { new ApplicationRequest("10.2.0.55", "sqlserver.antiwizard.net", new ApplicationProtocolPort(ApplicationProtocol.Mssql, 1433)) };
+        yield return new object[] { new ApplicationRequest("10.10.0.55", "reddit.com", new ApplicationProtocolPort(ApplicationProtocol.Https, 443)) };
+        yield return new object[] { new ApplicationRequest("10.2.1.55", "cosmosdb.antiwizard.net", new ApplicationProtocolPort(ApplicationProtocol.Https, 443)) };
+    }
+
+    public static IEnumerable<object[]> NetworkRuleTests()
+    {
+        yield return new object[] { new NetworkRequest("10.10.0.1", "10.2.0.55", 88, NetworkProtocols.TCP) };
+        yield return new object[] { new NetworkRequest("10.10.0.1", "10.2.0.24", 1500, NetworkProtocols.TCP) };
+        yield return new object[] { new NetworkRequest("10.10.10.1", "10.2.0.24", 1495, NetworkProtocols.TCP) };
+        yield return new object[] { new NetworkRequest("10.10.10.1", "10.3.0.35", 3306, NetworkProtocols.TCP) };
+        yield return new object[] { new NetworkRequest("10.10.10.1", "10.2.0.24", ushort.MaxValue, NetworkProtocols.TCP) };
+        yield return new object[] { new NetworkRequest("10.1.0.34", "10.3.0.35", 3306, NetworkProtocols.TCP) };
+        yield return new object[] { new NetworkRequest("10.1.0.34", "10.2.0.35", ushort.MaxValue, NetworkProtocols.TCP) };
+        yield return new object[] { new NetworkRequest("10.1.0.34", "10.2.0.35", ushort.MinValue, NetworkProtocols.TCP) };
+    }
+
     public TestImportedData(ImportedDataFixture importedDataFixture)
     {
         this.importedDataFixture = importedDataFixture;
     }
 
-    [Fact]
-    public async Task TestApplicationRules()
+    [Theory]
+    [MemberData(nameof(ApplicationRuleTests))]
+    public async Task TestAllowApplicationRules(ApplicationRequest applicationRequest)
     {
-        var applicationRequest = new ApplicationRequest("10.10.0.1", "google.com", new ApplicationProtocolPort(ApplicationProtocol.Https, 443));
+        var result = await importedDataFixture.RuleProcessor.ProcessApplicationRequest(applicationRequest);
+        Assert.True(result.OrderBy(item => item.Priority).First().RuleAction == RuleAction.Allow);
+    }
 
-        var insecureUserToGoogle = await importedDataFixture.RuleProcessor.ProcessApplicationRequest(applicationRequest);
-        Assert.True(insecureUserToGoogle.OrderBy(item => item.Priority).First().RuleAction == RuleAction.Allow);
-
-        applicationRequest = new ApplicationRequest("10.10.10.1", "google.com", new ApplicationProtocolPort(ApplicationProtocol.Https, 443));
-        var secureUserToGoogle = await importedDataFixture.RuleProcessor.ProcessApplicationRequest(applicationRequest);
-        Assert.False(secureUserToGoogle.OrderBy(item => item.Priority).FirstOrDefault() != null);
+    [Theory]
+    [MemberData(nameof(NetworkRuleTests))]
+    public void TestAllowNetworkRules(NetworkRequest request)
+    {
+        var result = importedDataFixture.RuleProcessor.ProcessNetworkRequest(request);
+        Assert.True(result.OrderBy(item => item.Priority).First().RuleAction == RuleAction.Allow);
     }
 }
