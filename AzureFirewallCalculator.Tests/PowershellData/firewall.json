@@ -1,0 +1,630 @@
+{
+  "ManagementIpConfiguration": null,
+  "ApplicationRuleCollections": [
+    {
+      "Action": {
+        "Type": "Allow"
+      },
+      "Rules": [
+        {
+          "Name": "InsecureToAllHttps",
+          "Description": null,
+          "SourceAddresses": [],
+          "TargetFqdns": [
+            "*"
+          ],
+          "FqdnTags": [],
+          "Protocols": [
+            {
+              "ProtocolType": "Https",
+              "Port": 443
+            },
+            {
+              "ProtocolType": "Http",
+              "Port": 80
+            }
+          ],
+          "SourceIpGroups": [
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/InsecureUserNetwork"
+          ]
+        },
+        {
+          "Name": "SecureToCustomSoftware",
+          "Description": null,
+          "SourceAddresses": [],
+          "TargetFqdns": [
+            "customsoftware.antiwizard.net"
+          ],
+          "FqdnTags": [],
+          "Protocols": [
+            {
+              "ProtocolType": "Https",
+              "Port": 443
+            }
+          ],
+          "SourceIpGroups": [
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/SecureUserNetwork"
+          ]
+        },
+        {
+          "Name": "SecureToProcesses",
+          "Description": null,
+          "SourceAddresses": [],
+          "TargetFqdns": [
+            "*.process.antiwizard.net"
+          ],
+          "FqdnTags": [],
+          "Protocols": [
+            {
+              "ProtocolType": "Https",
+              "Port": 443
+            }
+          ],
+          "SourceIpGroups": [
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/SecureUserNetwork"
+          ]
+        },
+        {
+          "Name": "SecureToWeb",
+          "Description": null,
+          "SourceAddresses": [],
+          "TargetFqdns": [
+            "*.web.antiwizard.net"
+          ],
+          "FqdnTags": [],
+          "Protocols": [
+            {
+              "ProtocolType": "Https",
+              "Port": 443
+            },
+            {
+              "ProtocolType": "Http",
+              "Port": 80
+            }
+          ],
+          "SourceIpGroups": [
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/SecureUserNetwork"
+          ]
+        },
+        {
+          "Name": "SecureToData",
+          "Description": null,
+          "SourceAddresses": [],
+          "TargetFqdns": [
+            "sqlserver.antiwizard.net"
+          ],
+          "FqdnTags": [],
+          "Protocols": [
+            {
+              "ProtocolType": "Mssql",
+              "Port": 1433
+            }
+          ],
+          "SourceIpGroups": [
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/SecureUserNetwork"
+          ]
+        }
+      ],
+      "Priority": 100,
+      "Name": "UserNetwork_ApplicationRules"
+    },
+    {
+      "Action": {
+        "Type": "Deny"
+      },
+      "Rules": [
+        {
+          "Name": "BadlyConfiguredBlock",
+          "Description": null,
+          "SourceAddresses": [],
+          "TargetFqdns": [
+            "reddit.com",
+            "*.reddit.com"
+          ],
+          "FqdnTags": [],
+          "Protocols": [
+            {
+              "ProtocolType": "Https",
+              "Port": 443
+            },
+            {
+              "ProtocolType": "Http",
+              "Port": 80
+            }
+          ],
+          "SourceIpGroups": [
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/InsecureUserNetwork"
+          ]
+        }
+      ],
+      "Priority": 200,
+      "Name": "BadlyConfiguredBlocks"
+    },
+    {
+      "Action": {
+        "Type": "Allow"
+      },
+      "Rules": [
+        {
+          "Name": "ProcessVMsToCustomSoftware",
+          "Description": null,
+          "SourceAddresses": [],
+          "TargetFqdns": [
+            "customsoftware.antiwizard.net"
+          ],
+          "FqdnTags": [],
+          "Protocols": [
+            {
+              "ProtocolType": "Https",
+              "Port": 443
+            }
+          ],
+          "SourceIpGroups": [
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/ProcessesNetwork_VMs"
+          ]
+        },
+        {
+          "Name": "ProcessesToDataStorage_Mssql",
+          "Description": null,
+          "SourceAddresses": [],
+          "TargetFqdns": [
+            "sqlserver.antiwizard.net"
+          ],
+          "FqdnTags": [],
+          "Protocols": [
+            {
+              "ProtocolType": "Mssql",
+              "Port": 1433
+            }
+          ],
+          "SourceIpGroups": [
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/ProcessesNetwork_Containers",
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/ProcessesNetwork_VMs",
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/ProcessesNetwork_AppServices"
+          ]
+        },
+        {
+          "Name": "ProcessesToDataStorage_Cosmos",
+          "Description": null,
+          "SourceAddresses": [],
+          "TargetFqdns": [
+            "cosmosdb.antiwizard.net"
+          ],
+          "FqdnTags": [],
+          "Protocols": [
+            {
+              "ProtocolType": "Https",
+              "Port": 443
+            }
+          ],
+          "SourceIpGroups": [
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/ProcessesNetwork_Containers",
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/ProcessesNetwork_VMs",
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/ProcessesNetwork_AppServices"
+          ]
+        },
+        {
+          "Name": "ProcessContainersToRegistry",
+          "Description": null,
+          "SourceAddresses": [],
+          "TargetFqdns": [
+            "containerregistry.cloud.antiwizard.net"
+          ],
+          "FqdnTags": [],
+          "Protocols": [
+            {
+              "ProtocolType": "Https",
+              "Port": 443
+            }
+          ],
+          "SourceIpGroups": [
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/ProcessesNetwork_Containers"
+          ]
+        },
+        {
+          "Name": "ProcessesToWeb",
+          "Description": null,
+          "SourceAddresses": [],
+          "TargetFqdns": [
+            "*.web.antiwizard.net"
+          ],
+          "FqdnTags": [],
+          "Protocols": [
+            {
+              "ProtocolType": "Https",
+              "Port": 443
+            },
+            {
+              "ProtocolType": "Http",
+              "Port": 80
+            }
+          ],
+          "SourceIpGroups": [
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/ProcessesNetwork_Containers",
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/ProcessesNetwork_VMs",
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/ProcessesNetwork_AppServices"
+          ]
+        }
+      ],
+      "Priority": 300,
+      "Name": "Processes_ApplicationRules"
+    },
+    {
+      "Action": {
+        "Type": "Allow"
+      },
+      "Rules": [
+        {
+          "Name": "WebVMsToCustomSoftware",
+          "Description": null,
+          "SourceAddresses": [],
+          "TargetFqdns": [
+            "customsoftware.antiwizard.net"
+          ],
+          "FqdnTags": [],
+          "Protocols": [
+            {
+              "ProtocolType": "Https",
+              "Port": 443
+            }
+          ],
+          "SourceIpGroups": [
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/WebNetwork_VMs"
+          ]
+        },
+        {
+          "Name": "SecureWebVmToDataStorage",
+          "Description": null,
+          "SourceAddresses": [
+            "10.1.0.34"
+          ],
+          "TargetFqdns": [
+            "sqlserver.antiwizard.net"
+          ],
+          "FqdnTags": [],
+          "Protocols": [
+            {
+              "ProtocolType": "Mssql",
+              "Port": 1433
+            }
+          ],
+          "SourceIpGroups": []
+        },
+        {
+          "Name": "WebContainersToRegistry",
+          "Description": null,
+          "SourceAddresses": [
+            "10.1.1.0/25"
+          ],
+          "TargetFqdns": [
+            "containerregistry.cloud.antiwizard.net"
+          ],
+          "FqdnTags": [],
+          "Protocols": [
+            {
+              "ProtocolType": "Https",
+              "Port": 443
+            }
+          ],
+          "SourceIpGroups": []
+        },
+        {
+          "Name": "WebToCustomers",
+          "Description": null,
+          "SourceAddresses": [],
+          "TargetFqdns": [
+            "subdomain.example.com",
+            "othercustomer.example.com"
+          ],
+          "FqdnTags": [],
+          "Protocols": [
+            {
+              "ProtocolType": "Https",
+              "Port": 443
+            }
+          ],
+          "SourceIpGroups": [
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/WebNetwork_Containers",
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/WebNetwork_VMs",
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/WebNetwork_AppServices"
+          ]
+        }
+      ],
+      "Priority": 400,
+      "Name": "Web_ApplicationRules"
+    }
+  ],
+  "NatRuleCollections": [],
+  "NetworkRuleCollections": [
+    {
+      "Action": {
+        "Type": "Allow"
+      },
+      "Rules": [
+        {
+          "Name": "InsecureToAllHttps",
+          "Description": null,
+          "Protocols": [
+            "TCP",
+            "UDP"
+          ],
+          "SourceAddresses": [],
+          "DestinationAddresses": [
+            "*"
+          ],
+          "SourceIpGroups": [
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/InsecureUserNetwork"
+          ],
+          "DestinationIpGroups": [],
+          "DestinationFqdns": [],
+          "DestinationPorts": [
+            "443",
+            "80"
+          ]
+        },
+        {
+          "Name": "SecureRdpToVms",
+          "Description": null,
+          "Protocols": [
+            "TCP",
+            "ICMP"
+          ],
+          "SourceAddresses": [],
+          "DestinationAddresses": [
+            "10.2.0.0/24",
+            "10.1.0.0/24",
+            "10.3.0.0/24"
+          ],
+          "SourceIpGroups": [
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/SecureUserNetwork"
+          ],
+          "DestinationIpGroups": [],
+          "DestinationFqdns": [],
+          "DestinationPorts": [
+            "22",
+            "3389"
+          ]
+        },
+        {
+          "Name": "UserAuthToAuthServer",
+          "Description": null,
+          "Protocols": [
+            "TCP"
+          ],
+          "SourceAddresses": [],
+          "DestinationAddresses": [],
+          "SourceIpGroups": [
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/SecureUserNetwork",
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/InsecureUserNetwork"
+          ],
+          "DestinationIpGroups": [],
+          "DestinationFqdns": [
+            "authserver1.antiwizard.net",
+            "authserver2.antiwizard.net"
+          ],
+          "DestinationPorts": [
+            "88"
+          ]
+        },
+        {
+          "Name": "InsecureToRequiredProcesses",
+          "Description": null,
+          "Protocols": [
+            "TCP"
+          ],
+          "SourceAddresses": [],
+          "DestinationAddresses": [],
+          "SourceIpGroups": [
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/SecureUserNetwork",
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/InsecureUserNetwork"
+          ],
+          "DestinationIpGroups": [
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/ProcessesNetwork_Containers",
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/ProcessesNetwork_VMs"
+          ],
+          "DestinationFqdns": [],
+          "DestinationPorts": [
+            "1500-1600",
+            "1495"
+          ]
+        },
+        {
+          "Name": "SecureToAllProcesses",
+          "Description": null,
+          "Protocols": [
+            "TCP"
+          ],
+          "SourceAddresses": [],
+          "DestinationAddresses": [],
+          "SourceIpGroups": [
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/SecureUserNetwork",
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/InsecureUserNetwork"
+          ],
+          "DestinationIpGroups": [
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/ProcessesNetwork_Containers",
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/ProcessesNetwork_VMs"
+          ],
+          "DestinationFqdns": [],
+          "DestinationPorts": [
+            "*"
+          ]
+        },
+        {
+          "Name": "SecureToMysql",
+          "Description": null,
+          "Protocols": [
+            "TCP"
+          ],
+          "SourceAddresses": [],
+          "DestinationAddresses": [],
+          "SourceIpGroups": [
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/SecureUserNetwork",
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/InsecureUserNetwork"
+          ],
+          "DestinationIpGroups": [],
+          "DestinationFqdns": [
+            "mysql.antiwizard.net"
+          ],
+          "DestinationPorts": [
+            "3306"
+          ]
+        }
+      ],
+      "Priority": 100,
+      "Name": "UserNetworks"
+    },
+    {
+      "Action": {
+        "Type": "Allow"
+      },
+      "Rules": [
+        {
+          "Name": "WebToRequiredProcesses",
+          "Description": null,
+          "Protocols": [
+            "TCP"
+          ],
+          "SourceAddresses": [],
+          "DestinationAddresses": [],
+          "SourceIpGroups": [
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/WebNetwork_AppServices",
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/WebNetwork_Containers",
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/WebNetwork_VMs"
+          ],
+          "DestinationIpGroups": [
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/ProcessesNetwork_Containers",
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/ProcessesNetwork_VMs"
+          ],
+          "DestinationFqdns": [],
+          "DestinationPorts": [
+            "1500-1600",
+            "1495"
+          ]
+        },
+        {
+          "Name": "SecureWebVmToAllProcesses",
+          "Description": null,
+          "Protocols": [
+            "TCP"
+          ],
+          "SourceAddresses": [
+            "10.1.0.34"
+          ],
+          "DestinationAddresses": [],
+          "SourceIpGroups": [],
+          "DestinationIpGroups": [
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/ProcessesNetwork_Containers",
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/ProcessesNetwork_VMs"
+          ],
+          "DestinationFqdns": [],
+          "DestinationPorts": [
+            "*"
+          ]
+        },
+        {
+          "Name": "SecureWebVmToMysql",
+          "Description": null,
+          "Protocols": [
+            "TCP"
+          ],
+          "SourceAddresses": [
+            "10.1.0.34"
+          ],
+          "DestinationAddresses": [],
+          "SourceIpGroups": [],
+          "DestinationIpGroups": [],
+          "DestinationFqdns": [
+            "mysql.antiwizard.net"
+          ],
+          "DestinationPorts": [
+            "3306"
+          ]
+        }
+      ],
+      "Priority": 200,
+      "Name": "Web"
+    },
+    {
+      "Action": {
+        "Type": "Allow"
+      },
+      "Rules": [
+        {
+          "Name": "ProcessesToClient_NoSNI",
+          "Description": null,
+          "Protocols": [
+            "TCP"
+          ],
+          "SourceAddresses": [],
+          "DestinationAddresses": [],
+          "SourceIpGroups": [
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/WebNetwork_AppServices",
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/WebNetwork_Containers",
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/WebNetwork_VMs"
+          ],
+          "DestinationIpGroups": [],
+          "DestinationFqdns": [
+            "customer.example.com"
+          ],
+          "DestinationPorts": [
+            "443"
+          ]
+        },
+        {
+          "Name": "ProcessesToMysql",
+          "Description": null,
+          "Protocols": [
+            "TCP"
+          ],
+          "SourceAddresses": [],
+          "DestinationAddresses": [],
+          "SourceIpGroups": [
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/ProcessesNetwork_Containers",
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/ProcessesNetwork_VMs",
+            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/ProcessesNetwork_AppServices"
+          ],
+          "DestinationIpGroups": [],
+          "DestinationFqdns": [
+            "mysql.antiwizard.net"
+          ],
+          "DestinationPorts": [
+            "3306"
+          ]
+        }
+      ],
+      "Priority": 300,
+      "Name": "Processes"
+    }
+  ],
+  "Sku": {
+    "Name": "AZFW_VNet",
+    "Tier": "Standard"
+  },
+  "VirtualHub": null,
+  "FirewallPolicy": null,
+  "ThreatIntelMode": "Alert",
+  "ThreatIntelWhitelist": {
+    "FQDNs": null,
+    "IpAddresses": null
+  },
+  "HubIPAddresses": null,
+  "LearnedIPPrefixes": null,
+  "PrivateRange": null,
+  "DNSEnableProxy": "true",
+  "DNSServer": [
+    "10.0.0.132",
+    "10.0.0.133"
+  ],
+  "ProvisioningState": "Succeeded",
+  "Zones": [],
+  "AllowActiveFTP": null,
+  "EnableFatFlowLogging": null,
+  "EnableUDPLogOptimization": null,
+  "RouteServerId": null,
+  "ResourceGroupName": "TestFw",
+  "Location": "eastus",
+  "ResourceGuid": null,
+  "Type": "Microsoft.Network/azureFirewalls",
+  "Tag": {},
+  "Name": "TestFw"
+}

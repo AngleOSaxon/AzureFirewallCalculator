@@ -13,7 +13,7 @@ var dnsResolver = new CombinedResolver(new StaticDnsResolver(TestDataSetup.GetSt
 var firewall = parsedFirewall.ConvertToFirewall(ipGroups, dnsResolver);
 
 
-var applicationRequest = new ApplicationRequest("10.0.0.1", "google.com", new ApplicationProtocolPort(ApplicationProtocol.Https, 443));
+var applicationRequest = new ApplicationRequest("10.10.0.1", "google.com", new ApplicationProtocolPort(ApplicationProtocol.Https, 443));
 
 var processor = new RuleProcessor(dnsResolver, firewall);
 

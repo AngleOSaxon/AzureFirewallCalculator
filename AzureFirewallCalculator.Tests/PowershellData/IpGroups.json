@@ -1,0 +1,145 @@
+[
+  {
+    "IpAddresses": [
+      "10.1.1.0/25"
+    ],
+    "ResourceGroupName": "rg",
+    "Location": "eastus",
+    "ResourceGuid": null,
+    "Type": "Microsoft.Network/IpGroups",
+    "Tag": null,
+    "TagsTable": null,
+    "Name": "WebNetwork_Containers",
+    "Id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/WebNetwork_Containers"
+  },
+  {
+    "IpAddresses": [
+      "10.1.1.128/25"
+    ],
+    "ResourceGroupName": "rg",
+    "Location": "eastus",
+    "ResourceGuid": null,
+    "Type": "Microsoft.Network/IpGroups",
+    "Tag": null,
+    "TagsTable": null,
+    "Name": "WebNetwork_AppServices",
+    "Id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/WebNetwork_AppServices"
+  },
+  {
+    "IpAddresses": [
+      "10.1.0.0/24"
+    ],
+    "ResourceGroupName": "rg",
+    "Location": "eastus",
+    "ResourceGuid": null,
+    "Type": "Microsoft.Network/IpGroups",
+    "Tag": null,
+    "TagsTable": null,
+    "Name": "WebNetwork_VMs",
+    "Id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/WebNetwork_VMs"
+  },
+  {
+    "IpAddresses": [
+      "10.2.1.0/25"
+    ],
+    "ResourceGroupName": "rg",
+    "Location": "eastus",
+    "ResourceGuid": null,
+    "Type": "Microsoft.Network/IpGroups",
+    "Tag": null,
+    "TagsTable": null,
+    "Name": "ProcessesNetwork_Containers",
+    "Id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/ProcessesNetwork_Containers"
+  },
+  {
+    "IpAddresses": [
+      "10.2.1.128/25"
+    ],
+    "ResourceGroupName": "rg",
+    "Location": "eastus",
+    "ResourceGuid": null,
+    "Type": "Microsoft.Network/IpGroups",
+    "Tag": null,
+    "TagsTable": null,
+    "Name": "ProcessesNetwork_AppServices",
+    "Id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/ProcessesNetwork_AppServices"
+  },
+  {
+    "IpAddresses": [
+      "10.2.0.0/24"
+    ],
+    "ResourceGroupName": "rg",
+    "Location": "eastus",
+    "ResourceGuid": null,
+    "Type": "Microsoft.Network/IpGroups",
+    "Tag": null,
+    "TagsTable": null,
+    "Name": "ProcessesNetwork_VMs",
+    "Id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/ProcessesNetwork_VMs"
+  },
+  {
+    "IpAddresses": [
+      "10.3.1.0/25"
+    ],
+    "ResourceGroupName": "rg",
+    "Location": "eastus",
+    "ResourceGuid": null,
+    "Type": "Microsoft.Network/IpGroups",
+    "Tag": null,
+    "TagsTable": null,
+    "Name": "DataNetwork_Containers",
+    "Id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/DataNetwork_Containers"
+  },
+  {
+    "IpAddresses": [
+      "10.3.1.128/25"
+    ],
+    "ResourceGroupName": "rg",
+    "Location": "eastus",
+    "ResourceGuid": null,
+    "Type": "Microsoft.Network/IpGroups",
+    "Tag": null,
+    "TagsTable": null,
+    "Name": "ProcessesNetwork_AppServices",
+    "Id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/DataNetwork_AppServices"
+  },
+  {
+    "IpAddresses": [
+      "10.3.0.0/24"
+    ],
+    "ResourceGroupName": "rg",
+    "Location": "eastus",
+    "ResourceGuid": null,
+    "Type": "Microsoft.Network/IpGroups",
+    "Tag": null,
+    "TagsTable": null,
+    "Name": "DataNetwork_VMs",
+    "Id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/DataNetwork_VMs"
+  },
+  {
+    "IpAddresses": [
+      "10.10.0.0/24"
+    ],
+    "ResourceGroupName": "rg",
+    "Location": "eastus",
+    "ResourceGuid": null,
+    "Type": "Microsoft.Network/IpGroups",
+    "Tag": null,
+    "TagsTable": null,
+    "Name": "InsecureUserNetwork",
+    "Id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/InsecureUserNetwork"
+  },
+  {
+    "IpAddresses": [
+      "10.10.10.0/24"
+    ],
+    "ResourceGroupName": "rg",
+    "Location": "eastus",
+    "ResourceGuid": null,
+    "Type": "Microsoft.Network/IpGroups",
+    "Tag": null,
+    "TagsTable": null,
+    "Name": "SecureUserNetwork",
+    "Id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/ipGroups/SecureUserNetwork"
+  }
+]
