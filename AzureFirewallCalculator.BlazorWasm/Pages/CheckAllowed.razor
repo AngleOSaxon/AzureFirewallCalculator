@@ -1,0 +1,254 @@
+﻿@using AzureFirewallCalculator.Core;
+@using PowershellSource = AzureFirewallCalculator.Core.PowershellSource;
+@using AzureFirewallCalculator.Core.Dns;
+@using AzureFirewallCalculator.Core.Tags;
+
+@page "/check-allowed"
+@inject IDnsResolver DnsResolver
+
+<PageTitle>Firewall</PageTitle>
+
+<label>Ip Groups:</label> <InputFile OnChange="@ReadIpGroups" />
+<label>Firewall:</label><InputFile OnChange="@ReadFirewall" />
+<label>Service Tags:</label><InputFile OnChange="@ReadServiceTags" />
+
+@if (Firewall == null)
+{
+    <h1>Loading...</h1>
+    return;
+}
+
+<ul>
+    @foreach(var hat in Firewall.ApplicationRuleCollections)
+    {
+        <li>@hat.Name</li>
+    }
+</ul>
+
+<h3>Check Network Rule</h3>
+<div>
+    <label for="source-ip">Source IP:</label><InputText id="source-ip" @bind-Value="NetworkSourceIp" />
+    <label for="destination-ip">Destination IP:</label><InputText id="destination-ip" @bind-Value="NetworkDestinationIp" />
+    <label for="destination-port">Destination Port:</label><InputNumber id="destination-port" @bind-Value="NetworkDestinationPort" />
+    <label for="network-protocol">Protocol:</label>
+    <InputSelect id="network-protocol" @bind-Value="NetworkProtocol">
+      <option disabled value="@NetworkProtocols.None">@NetworkProtocols.None</option>
+      <option value="@NetworkProtocols.TCP">@NetworkProtocols.TCP</option>
+      <option value="@NetworkProtocols.UDP">@NetworkProtocols.UDP</option>
+      <option value="@NetworkProtocols.ICMP">@NetworkProtocols.ICMP</option>
+    </InputSelect>
+</div>
+<button @onclick="CheckNetworkRule">Check Network Rule</button>
+
+<h3>Check Application Rule</h3>
+<div>
+    <label for="source-ip">Source IP:</label><InputText id="source-ip" @bind-Value="ApplicationSourceIp" />
+    <label for="destination-fqdn">Destination Fqdn:</label><InputText id="destination-fqdn" @bind-Value="DestinationFqdn" />
+    <label for="destination-port">Destination Port:</label><InputNumber id="destination-port" @bind-Value="ApplicationDestinationPort" />
+    <label for="application-protocol">Protocol:</label>
+    <InputSelect id="application-protocol" @bind-Value="ApplicationProtocol">
+      <option disabled value="">Select</option>
+      <option value="@ApplicationProtocol.Mssql">@ApplicationProtocol.Mssql</option>
+      <option value="@ApplicationProtocol.Https">@ApplicationProtocol.Https</option>
+      <option value="@ApplicationProtocol.Http">@ApplicationProtocol.Http</option>
+    </InputSelect>
+</div>
+<button @onclick="CheckApplicationRule">Check Application Rule</button>
+
+<ul>
+    @foreach(var response in NetworkProcessingResponses.OrderBy(item => item.Priority))
+    {
+        <li>
+            <span>
+                @response.Priority
+            </span>
+            <span>
+                @response.RuleAction
+            </span>
+            <span>
+                <ul>
+                    @foreach(var match in response.MatchedRules)
+                    {
+                        <li>
+                            @match.Rule.Name
+                            <ul>
+                            @foreach(var destination in match.Rule.DestinationIps)
+                            {
+                                <li>
+                                    @if(match.MatchedDestinationIps.Contains(destination))
+                                    {
+                                        <strong>@destination</strong>
+                                    }
+                                    else
+                                    {
+                                        @destination
+                                    }
+                                </li>
+                            }
+                            </ul>
+                        </li>
+                    }
+                </ul>
+            </span>
+        </li>
+    }
+</ul>
+
+<ul>
+    @foreach(var response in ApplicationProcessingResponses.OrderBy(item => item.Priority))
+    {
+        <li>
+            <span>
+                @response.Priority
+            </span>
+            <span>
+                @response.RuleAction
+            </span>
+            <span>
+                <ul>
+                    @foreach(var match in response.MatchedRules)
+                    {
+                        <li>
+                            @match.Rule.Name
+                            <ul>
+                            @foreach(var destination in match.Rule.DestinationFqdns)
+                            {
+                                <li>
+                                    @if(match.MatchedTargetFqdns.Contains(destination))
+                                    {
+                                        <strong>@destination</strong>
+                                    }
+                                    else
+                                    {
+                                        @destination
+                                    }
+                                </li>
+                            }
+                            </ul>
+                        </li>
+                    }
+                </ul>
+            </span>
+        </li>
+    }
+</ul>
+
+@code {
+    private Firewall? Firewall;
+
+    private Dictionary<string, PowershellSource.IpGroup>? IpGroups;
+
+    private PowershellSource.Firewall? PowershellFirewall;
+
+    private ServiceTags? ServiceTags;
+
+    private string NetworkSourceIp = string.Empty;
+
+    private string NetworkDestinationIp = string.Empty;
+
+    private NetworkProtocols NetworkProtocol;
+
+    private int? NetworkDestinationPort;
+
+    private string ApplicationSourceIp = string.Empty;
+
+    private string DestinationFqdn = string.Empty;
+
+    private ApplicationProtocol ApplicationProtocol;
+
+    private int? ApplicationDestinationPort;
+
+    private IEnumerable<NetworkProcessingResponse> NetworkProcessingResponses = Array.Empty<NetworkProcessingResponse>();
+
+    private IEnumerable<ApplicationProcessingResponse> ApplicationProcessingResponses = Array.Empty<ApplicationProcessingResponse>();
+
+    protected async Task ReadIpGroups(InputFileChangeEventArgs e)
+    {
+        var stream = e.File.OpenReadStream(maxAllowedSize: 1024 * 1024 * 10);
+        IpGroups = (await System.Text.Json.JsonSerializer.DeserializeAsync<PowershellSource.IpGroup[]>(stream))!.ToDictionary(item => item.Id, StringComparer.CurrentCultureIgnoreCase);
+        await ConvertFirewall();
+    }
+
+    protected async Task ReadFirewall(InputFileChangeEventArgs e)
+    {
+        var stream = e.File.OpenReadStream(maxAllowedSize: 1024 * 1024 * 10);
+        PowershellFirewall = await System.Text.Json.JsonSerializer.DeserializeAsync<PowershellSource.Firewall>(stream);
+        await ConvertFirewall();
+    }
+
+    protected async Task ReadServiceTags(InputFileChangeEventArgs e)
+    {
+        var stream = e.File.OpenReadStream(maxAllowedSize: 1024 * 1024 * 10);
+
+        ServiceTags = await System.Text.Json.JsonSerializer.DeserializeAsync<ServiceTags>(stream, new System.Text.Json.JsonSerializerOptions
+            {
+                PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+            });
+        await ConvertFirewall();
+    }
+
+    protected async Task ConvertFirewall()
+    {
+        if (IpGroups == null || PowershellFirewall == null || ServiceTags == null)
+        {
+            return;
+        }
+
+        Firewall = await PowershellFirewall.Value.ConvertToFirewall(IpGroups, DnsResolver, ServiceTags);
+    }
+
+    protected void CheckNetworkRule()
+    {
+        if (string.IsNullOrWhiteSpace(NetworkSourceIp) 
+            || string.IsNullOrWhiteSpace(NetworkDestinationIp) 
+            || NetworkDestinationPort == null 
+            || NetworkProtocol == NetworkProtocols.None
+            || Firewall == null)
+        {
+            return;
+        }
+        var request = new NetworkRequest(NetworkSourceIp, NetworkDestinationIp, (ushort)NetworkDestinationPort.Value, NetworkProtocol);
+
+        var ruleProcessor = new RuleProcessor(DnsResolver, Firewall);
+        NetworkProcessingResponses = ruleProcessor.ProcessNetworkRequest(request);
+    }
+
+    protected async Task CheckApplicationRule()
+    {
+        if (string.IsNullOrWhiteSpace(ApplicationSourceIp) 
+            || string.IsNullOrWhiteSpace(DestinationFqdn) 
+            || ApplicationDestinationPort == null 
+            || ApplicationProtocol == 0
+            || Firewall == null)
+        {
+            return;
+        }
+        var request = new ApplicationRequest(ApplicationSourceIp, DestinationFqdn, new ApplicationProtocolPort(ApplicationProtocol, (ushort)ApplicationDestinationPort.Value));
+
+        var ruleProcessor = new RuleProcessor(DnsResolver, Firewall);
+        var responses = await ruleProcessor.ProcessApplicationRequest(request);
+
+        var (network, application) = responses.Aggregate((networkRules: new List<NetworkProcessingResponse>(), applicationRules: new List<ApplicationProcessingResponse>()), (aggregate, item) =>
+            {
+                var (networkRules, applicationRules) = aggregate;
+
+                if (item is NetworkProcessingResponse networkResponse)
+                {
+                    networkRules.Add(networkResponse);
+                }
+                else if (item is ApplicationProcessingResponse applicationResponse)
+                {
+                    applicationRules.Add(applicationResponse);
+                }
+                else
+                {
+                    throw new Exception($"Received item of unexpected type '{item.GetType().FullName}'");
+                }
+
+                return aggregate;
+            });
+
+        NetworkProcessingResponses = network;
+        ApplicationProcessingResponses = application;
+    }
+}

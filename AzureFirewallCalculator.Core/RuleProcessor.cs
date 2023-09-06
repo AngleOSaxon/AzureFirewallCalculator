@@ -50,7 +50,7 @@ public class RuleProcessor
             var matches = collection.GetMatches(applicationRequest);
             if (matches.Any())
             {
-                accumulator.Add(new ApplicationProcessingResponse(collection.Priority, collection.Name, collection.RuleAction, matches));
+                accumulator.Add(new ApplicationProcessingResponse(collection.Priority, collection.Name, collection.RuleAction, MatchedRules: matches));
             }
             return accumulator;
         });

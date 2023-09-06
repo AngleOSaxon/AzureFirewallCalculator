@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.Sockets;
 using AzureFirewallCalculator.Core.Tags;
 
 namespace AzureFirewallCalculator.Core;
@@ -18,6 +19,12 @@ public readonly record struct RuleIpRange
     public override string ToString()
     {
         var start = new IPAddress(BitConverter.GetBytes(Start).Reverse().ToArray());
+
+        if (Start == End)
+        {
+            return start.ToString();
+        }
+
         var end = new IPAddress(BitConverter.GetBytes(End).Reverse().ToArray());
 
         return $"{start} - {end}";
@@ -59,6 +66,12 @@ public readonly record struct RuleIpRange
                 throw new ArgumentException($"Failed to parse range '{source}'");
             }
 
+            if (startIp.AddressFamily == AddressFamily.InterNetworkV6 || endIp.AddressFamily == AddressFamily.InterNetworkV6)
+            {
+                Console.WriteLine($"Skipping IPv6 Address '{source}'");
+                return null;
+            }
+
             var start = startIp.ConvertToUint();
             var end = endIp.ConvertToUint();
 
@@ -72,6 +85,12 @@ public readonly record struct RuleIpRange
             if (!IPAddress.TryParse(split[0], out var ip) || !ushort.TryParse(split[1], out var maskSize))
             {
                 throw new ArgumentException($"Failed to parse CIDR '{source}'");
+            }
+
+            if (ip.AddressFamily == AddressFamily.InterNetworkV6)
+            {
+                Console.WriteLine($"Skipping IPv6 Address '{source}'");
+                return null;
             }
 
             var startIp = ip.ConvertToUint();
@@ -94,7 +113,7 @@ public readonly record struct RuleIpRange
         
         // TODO: Incorporate MS IP Ranges?
         // TODO: Logging plans
-        Console.Error.WriteLine($"Unparsable IP range: '{source}'");
+        Console.WriteLine($"Unparsable IP range: '{source}'");
 
         return null;
     }

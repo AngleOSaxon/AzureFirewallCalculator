@@ -1,6 +1,8 @@
+using System.Data;
+
 namespace AzureFirewallCalculator.Core;
 
-public record class NetworkRule
+public class NetworkRule
 {
     public string Name { get;}
 
@@ -21,14 +23,19 @@ public record class NetworkRule
         NetworkProtocols = networkProtocols;
     }
 
-    public bool Matches(NetworkRequest request)
+    public NetworkRuleMatch Matches(NetworkRequest request)
     {
         var (source, destination, destinationPort, protocol) = request;
-        var sourceInRange = SourceIps.Any(item => source >= item.Start && source <= item.End);
-        var destinationInRange = DestinationIps.Any(item => destination >= item.Start && destination <= item.End);
+        var sourcesInRange = SourceIps.Where(item => source >= item.Start && source <= item.End).ToArray();
+        var destinationsInRange = DestinationIps.Where(item => destination >= item.Start && destination <= item.End).ToArray();
         // No ports in ICMP
         var destinationPortInRange = DestinationPorts.Any(item => (destinationPort >= item.Start && destinationPort <= item.End) || protocol.HasFlag(NetworkProtocols.ICMP));
 
-        return protocol != NetworkProtocols.None && sourceInRange && destinationInRange && destinationPortInRange && NetworkProtocols.HasFlag(protocol);
+        return new NetworkRuleMatch(
+            Matched: protocol != NetworkProtocols.None && sourcesInRange.Any() && destinationsInRange.Any() && destinationPortInRange && NetworkProtocols.HasFlag(protocol),
+            MatchedSourceIps: sourcesInRange,
+            MatchedDestinationIps: destinationsInRange,
+            Rule: this
+        );
     }
 }

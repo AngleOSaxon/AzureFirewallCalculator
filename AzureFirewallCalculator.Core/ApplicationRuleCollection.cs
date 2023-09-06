@@ -18,5 +18,5 @@ public record class ApplicationRuleCollection
         Rules = rules;
     }
 
-    public ApplicationRule[] GetMatches(ApplicationRequest request) => Rules.Where(item => item.Matches(request)).ToArray();
+    public ApplicationRuleMatch[] GetMatches(ApplicationRequest request) => Rules.Select(item => item.Matches(request)).Where(item => item.Matched).ToArray();
 }

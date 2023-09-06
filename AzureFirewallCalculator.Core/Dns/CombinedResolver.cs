@@ -18,9 +18,10 @@ public class CombinedResolver : IDnsResolver
             {
                 return await item.ResolveAddress(fqdn);
             }
-            catch
+            catch (Exception ex)
             {
                 // TODO: Logging
+                Console.Error.WriteLine(ex);
                 return Array.Empty<uint>();
             }
         });

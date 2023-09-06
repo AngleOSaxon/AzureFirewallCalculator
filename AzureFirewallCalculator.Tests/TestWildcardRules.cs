@@ -9,37 +9,37 @@ public class TestWildcardRules
     {
         yield return new object[] 
         {
-            new ApplicationRule("", new RuleIpRange[] { new RuleIpRange(uint.MinValue, uint.MinValue) }, new string[] { "*.example.com" }, Array.Empty<string>(), new ApplicationProtocolPort[] { new ApplicationProtocolPort(ApplicationProtocol.Https, 443) }),
+            new ApplicationRule("", new RuleIpRange[] { new(uint.MinValue, uint.MinValue) }, new string[] { "*.example.com" }, Array.Empty<string>(), new ApplicationProtocolPort[] { new(ApplicationProtocol.Https, 443) }),
             new ApplicationRequest(uint.MinValue, "foo.example.com", new ApplicationProtocolPort(ApplicationProtocol.Https, 443)),
             true
         };
         yield return new object[] 
         {
-            new ApplicationRule("", new RuleIpRange[] { new RuleIpRange(uint.MinValue, uint.MinValue) }, new string[] { "*.example.com" }, Array.Empty<string>(), new ApplicationProtocolPort[] { new ApplicationProtocolPort(ApplicationProtocol.Https, 443) }),
+            new ApplicationRule("", new RuleIpRange[] { new(uint.MinValue, uint.MinValue) }, new string[] { "*.example.com" }, Array.Empty<string>(), new ApplicationProtocolPort[] { new(ApplicationProtocol.Https, 443) }),
             new ApplicationRequest(uint.MinValue, "example.com", new ApplicationProtocolPort(ApplicationProtocol.Https, 443)),
             false
         };
         yield return new object[] 
         {
-            new ApplicationRule("", new RuleIpRange[] { new RuleIpRange(uint.MinValue, uint.MinValue) }, new string[] { "*.example.com" }, Array.Empty<string>(), new ApplicationProtocolPort[] { new ApplicationProtocolPort(ApplicationProtocol.Https, 443) }),
+            new ApplicationRule("", new RuleIpRange[] { new(uint.MinValue, uint.MinValue) }, new string[] { "*.example.com" }, Array.Empty<string>(), new ApplicationProtocolPort[] { new(ApplicationProtocol.Https, 443) }),
             new ApplicationRequest(uint.MinValue, "foo.bar.example.com", new ApplicationProtocolPort(ApplicationProtocol.Https, 443)),
             true
         };
         yield return new object[] 
         {
-            new ApplicationRule("", new RuleIpRange[] { new RuleIpRange(uint.MinValue, uint.MinValue) }, new string[] { "*.example.com" }, Array.Empty<string>(), new ApplicationProtocolPort[] { new ApplicationProtocolPort(ApplicationProtocol.Https, 443) }),
+            new ApplicationRule("", new RuleIpRange[] { new(uint.MinValue, uint.MinValue) }, new string[] { "*.example.com" }, Array.Empty<string>(), new ApplicationProtocolPort[] { new(ApplicationProtocol.Https, 443) }),
             new ApplicationRequest(uint.MinValue, "example.com.foo", new ApplicationProtocolPort(ApplicationProtocol.Https, 443)),
             false
         };
         yield return new object[] 
         {
-            new ApplicationRule("", new RuleIpRange[] { new RuleIpRange(uint.MinValue, uint.MinValue) }, new string[] { "*example.com" }, Array.Empty<string>(), new ApplicationProtocolPort[] { new ApplicationProtocolPort(ApplicationProtocol.Https, 443) }),
+            new ApplicationRule("", new RuleIpRange[] { new(uint.MinValue, uint.MinValue) }, new string[] { "*example.com" }, Array.Empty<string>(), new ApplicationProtocolPort[] { new(ApplicationProtocol.Https, 443) }),
             new ApplicationRequest(uint.MinValue, "example.com", new ApplicationProtocolPort(ApplicationProtocol.Https, 443)),
             true
         };
         yield return new object[] 
         {
-            new ApplicationRule("", new RuleIpRange[] { new RuleIpRange(uint.MinValue, uint.MinValue) }, new string[] { "*example.com" }, Array.Empty<string>(), new ApplicationProtocolPort[] { new ApplicationProtocolPort(ApplicationProtocol.Https, 443) }),
+            new ApplicationRule("", new RuleIpRange[] { new(uint.MinValue, uint.MinValue) }, new string[] { "*example.com" }, Array.Empty<string>(), new ApplicationProtocolPort[] { new(ApplicationProtocol.Https, 443) }),
             new ApplicationRequest(uint.MinValue, "foo.example.com", new ApplicationProtocolPort(ApplicationProtocol.Https, 443)),
             true
         };
@@ -49,6 +49,6 @@ public class TestWildcardRules
     [MemberData(nameof(SourceData))]
     public void TestApplicationWildcardRules(ApplicationRule rule, ApplicationRequest request, bool shouldBeAllowed)
     {
-        Assert.Equal(rule.Matches(request), shouldBeAllowed);
+        Assert.Equal(rule.Matches(request).Matched, shouldBeAllowed);
     }
 }

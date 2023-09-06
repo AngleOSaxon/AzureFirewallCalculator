@@ -53,18 +53,23 @@ public class ApplicationRule
         Protocols = protocols;
     }
 
-    public bool Matches(ApplicationRequest request)
+    public ApplicationRuleMatch Matches(ApplicationRequest request)
     {
         var (sourceIp, destinationFqdn, protocol) = request;
 
-        var sourceInRange = SourceAddresses.Any(item => sourceIp >= item.Start && sourceIp <= item.End);
+        var sourceInRange = SourceAddresses.Where(item => sourceIp >= item.Start && sourceIp <= item.End);
         // TODO: Handle TargetURL postfix wildcards.  Only work in path; not in domain
         // https://learn.microsoft.com/en-us/azure/firewall/firewall-faq#how-do-wildcards-work-in-target-urls-and-target-fqdns-in-application-rules
         var destinationMatches = AllowAllDestinations
-            || DestinationFqdns.Any(item => item.Equals(destinationFqdn))
-            || PrefixWildcards.Any(item => item.Length <= destinationFqdn.Length && item.Span.SequenceEqual(destinationFqdn.AsSpan(destinationFqdn.Length - item.Length, item.Length)));
+            ? DestinationFqdns
+            : DestinationFqdns.Where(item => item.Equals(destinationFqdn));
         var protocolMatches = Protocols.Contains(protocol);
 
-        return sourceInRange && destinationMatches && protocolMatches;
+        return new ApplicationRuleMatch(
+            Matched: sourceInRange.Any() && destinationMatches.Any() && protocolMatches,
+            MatchedSourceIps: sourceInRange.ToArray(),
+            MatchedTargetFqdns: destinationMatches.ToArray(),
+            Rule: this
+        );
     }
 }

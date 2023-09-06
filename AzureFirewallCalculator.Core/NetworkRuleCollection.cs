@@ -18,5 +18,5 @@ public record class NetworkRuleCollection
         Rules = rules;
     }
 
-    public NetworkRule[] GetMatches(NetworkRequest request) => Rules.Where(item => item.Matches(request)).ToArray();
+    public NetworkRuleMatch[] GetMatches(NetworkRequest request) => Rules.Select(item => item.Matches(request)).Where(item => item.Matched).ToArray();
 }
