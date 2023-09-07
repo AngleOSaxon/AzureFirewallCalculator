@@ -10,4 +10,9 @@
   <ItemGroup>
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Azure.ResourceManager.Network" Version="1.4.0" />
+    <PackageReference Include="Azure.ResourceManager.Resources" Version="1.6.0" />
+  </ItemGroup>
+
 </Project>

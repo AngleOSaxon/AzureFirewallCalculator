@@ -1,29 +1,14 @@
-﻿@using AzureFirewallCalculator.Core;
-@using PowershellSource = AzureFirewallCalculator.Core.PowershellSource;
+@using AzureFirewallCalculator.Core;
 @using AzureFirewallCalculator.Core.Dns;
 @using AzureFirewallCalculator.Core.Tags;
 
-@page "/check-allowed"
-@inject IDnsResolver DnsResolver
-
-<PageTitle>Firewall</PageTitle>
-
-<label>Ip Groups:</label> <InputFile OnChange="@ReadIpGroups" />
-<label>Firewall:</label><InputFile OnChange="@ReadFirewall" />
-<label>Service Tags:</label><InputFile OnChange="@ReadServiceTags" />
+@inject IDnsResolver DnsResolver;
 
 @if (Firewall == null)
 {
     <h1>Loading...</h1>
     return;
 }
-
-<ul>
-    @foreach(var hat in Firewall.ApplicationRuleCollections)
-    {
-        <li>@hat.Name</li>
-    }
-</ul>
 
 <h3>Check Network Rule</h3>
 <div>
@@ -134,13 +119,8 @@
 </ul>
 
 @code {
-    private Firewall? Firewall;
-
-    private Dictionary<string, PowershellSource.IpGroup>? IpGroups;
-
-    private PowershellSource.Firewall? PowershellFirewall;
-
-    private ServiceTags? ServiceTags;
+    [Parameter]
+    public Firewall? Firewall { get; set; }
 
     private string NetworkSourceIp = string.Empty;
 
@@ -161,41 +141,6 @@
     private IEnumerable<NetworkProcessingResponse> NetworkProcessingResponses = Array.Empty<NetworkProcessingResponse>();
 
     private IEnumerable<ApplicationProcessingResponse> ApplicationProcessingResponses = Array.Empty<ApplicationProcessingResponse>();
-
-    protected async Task ReadIpGroups(InputFileChangeEventArgs e)
-    {
-        var stream = e.File.OpenReadStream(maxAllowedSize: 1024 * 1024 * 10);
-        IpGroups = (await System.Text.Json.JsonSerializer.DeserializeAsync<PowershellSource.IpGroup[]>(stream))!.ToDictionary(item => item.Id, StringComparer.CurrentCultureIgnoreCase);
-        await ConvertFirewall();
-    }
-
-    protected async Task ReadFirewall(InputFileChangeEventArgs e)
-    {
-        var stream = e.File.OpenReadStream(maxAllowedSize: 1024 * 1024 * 10);
-        PowershellFirewall = await System.Text.Json.JsonSerializer.DeserializeAsync<PowershellSource.Firewall>(stream);
-        await ConvertFirewall();
-    }
-
-    protected async Task ReadServiceTags(InputFileChangeEventArgs e)
-    {
-        var stream = e.File.OpenReadStream(maxAllowedSize: 1024 * 1024 * 10);
-
-        ServiceTags = await System.Text.Json.JsonSerializer.DeserializeAsync<ServiceTags>(stream, new System.Text.Json.JsonSerializerOptions
-            {
-                PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
-            });
-        await ConvertFirewall();
-    }
-
-    protected async Task ConvertFirewall()
-    {
-        if (IpGroups == null || PowershellFirewall == null || ServiceTags == null)
-        {
-            return;
-        }
-
-        Firewall = await PowershellFirewall.Value.ConvertToFirewall(IpGroups, DnsResolver, ServiceTags);
-    }
 
     protected void CheckNetworkRule()
     {
