@@ -19,14 +19,23 @@
     </Design.DataContext>
 
     <DockPanel LastChildFill="True">
-        <Border Width="200" BorderBrush="Black" BorderThickness="1" DockPanel.Dock="Left">
-            <Button Width="200" Content="Load From ARM" Command="{Binding GoToLoadFromArm}" />
+        <Border Width="125" BorderBrush="Gray" BorderThickness="0,0,1,0" DockPanel.Dock="Left">
+            <Button VerticalAlignment="Top" Width="125" Content="Load From ARM" Command="{Binding GoToLoadFromArm}" />
         </Border>
         <rxui:RoutedViewHost Router="{Binding Router}">
             <rxui:RoutedViewHost.DefaultContent>
-                <TextBlock Text="Default content"
-                           HorizontalAlignment="Center"
-                           VerticalAlignment="Center" />
+                <StackPanel Orientation="Vertical" VerticalAlignment="Center">
+                    <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="ExtraBold">
+                        <TextBlock.Text>
+                            Azure Firewall Calculator
+                        </TextBlock.Text>
+                    </TextBlock>
+                    <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <TextBlock.Text>
+                            Load a firewall and enter a network request to see what rules it would trigger
+                        </TextBlock.Text>
+                    </TextBlock>
+                </StackPanel>
             </rxui:RoutedViewHost.DefaultContent>
         </rxui:RoutedViewHost>
     </DockPanel>
