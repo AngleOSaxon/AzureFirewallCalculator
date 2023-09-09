@@ -1,0 +1,33 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:AzureFirewallCalculator.Desktop.ViewModels"
+             xmlns:v="using:AzureFirewallCalculator.Desktop.Views"
+             xmlns:rxui="clr-namespace:Avalonia.ReactiveUI;assembly=Avalonia.ReactiveUI"
+             xmlns:local="using:AzureFirewallCalculator.Desktop.Views"
+             x:DataType="vm:LoadFromFileViewModel"
+             x:Class="AzureFirewallCalculator.Desktop.Views.LoadFromFileView">
+    <DockPanel LastChildFill="True">
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+            <Button Content="Import Firewall File" Command="{Binding LoadFirewallCommand}" IsEnabled="{Binding !ShowLoadIndicator}" />
+            <Button Content="Import IPGroups File" Command="{Binding LoadIpGroupsCommand}" IsEnabled="{Binding !ShowLoadIndicator}" />
+            <Button Content="Download Service Tags" Command="{Binding LoadServiceTagsCommand}" IsEnabled="{Binding !ShowLoadIndicator}" />
+            <ProgressBar Margin="20,0,20,0" IsVisible="{Binding ShowLoadIndicator}"
+                Minimum="0" Maximum="100" Value="{Binding LoadIndicator}"
+                ShowProgressText="False" />
+            <TextBlock Text="Importing..."  VerticalAlignment="Center" IsVisible="{Binding ShowLoadIndicator}" />
+            <TextBlock Margin="20,0,5,0" Text="Loaded Firewall: " IsVisible="{Binding FirewallLoaded}" />
+            <TextBlock Margin="0,0,20,0" Text="{Binding Firewall.Value.Name}" IsVisible="{Binding FirewallLoaded}" />
+            <TextBlock Text="IP Group Count:" IsVisible="{Binding IpGroupsLoaded}" />
+            <TextBlock Margin="0,0,20,0" Text="{Binding IpGroups.Length}" IsVisible="{Binding IpGroupsLoaded}" />
+            <TextBlock Text="Service Tag Count:" IsVisible="{Binding ServiceTagsLoaded}" />
+            <TextBlock Text="{Binding ServiceTags.Values.Length}" IsVisible="{Binding ServiceTagsLoaded}" />
+        </StackPanel>
+        <rxui:RoutedViewHost Router="{Binding Router}">
+            <rxui:RoutedViewHost.DefaultContent>
+                <StackPanel Orientation="Vertical" VerticalAlignment="Center">
+                    <TextBlock HorizontalAlignment="Center" Text="Select Exported Firewall Files" />
+                </StackPanel>
+            </rxui:RoutedViewHost.DefaultContent>
+        </rxui:RoutedViewHost>
+    </DockPanel>
+</UserControl>

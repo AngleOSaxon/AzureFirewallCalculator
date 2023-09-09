@@ -23,6 +23,7 @@
         <Border Width="125" BorderBrush="Gray" BorderThickness="0,0,1,0" DockPanel.Dock="Left">
             <DockPanel LastChildFill="False">
                 <Button DockPanel.Dock="Top" Width="125" Content="Load From ARM" Command="{Binding GoToLoadFromArm}" />
+                <Button DockPanel.Dock="Top" Width="125" Content="Load From Files" Command="{Binding GoToLoadFromFiles}" />
                 <TextBlock DockPanel.Dock="Bottom" HorizontalAlignment="Center" FontWeight="ExtraBold" FontSize="16" Text="{Binding UserName}" />
             </DockPanel>
         </Border>

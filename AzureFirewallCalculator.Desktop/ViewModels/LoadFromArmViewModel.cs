@@ -21,6 +21,7 @@ namespace AzureFirewallCalculator.Desktop.ViewModels;
 public class LoadFromArmViewModel : ReactiveObject, IRoutableViewModel, IScreen
 {
     public IScreen HostScreen { get; }
+    public IDnsResolver DnsResolver { get; }
     public AuthenticationService AuthenticationService { get; }
     public string UrlPathSegment { get; } = "load-from-arm";
     public ArmService ArmService { get; }
@@ -57,7 +58,6 @@ public class LoadFromArmViewModel : ReactiveObject, IRoutableViewModel, IScreen
         }
     }
     public Firewall? ConvertedFirewall { get; set; }
-    public IDnsResolver Resolver { get; }
     public RoutingState Router { get; } = new RoutingState();
     private bool showLoadIndicator;
     public bool ShowLoadIndicator
@@ -82,12 +82,12 @@ public class LoadFromArmViewModel : ReactiveObject, IRoutableViewModel, IScreen
     public ReactiveCommand<Unit, Task> LoginCommand { get; }    
     
 
-    public LoadFromArmViewModel(IScreen screen, AuthenticationService authenticationService)
+    public LoadFromArmViewModel(IScreen screen, IDnsResolver dnsResolver, AuthenticationService authenticationService)
     {
         HostScreen = screen;
+        DnsResolver = dnsResolver;
         AuthenticationService = authenticationService;
-        Resolver = new DynamicResolver();
-        ArmService = new ArmService(new ArmClient(authenticationService.GetAuthenticationToken()), Resolver);
+        ArmService = new ArmService(new ArmClient(authenticationService.GetAuthenticationToken()), DnsResolver);
         Subscriptions = new AvaloniaList<SubscriptionResource>();
         Firewalls = new AvaloniaList<AzureFirewallData>();
         LoginCommand = ReactiveCommand.CreateFromObservable(() => Observable.Start(() => LoadSubscriptions()));
@@ -162,7 +162,7 @@ public class LoadFromArmViewModel : ReactiveObject, IRoutableViewModel, IScreen
             }
 
             ConvertedFirewall = await ArmService.ConvertToFirewall(firewall, ipGroups, serviceTags);
-            await Router.NavigateAndReset.Execute(new CheckTrafficViewModel(ConvertedFirewall, Resolver, this));
+            await Router.NavigateAndReset.Execute(new CheckTrafficViewModel(ConvertedFirewall, DnsResolver, this));
         });
     }
 

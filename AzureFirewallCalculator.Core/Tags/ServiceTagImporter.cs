@@ -4,7 +4,7 @@ namespace AzureFirewallCalculator.Core.Tags;
 
 public class ServiceTagImporter
 {
-    private static HttpClient HttpClient = new HttpClient();
+    private static HttpClient HttpClient = new();
 
     public static async Task<ServiceTags> GetServiceTags()
     {
