@@ -3,6 +3,7 @@
         xmlns:app="clr-namespace:AzureFirewallCalculator.Desktop"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:AzureFirewallCalculator.Desktop.ViewModels"
+        xmlns:v="using:AzureFirewallCalculator.Desktop.Views"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
@@ -24,18 +25,7 @@
         </Border>
         <rxui:RoutedViewHost Router="{Binding Router}">
             <rxui:RoutedViewHost.DefaultContent>
-                <StackPanel Orientation="Vertical" VerticalAlignment="Center">
-                    <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="ExtraBold">
-                        <TextBlock.Text>
-                            Azure Firewall Calculator
-                        </TextBlock.Text>
-                    </TextBlock>
-                    <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <TextBlock.Text>
-                            Load a firewall and enter a network request to see what rules it would trigger
-                        </TextBlock.Text>
-                    </TextBlock>
-                </StackPanel>
+                <v:DefaultContentView />
             </rxui:RoutedViewHost.DefaultContent>
         </rxui:RoutedViewHost>
     </DockPanel>

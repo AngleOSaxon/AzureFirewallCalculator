@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:AzureFirewallCalculator.Desktop.ViewModels"
+             xmlns:v="using:AzureFirewallCalculator.Desktop.Views"
              xmlns:rxui="clr-namespace:Avalonia.ReactiveUI;assembly=Avalonia.ReactiveUI"
              xmlns:local="using:AzureFirewallCalculator.Desktop.Views"
              xmlns:i="clr-namespace:Avalonia.Xaml.Interactivity;assembly=Avalonia.Xaml.Interactivity"
@@ -26,9 +27,7 @@
         </StackPanel>
         <rxui:RoutedViewHost Router="{Binding Router}">
             <rxui:RoutedViewHost.DefaultContent>
-                <TextBlock Text="Default content"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center" />
+                <v:DefaultContentView />
             </rxui:RoutedViewHost.DefaultContent>
         </rxui:RoutedViewHost>
     </DockPanel>

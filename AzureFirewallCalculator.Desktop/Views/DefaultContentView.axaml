@@ -1,0 +1,18 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:AzureFirewallCalculator.Desktop.ViewModels"
+             x:DataType="vm:DefaultContentViewModel"
+             x:Class="AzureFirewallCalculator.Desktop.Views.DefaultContentView">
+    <StackPanel Orientation="Vertical" VerticalAlignment="Center">
+        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="ExtraBold">
+            <TextBlock.Text>
+                Azure Firewall Calculator
+            </TextBlock.Text>
+        </TextBlock>
+        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center">
+            <TextBlock.Text>
+                Load a firewall and enter a network request to see what rules it would trigger
+            </TextBlock.Text>
+        </TextBlock>
+    </StackPanel>
+</UserControl>
