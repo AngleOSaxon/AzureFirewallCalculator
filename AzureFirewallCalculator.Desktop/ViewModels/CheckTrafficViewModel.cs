@@ -30,12 +30,12 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel
     public string NetworkSourceIp { get; set; } = string.Empty;
     public string NetworkDestinationIp { get; set; } = string.Empty;
     public NetworkProtocols[] SelectableNetworkProtocols { get; } = new [] { NetworkProtocols.TCP, NetworkProtocols.UDP, NetworkProtocols.ICMP };
-    public NetworkProtocols NetworkProtocol { get; set; }
+    public NetworkProtocols NetworkProtocol { get; set; } 
     public int? NetworkDestinationPort { get; set; }
     public string ApplicationSourceIp { get; set; } = string.Empty;
     public string DestinationFqdn { get; set; } = string.Empty;
-    public ApplicationProtocol[] SelectableApplicationProtocols { get; } = new [] { ApplicationProtocol.Mssql, ApplicationProtocol.Https, ApplicationProtocol.Http };
-    public ApplicationProtocol ApplicationProtocol { get; set; }
+    public ApplicationProtocol[] SelectableApplicationProtocols { get; } = new [] { Core.ApplicationProtocol.Mssql, Core.ApplicationProtocol.Https, Core.ApplicationProtocol.Http };
+    public ApplicationProtocol? ApplicationProtocol { get; set; } 
     public int? ApplicationDestinationPort { get; set; }
     public ObservableCollection<NetworkProcessingResponse> NetworkProcessingResponses { get; set; } = new();
     public AvaloniaList<ApplicationProcessingResponse> ApplicationProcessingResponses { get; set; } = new();
@@ -69,7 +69,7 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel
         if (string.IsNullOrWhiteSpace(ApplicationSourceIp) 
             || string.IsNullOrWhiteSpace(DestinationFqdn) 
             || ApplicationDestinationPort == null 
-            || ApplicationProtocol == 0
+            || ApplicationProtocol == null
             || Firewall == null)
         {
             return;
@@ -81,7 +81,7 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel
             ApplicationProcessingResponses.Clear();
         });
 
-        var request = new ApplicationRequest(ApplicationSourceIp, DestinationFqdn, new ApplicationProtocolPort(ApplicationProtocol, (ushort)ApplicationDestinationPort.Value));
+        var request = new ApplicationRequest(ApplicationSourceIp, DestinationFqdn, new ApplicationProtocolPort(ApplicationProtocol.Value, (ushort)ApplicationDestinationPort.Value));
 
         var ruleProcessor = new RuleProcessor(DnsResolver, Firewall);
         var responses = await ruleProcessor.ProcessApplicationRequest(request);
