@@ -73,7 +73,16 @@
                                             <TextBlock HorizontalAlignment="Center" VerticalAlignment="Top" Text="{Binding Rule.Name, DataType={x:Type core:NetworkRuleMatch}}" />
                                         </DataTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTemplateColumn Header="Matched Source Ips" Width="*">
+                                    <DataGridTemplateColumn  Width="*">
+                                        <DataGridTemplateColumn.HeaderTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="Source Ips (" />
+                                                    <TextBlock FontWeight="ExtraBold" Text="Matched" />
+                                                    <TextBlock Text=")" />
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.HeaderTemplate>
                                         <DataTemplate>
                                             <ItemsRepeater x:Name="RuleSourceIps" ItemsSource="{Binding Rule.SourceIps}" x:CompileBindings="False">
                                                 <ItemsRepeater.ItemTemplate>
@@ -96,7 +105,16 @@
                                             </ItemsRepeater>
                                         </DataTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTemplateColumn Header="Matched Destination Ips" Width="*">
+                                    <DataGridTemplateColumn Width="*">
+                                        <DataGridTemplateColumn.HeaderTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="Destination Ips (" />
+                                                    <TextBlock FontWeight="ExtraBold" Text="Matched" />
+                                                    <TextBlock Text=")" />
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.HeaderTemplate>
                                         <DataTemplate>
                                             <ItemsRepeater x:Name="DestinationSourceIps" ItemsSource="{Binding Rule.DestinationIps}" x:CompileBindings="False">
                                                 <ItemsRepeater.ItemTemplate>
@@ -162,7 +180,16 @@
                                             <TextBlock HorizontalAlignment="Center" VerticalAlignment="Top" Text="{Binding Rule.Name, DataType={x:Type core:ApplicationRuleMatch}}" />
                                         </DataTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTemplateColumn Header="Matched Source Ips" Width="*">
+                                    <DataGridTemplateColumn Width="*">
+                                        <DataGridTemplateColumn.HeaderTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="Source Ips (" />
+                                                    <TextBlock FontWeight="ExtraBold" Text="Matched" />
+                                                    <TextBlock Text=")" />
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.HeaderTemplate>
                                         <DataTemplate>
                                             <ItemsRepeater x:Name="RuleSourceIps" ItemsSource="{Binding Rule.SourceIps}" x:CompileBindings="False">
                                                 <ItemsRepeater.ItemTemplate>
@@ -185,7 +212,16 @@
                                             </ItemsRepeater>
                                         </DataTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTemplateColumn Header="Matched Destination Fqdns" Width="*">
+                                    <DataGridTemplateColumn Width="*">
+                                        <DataGridTemplateColumn.HeaderTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="Destination Fqdns (" />
+                                                    <TextBlock FontWeight="ExtraBold" Text="Matched" />
+                                                    <TextBlock Text=")" />
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.HeaderTemplate>
                                         <DataTemplate>
                                             <ItemsRepeater x:Name="DestinationFqdns" ItemsSource="{Binding Rule.DestinationFqdns}" x:CompileBindings="False">
                                                 <ItemsRepeater.ItemTemplate>
