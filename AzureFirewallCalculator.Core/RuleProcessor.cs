@@ -26,7 +26,7 @@ public class RuleProcessor
             return accumulator;
         });
 
-        return networkRequestResults.ToArray();
+        return networkRequestResults.Distinct().OrderBy(item => item.Priority).ToArray();
     }
 
     public NetworkProcessingResponse[] ProcessNetworkRequest(NetworkRequest networkRequest) => ProcessNetworkRequests(new NetworkRequest[] { networkRequest });
@@ -57,6 +57,6 @@ public class RuleProcessor
 
         var networkResults = await networkRequestTask;
 
-        return networkResults.Concat(results).ToArray();
+        return networkResults.Distinct().OrderBy(item => item.Priority).Concat(results.Distinct().OrderBy(item => item.Priority)).ToArray();
     }
 }

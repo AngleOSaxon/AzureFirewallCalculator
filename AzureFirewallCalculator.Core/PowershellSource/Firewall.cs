@@ -67,7 +67,7 @@ public record struct Firewall
                     .Select(item => new Core.ApplicationRule
                     (
                         name: item.Name,
-                        sourceAddresses: item.SourceIpGroups
+                        sourceIps: item.SourceIpGroups
                             .SelectMany(item => ipGroups[item].IpAddresses)
                             .Concat(item.SourceAddresses)
                             .Select(item => RuleIpRange.Parse(item))

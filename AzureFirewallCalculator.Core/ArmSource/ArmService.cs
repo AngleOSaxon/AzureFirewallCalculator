@@ -139,7 +139,7 @@ public class ArmService
                     .Select(item => new ApplicationRule
                     (
                         name: item.Name,
-                        sourceAddresses: item.SourceIPGroups
+                        sourceIps: item.SourceIPGroups
                             .SelectMany(item => ipGroups[item].IPAddresses)
                             .Concat(item.SourceAddresses)
                             .Select(item => RuleIpRange.Parse(item))

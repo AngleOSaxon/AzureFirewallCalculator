@@ -1,10 +1,10 @@
 namespace AzureFirewallCalculator.Core;
 
-public class ApplicationRule
+public record class ApplicationRule
 {
     public string Name { get; }
 
-    public RuleIpRange[] SourceAddresses { get; }
+    public RuleIpRange[] SourceIps { get; }
 
     public string[] DestinationFqdns { get; }
 
@@ -16,10 +16,10 @@ public class ApplicationRule
 
     public ApplicationProtocolPort[] Protocols { get; }
 
-    public ApplicationRule(string name, RuleIpRange[] sourceAddresses, string[] destinationFqdns, string[] destinationTags, ApplicationProtocolPort[] protocols)
+    public ApplicationRule(string name, RuleIpRange[] sourceIps, string[] destinationFqdns, string[] destinationTags, ApplicationProtocolPort[] protocols)
     {
         Name = name;
-        SourceAddresses = sourceAddresses;
+        SourceIps = sourceIps;
 
         var seed = (fqdns: new List<string>(), prefixWildcards: new List<ReadOnlyMemory<char>>(), allowAllDestinations: false);
         var (fqdns, prefixWildcards, allowAllDestinations) = destinationFqdns.Aggregate(seed, (accumulation, destinationFqdn) =>
@@ -57,7 +57,7 @@ public class ApplicationRule
     {
         var (sourceIp, destinationFqdn, protocol) = request;
 
-        var sourceInRange = SourceAddresses.Where(item => sourceIp >= item.Start && sourceIp <= item.End);
+        var sourceInRange = SourceIps.Where(item => sourceIp >= item.Start && sourceIp <= item.End);
         // TODO: Handle TargetURL postfix wildcards.  Only work in path; not in domain
         // https://learn.microsoft.com/en-us/azure/firewall/firewall-faq#how-do-wildcards-work-in-target-urls-and-target-fqdns-in-application-rules
         var destinationMatches = AllowAllDestinations

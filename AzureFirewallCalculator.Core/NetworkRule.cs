@@ -2,7 +2,7 @@ using System.Data;
 
 namespace AzureFirewallCalculator.Core;
 
-public class NetworkRule
+public record class NetworkRule
 {
     public string Name { get;}
 

@@ -10,10 +10,18 @@ public class DynamicResolver : IDnsResolver
     // TODO: DNS lookup without exceptions for unknown names.  Likely also requires custom client
     public async Task<uint[]> ResolveAddress(string fqdn)
     {
-        var entries = await SystemDns.GetHostEntryAsync(fqdn);
-        return entries.AddressList
-            .Where(item => item.AddressFamily != System.Net.Sockets.AddressFamily.InterNetworkV6)
-            .Select(item => item.ConvertToUint())
-            .ToArray();
+        try
+        {
+            var entries = await SystemDns.GetHostEntryAsync(fqdn);
+            return entries.AddressList
+                .Where(item => item.AddressFamily != System.Net.Sockets.AddressFamily.InterNetworkV6)
+                .Select(item => item.ConvertToUint())
+                .ToArray();
+        }
+        catch
+        {
+
+        }
+        return Array.Empty<uint>();
     }
 }

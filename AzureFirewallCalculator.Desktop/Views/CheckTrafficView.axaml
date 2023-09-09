@@ -1,0 +1,219 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:AzureFirewallCalculator.Desktop.ViewModels"
+             xmlns:core="using:AzureFirewallCalculator.Core"
+             xmlns:Converters="using:AzureFirewallCalculator.Desktop.Converters" xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:i="clr-namespace:Avalonia.Xaml.Interactivity;assembly=Avalonia.Xaml.Interactivity"
+             xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Avalonia.Xaml.Interactions"
+             x:DataType="vm:CheckTrafficViewModel"
+             x:Class="AzureFirewallCalculator.Desktop.Views.CheckTrafficView">
+    <UserControl.Resources>
+        <Converters:MatchFontWeightConverter x:Key="MatchFontWeightConverter" />
+    </UserControl.Resources>
+    <DockPanel HorizontalAlignment="Center"
+                VerticalAlignment="Center">
+        <Grid DockPanel.Dock="Top" HorizontalAlignment="Center" VerticalAlignment="Top" ColumnDefinitions="Auto,*,*,*,*" RowDefinitions="Auto,Auto,*,Auto">
+            <TextBox Width="125" Grid.Row="0" Grid.Column="0" Text="{Binding NetworkSourceIp, Mode=TwoWay}" Watermark="10.0.0.0"/>
+            <TextBox Width="125" Grid.Row="0" Grid.Column="1" Text="{Binding NetworkDestinationIp, Mode=TwoWay}" Watermark="10.0.0.10"/>
+            <TextBox Grid.Row="0" Grid.Column="2" Text="{Binding NetworkDestinationPort, Mode=TwoWay}" Watermark="443"/>
+            <ComboBox Grid.Row="0" Grid.Column="3" x:Name="NetworkProtocols" ItemsSource="{Binding SelectableNetworkProtocols}" SelectedItem="{Binding NetworkProtocol, DataType={x:Type vm:CheckTrafficViewModel}}">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding, DataType={x:Type vm:CheckTrafficViewModel}}"/>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+            <Button Grid.Row="0" Grid.Column="4" Command="{Binding CheckNetworkRuleCommand}" Content="Check Network Traffic" IsEnabled="true" />
+        </Grid>
+        <Grid DockPanel.Dock="Top" HorizontalAlignment="Center" VerticalAlignment="Top" ColumnDefinitions="Auto,*,*,*,*" RowDefinitions="Auto,Auto,*,Auto">
+            <TextBox Width="125" Grid.Row="0" Grid.Column="0" Text="{Binding ApplicationSourceIp, Mode=TwoWay}" Watermark="10.0.0.0"/>
+            <TextBox Width="250" Grid.Row="0" Grid.Column="1" Text="{Binding DestinationFqdn, Mode=TwoWay}" Watermark="www.google.com"/>
+            <TextBox Grid.Row="0" Grid.Column="2" Text="{Binding ApplicationDestinationPort, Mode=TwoWay}" Watermark="443"/>
+            <ComboBox Grid.Row="0" Grid.Column="3" x:Name="ApplicationProtocols" ItemsSource="{Binding SelectableApplicationProtocols}" SelectedItem="{Binding ApplicationProtocol, DataType={x:Type vm:CheckTrafficViewModel}}">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding, DataType={x:Type vm:CheckTrafficViewModel}}"/>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+            <Button Grid.Row="0" Grid.Column="4" Command="{Binding CheckApplicationRuleCommand}" Content="Check Application Traffic" IsEnabled="true" />
+        </Grid>
+        <DataGrid DockPanel.Dock="Top" Margin="20" x:Name="NetworkResponses" ItemsSource="{Binding NetworkProcessingResponses}"
+                IsReadOnly="True"
+                CanUserResizeColumns="True"
+                MinHeight="250"
+                BorderThickness="1" BorderBrush="Gray">
+            <DataGrid.Columns>
+                <DataGridTemplateColumn Header="Priority" Width="*">
+                    <DataTemplate>
+                        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Top" Text="{Binding Priority}" />
+                    </DataTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="Collection" Width="*">
+                    <DataTemplate>
+                        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Top" Text="{Binding CollectionName}" />
+                    </DataTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="Action" Width="*">
+                    <DataTemplate>
+                        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Top" Text="{Binding RuleAction}" />
+                    </DataTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="Matched Rules" Width="6*">
+                    <DataTemplate>
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <DataGrid Margin="20" ItemsSource="{Binding MatchedRules}"
+                                    IsReadOnly="True"
+                                    GridLinesVisibility="Horizontal"
+                                    CanUserResizeColumns="True"
+                                    BorderThickness="1" BorderBrush="Gray">
+                                <DataGrid.Columns>
+                                    <DataGridTemplateColumn Header="Rule Name" Width="*">
+                                        <DataTemplate>
+                                            <TextBlock HorizontalAlignment="Center" VerticalAlignment="Top" Text="{Binding Rule.Name, DataType={x:Type core:NetworkRuleMatch}}" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Header="Matched Source Ips" Width="*">
+                                        <DataTemplate>
+                                            <ItemsRepeater x:Name="RuleSourceIps" ItemsSource="{Binding Rule.SourceIps}" x:CompileBindings="False">
+                                                <ItemsRepeater.ItemTemplate>
+                                                    <DataTemplate x:CompileBindings="False">
+                                                        <StackPanel>
+                                                            <TextBlock Text="{Binding}" x:CompileBindings="False">
+                                                                <TextBlock.FontWeight>
+                                                                    <MultiBinding Converter="{StaticResource MatchFontWeightConverter}">
+                                                                        <Binding Path="." />
+                                                                        <Binding RelativeSource="{RelativeSource AncestorType=ItemsRepeater}" Path="DataContext.MatchedSourceIps"/>
+                                                                    </MultiBinding>
+                                                                </TextBlock.FontWeight>
+                                                            </TextBlock>
+                                                        </StackPanel>
+                                                    </DataTemplate>
+                                                </ItemsRepeater.ItemTemplate>
+                                                <ItemsRepeater.Layout>
+                                                    <StackLayout Orientation="Vertical" />
+                                                </ItemsRepeater.Layout>
+                                            </ItemsRepeater>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Header="Matched Destination Ips" Width="*">
+                                        <DataTemplate>
+                                            <ItemsRepeater x:Name="DestinationSourceIps" ItemsSource="{Binding Rule.DestinationIps}" x:CompileBindings="False">
+                                                <ItemsRepeater.ItemTemplate>
+                                                    <DataTemplate x:CompileBindings="False">
+                                                        <StackPanel>
+                                                            <TextBlock Text="{Binding}" x:CompileBindings="False">
+                                                                <TextBlock.FontWeight>
+                                                                    <MultiBinding Converter="{StaticResource MatchFontWeightConverter}">
+                                                                        <Binding Path="." />
+                                                                        <Binding RelativeSource="{RelativeSource AncestorType=ItemsRepeater}" Path="DataContext.MatchedDestinationIps"/>
+                                                                    </MultiBinding>
+                                                                </TextBlock.FontWeight>
+                                                            </TextBlock>
+                                                        </StackPanel>
+                                                    </DataTemplate>
+                                                </ItemsRepeater.ItemTemplate>
+                                                <ItemsRepeater.Layout>
+                                                    <StackLayout Orientation="Vertical" />
+                                                </ItemsRepeater.Layout>
+                                            </ItemsRepeater>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </ScrollViewer>
+                    </DataTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+        <DataGrid DockPanel.Dock="Top" Margin="20" x:Name="ApplicationResponses" ItemsSource="{Binding ApplicationProcessingResponses}"
+                IsReadOnly="True"
+                GridLinesVisibility="None"
+                CanUserResizeColumns="True"
+                MinHeight="250"
+                BorderThickness="1" BorderBrush="Gray">
+            <DataGrid.Columns>
+                <DataGridTemplateColumn Header="Priority" Width="*">
+                    <DataTemplate>
+                        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Top" Text="{Binding Priority}" />
+                    </DataTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="Collection" Width="*">
+                    <DataTemplate>
+                        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Top" Text="{Binding CollectionName}" />
+                    </DataTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="Action" Width="*">
+                    <DataTemplate>
+                        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Top" Text="{Binding RuleAction}" />
+                    </DataTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="Matched Rules" Width="6*">
+                    <DataTemplate>
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <DataGrid Margin="20" ItemsSource="{Binding MatchedRules}"
+                                    IsReadOnly="True"
+                                    GridLinesVisibility="Horizontal"
+                                    CanUserResizeColumns="True"
+                                    BorderThickness="1" BorderBrush="Gray">
+                                <DataGrid.Columns>
+                                    <DataGridTemplateColumn Header="Rule Name" Width="*">
+                                        <DataTemplate>
+                                            <TextBlock HorizontalAlignment="Center" VerticalAlignment="Top" Text="{Binding Rule.Name, DataType={x:Type core:ApplicationRuleMatch}}" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Header="Matched Source Ips" Width="*">
+                                        <DataTemplate>
+                                            <ItemsRepeater x:Name="RuleSourceIps" ItemsSource="{Binding Rule.SourceIps}" x:CompileBindings="False">
+                                                <ItemsRepeater.ItemTemplate>
+                                                    <DataTemplate x:CompileBindings="False">
+                                                        <StackPanel>
+                                                            <TextBlock Text="{Binding}" x:CompileBindings="False">
+                                                                <TextBlock.FontWeight>
+                                                                    <MultiBinding Converter="{StaticResource MatchFontWeightConverter}">
+                                                                        <Binding Path="." />
+                                                                        <Binding RelativeSource="{RelativeSource AncestorType=ItemsRepeater}" Path="DataContext.MatchedSourceIps"/>
+                                                                    </MultiBinding>
+                                                                </TextBlock.FontWeight>
+                                                            </TextBlock>
+                                                        </StackPanel>
+                                                    </DataTemplate>
+                                                </ItemsRepeater.ItemTemplate>
+                                                <ItemsRepeater.Layout>
+                                                    <StackLayout Orientation="Vertical" />
+                                                </ItemsRepeater.Layout>
+                                            </ItemsRepeater>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTemplateColumn Header="Matched Destination Fqdns" Width="*">
+                                        <DataTemplate>
+                                            <ItemsRepeater x:Name="DestinationFqdns" ItemsSource="{Binding Rule.DestinationFqdns}" x:CompileBindings="False">
+                                                <ItemsRepeater.ItemTemplate>
+                                                    <DataTemplate x:CompileBindings="False">
+                                                        <StackPanel>
+                                                            <TextBlock Text="{Binding}" x:CompileBindings="False">
+                                                                <TextBlock.FontWeight>
+                                                                    <MultiBinding Converter="{StaticResource MatchFontWeightConverter}">
+                                                                        <Binding Path="." />
+                                                                        <Binding RelativeSource="{RelativeSource AncestorType=ItemsRepeater}" Path="DataContext.MatchedTargetFqdns"/>
+                                                                    </MultiBinding>
+                                                                </TextBlock.FontWeight>
+                                                            </TextBlock>
+                                                        </StackPanel>
+                                                    </DataTemplate>
+                                                </ItemsRepeater.ItemTemplate>
+                                                <ItemsRepeater.Layout>
+                                                    <StackLayout Orientation="Vertical" />
+                                                </ItemsRepeater.Layout>
+                                            </ItemsRepeater>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </ScrollViewer>
+                    </DataTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+    </DockPanel>
+</UserControl>
