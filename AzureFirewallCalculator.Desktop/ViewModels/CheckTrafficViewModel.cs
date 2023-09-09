@@ -43,6 +43,19 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel
     public ReactiveCommand<Unit, Task> CheckApplicationRuleCommand { get; }
     public string? UrlPathSegment => "check-traffic";
     public IScreen HostScreen { get; }
+    private string? networkRuleError;
+    public string? NetworkRuleError
+    {
+        get { return networkRuleError; }
+        set { this.RaiseAndSetIfChanged(ref networkRuleError, value); }
+    }
+    private string? applicationRuleError;
+    public string? ApplicationRuleError
+    {
+        get { return applicationRuleError; }
+        set { this.RaiseAndSetIfChanged(ref applicationRuleError, value); }
+    }
+    
 
     public void CheckNetworkRule()
     {
@@ -52,8 +65,11 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel
             || NetworkProtocol == NetworkProtocols.None
             || Firewall == null)
         {
+            NetworkRuleError = "Check input";
             return;
         }
+
+        NetworkRuleError = null;
 
         NetworkProcessingResponses.Clear();
         ApplicationProcessingResponses.Clear();
@@ -72,8 +88,11 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel
             || ApplicationProtocol == null
             || Firewall == null)
         {
+            ApplicationRuleError = "Check input";
             return;
         }
+
+        ApplicationRuleError = null;
 
         Dispatcher.UIThread.Invoke(() =>
         {

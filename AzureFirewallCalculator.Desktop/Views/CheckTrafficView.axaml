@@ -14,6 +14,10 @@
         <Style Selector="TextBlock.Pad">
             <Setter Property="Margin" Value="20,0,20,0" />
         </Style>
+        <Style Selector="TextBlock.Alert">
+            <Setter Property="Foreground" Value="Red" />
+            <Setter Property="FontWeight" Value="ExtraBold" />
+        </Style>
     </UserControl.Styles>
     <DockPanel HorizontalAlignment="Center" VerticalAlignment="Center" LastChildFill="True">
         <Grid DockPanel.Dock="Top" HorizontalAlignment="Center" VerticalAlignment="Top" ColumnDefinitions="Auto,*,*,*,*" RowDefinitions="Auto,Auto,*,Auto">
@@ -43,7 +47,10 @@
             <Button Grid.Row="0" Grid.Column="4" Command="{Binding CheckApplicationRuleCommand}" Content="Check Application Traffic" IsEnabled="true" />
         </Grid>
         <Grid ColumnDefinitions="*" RowDefinitions="*,10*,*,10*">
-            <TextBlock Classes="Pad" Grid.Column="0" Grid.Row="0" Text="No network rules hit" IsVisible="{Binding !NetworkProcessingResponses.Count}" />
+            <DockPanel LastChildFill="False" Grid.Column="0" Grid.Row="0" >
+                <TextBlock DockPanel.Dock="Left" Classes="Pad" Text="No network rules hit" IsVisible="{Binding !NetworkProcessingResponses.Count}" />
+                <TextBlock DockPanel.Dock="Right" Classes="Pad Alert" Text="{Binding NetworkRuleError}" IsVisible="{Binding !NetworkProcessingResponses.Count}" />
+            </DockPanel>
             <DataGrid Grid.Column="0" Grid.Row="1" Margin="20" x:Name="NetworkResponses" ItemsSource="{Binding NetworkProcessingResponses}"
                     IsReadOnly="True"
                     CanUserResizeColumns="True"
@@ -144,7 +151,10 @@
                     </DataGridTemplateColumn>
                 </DataGrid.Columns>
             </DataGrid>
-            <TextBlock Classes="Pad" Grid.Column="0" Grid.Row="2" Text="No application rules hit" IsVisible="{Binding !ApplicationProcessingResponses.Count}" />
+            <DockPanel LastChildFill="False" Grid.Column="0" Grid.Row="2" >
+                <TextBlock Classes="Pad" Text="No application rules hit" IsVisible="{Binding !ApplicationProcessingResponses.Count}" />
+                <TextBlock DockPanel.Dock="Right" Classes="Pad Alert" Text="{Binding ApplicationRuleError}" IsVisible="{Binding !ApplicationRuleError}" />
+            </DockPanel>
             <DataGrid Grid.Column="0" Grid.Row="3" Margin="20" x:Name="ApplicationResponses" ItemsSource="{Binding ApplicationProcessingResponses}"
                     IsReadOnly="True"
                     GridLinesVisibility="None"
