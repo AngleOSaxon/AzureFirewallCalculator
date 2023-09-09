@@ -16,7 +16,7 @@
             <TextBox Width="125" Grid.Row="0" Grid.Column="0" Text="{Binding NetworkSourceIp, Mode=TwoWay}" Watermark="10.0.0.0"/>
             <TextBox Width="125" Grid.Row="0" Grid.Column="1" Text="{Binding NetworkDestinationIp, Mode=TwoWay}" Watermark="10.0.0.10"/>
             <TextBox Grid.Row="0" Grid.Column="2" Text="{Binding NetworkDestinationPort, Mode=TwoWay}" Watermark="443"/>
-            <ComboBox Grid.Row="0" Grid.Column="3" x:Name="NetworkProtocols" ItemsSource="{Binding SelectableNetworkProtocols}" SelectedItem="{Binding NetworkProtocol, DataType={x:Type vm:CheckTrafficViewModel}}">
+            <ComboBox Grid.Row="0" Grid.Column="3" x:Name="NetworkProtocols" PlaceholderText="Protocol" ItemsSource="{Binding SelectableNetworkProtocols}" SelectedItem="{Binding NetworkProtocol, DataType={x:Type vm:CheckTrafficViewModel}}">
                 <ComboBox.ItemTemplate>
                     <DataTemplate>
                         <TextBlock Text="{Binding, DataType={x:Type vm:CheckTrafficViewModel}}"/>
@@ -29,7 +29,7 @@
             <TextBox Width="125" Grid.Row="0" Grid.Column="0" Text="{Binding ApplicationSourceIp, Mode=TwoWay}" Watermark="10.0.0.0"/>
             <TextBox Width="250" Grid.Row="0" Grid.Column="1" Text="{Binding DestinationFqdn, Mode=TwoWay}" Watermark="www.google.com"/>
             <TextBox Grid.Row="0" Grid.Column="2" Text="{Binding ApplicationDestinationPort, Mode=TwoWay}" Watermark="443"/>
-            <ComboBox Grid.Row="0" Grid.Column="3" x:Name="ApplicationProtocols" ItemsSource="{Binding SelectableApplicationProtocols}" SelectedItem="{Binding ApplicationProtocol, DataType={x:Type vm:CheckTrafficViewModel}}">
+            <ComboBox Grid.Row="0" Grid.Column="3" x:Name="ApplicationProtocols" PlaceholderText="Protocol" ItemsSource="{Binding SelectableApplicationProtocols}" SelectedItem="{Binding ApplicationProtocol, DataType={x:Type vm:CheckTrafficViewModel}}">
                 <ComboBox.ItemTemplate>
                     <DataTemplate>
                         <TextBlock Text="{Binding, DataType={x:Type vm:CheckTrafficViewModel}}"/>
@@ -38,6 +38,7 @@
             </ComboBox>
             <Button Grid.Row="0" Grid.Column="4" Command="{Binding CheckApplicationRuleCommand}" Content="Check Application Traffic" IsEnabled="true" />
         </Grid>
+        <TextBlock DockPanel.Dock="Top" Text="No network rules hit" IsVisible="{Binding !NetworkProcessingResponses.Count}" />
         <DataGrid DockPanel.Dock="Top" Margin="20" x:Name="NetworkResponses" ItemsSource="{Binding NetworkProcessingResponses}"
                 IsReadOnly="True"
                 CanUserResizeColumns="True"
@@ -140,6 +141,7 @@
                 </DataGridTemplateColumn>
             </DataGrid.Columns>
         </DataGrid>
+        <TextBlock DockPanel.Dock="Top" Text="No application rules hit" IsVisible="{Binding !ApplicationProcessingResponses.Count}" />
         <DataGrid DockPanel.Dock="Top" Margin="20" x:Name="ApplicationResponses" ItemsSource="{Binding ApplicationProcessingResponses}"
                 IsReadOnly="True"
                 GridLinesVisibility="None"
