@@ -10,12 +10,12 @@ namespace AzureFirewallCalculator.Desktop.Authentication;
 
 public class AuthenticationToken : TokenCredential
 {
-    public AuthenticationToken(IPublicClientApplication identityClient)
+    public AuthenticationToken(AuthenticationService identityClient)
     {
-        IdentityClient = identityClient;
+        AuthenticationService = identityClient;
     }
 
-    public IPublicClientApplication IdentityClient { get; }
+    public AuthenticationService AuthenticationService { get; }
 
     public override AccessToken GetToken(TokenRequestContext requestContext, CancellationToken cancellationToken)
     {
@@ -24,26 +24,6 @@ public class AuthenticationToken : TokenCredential
 
     public override async ValueTask<AccessToken> GetTokenAsync(TokenRequestContext requestContext, CancellationToken cancellationToken)
     {
-        var accounts = await IdentityClient.GetAccountsAsync();
-        AuthenticationResult? result = null;
-        try
-        {
-            result = await IdentityClient
-                .AcquireTokenSilent(new [] { "https://management.azure.com/.default" }, accounts.FirstOrDefault())
-                .ExecuteAsync();
-        }
-        catch (MsalUiRequiredException)
-        {
-            result = await IdentityClient
-                .AcquireTokenInteractive(new [] { "https://management.azure.com/.default" })
-                .ExecuteAsync();
-        }
-        catch (Exception ex)
-        {
-            // Display the error text - probably as a pop-up
-            Debug.WriteLine($"Error: Authentication failed: {ex.Message}");
-        }
-
-        return new AccessToken(result!.AccessToken, result.ExpiresOn);
+        return await AuthenticationService.GetAccessToken(cancellationToken);
     }
 }

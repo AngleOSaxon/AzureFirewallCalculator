@@ -20,7 +20,6 @@ public class LoadFromArmViewModel : ReactiveObject, IRoutableViewModel, IScreen
 {
     public IScreen HostScreen { get; }
     public string UrlPathSegment { get; } = "load-from-arm";
-    public IPublicClientApplication IdentityClient { get; }
     public ArmService ArmService { get; }
     public AvaloniaList<SubscriptionResource> Subscriptions { get; }
     private SubscriptionResource? subscription;
@@ -58,17 +57,12 @@ public class LoadFromArmViewModel : ReactiveObject, IRoutableViewModel, IScreen
     public IDnsResolver Resolver { get; }
     public RoutingState Router { get; } = new RoutingState();
 
-    public LoadFromArmViewModel(IScreen screen)
+    public LoadFromArmViewModel(IScreen screen, AuthenticationService authenticationService)
     {
         HostScreen = screen;
-        IdentityClient = PublicClientApplicationBuilder.Create("5fb5bdf1-9e6f-4a5a-a0cd-390f7fe43ec9")
-            .WithAuthority(AzureCloudInstance.AzurePublic, "common")
-            .WithRedirectUri("http://localhost")
-            .Build();
-        var token = new AuthenticationToken(IdentityClient);
         
         Resolver = new DynamicResolver();
-        ArmService = new ArmService(new ArmClient(token), Resolver);
+        ArmService = new ArmService(new ArmClient(authenticationService.GetAuthenticationToken()), Resolver);
         Subscriptions = new AvaloniaList<SubscriptionResource>();
         Firewalls = new AvaloniaList<AzureFirewallData>();
         _ = LoadSubscriptions();
