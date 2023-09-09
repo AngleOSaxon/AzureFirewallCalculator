@@ -13,6 +13,8 @@ using Azure.ResourceManager.Network;
 using AzureFirewallCalculator.Core;
 using System.Reactive;
 using System.Reactive.Linq;
+using System.Threading;
+using Avalonia.Threading;
 
 namespace AzureFirewallCalculator.Desktop.ViewModels;
 
@@ -56,6 +58,21 @@ public class LoadFromArmViewModel : ReactiveObject, IRoutableViewModel, IScreen
     public Firewall? ConvertedFirewall { get; set; }
     public IDnsResolver Resolver { get; }
     public RoutingState Router { get; } = new RoutingState();
+    private bool showLoadIndicator;
+    public bool ShowLoadIndicator
+    {
+        get { return showLoadIndicator; }
+        set { this.RaiseAndSetIfChanged(ref showLoadIndicator, value); }
+    }
+    private int loadIndicator;
+    public int LoadIndicator { get => loadIndicator; set => this.RaiseAndSetIfChanged(ref loadIndicator, value); }
+    private string loadIndicatorText = "Loading...";
+    public string LoadIndicatorText
+    {
+        get { return loadIndicatorText; }
+        set { this.RaiseAndSetIfChanged(ref loadIndicatorText, value); }
+    }
+    
 
     public LoadFromArmViewModel(IScreen screen, AuthenticationService authenticationService)
     {
@@ -71,21 +88,39 @@ public class LoadFromArmViewModel : ReactiveObject, IRoutableViewModel, IScreen
     public async Task LoadSubscriptions()
     {
         Subscriptions.Clear();
-        var collection = await ArmService.GetSubscriptions();
-        foreach (var subscription in collection)
+
+        await Load("Logging in...", async () =>
         {
-            Subscriptions.Add(subscription);
+            var collection = await ArmService.GetSubscriptions();
+            foreach (var subscription in collection)
+            {
+                Dispatcher.UIThread.Invoke(() => Subscriptions.Add(subscription));
+            }
+        });
+    }
+
+    private async Task ChangeLoadIndicator(CancellationToken token)
+    {
+        LoadIndicator = 0;
+        while (!token.IsCancellationRequested)
+        {
+            LoadIndicator = (LoadIndicator + 5) % 100;
+            await Task.Delay(100, token);
         }
+        LoadIndicator = 0;
     }
 
     public async Task SubscriptionSelected(SubscriptionResource subscription)
     {
         Firewalls.Clear();
-        var firewalls = await ArmService.GetFirewalls(subscription);
-        foreach (var firewall in firewalls)
+        await Load("Loading firewalls...", async () =>
         {
-            Firewalls.Add(firewall);
-        }
+            var firewalls = await ArmService.GetFirewalls(subscription);
+            foreach (var firewall in firewalls)
+            {
+                Dispatcher.UIThread.Invoke(() => Firewalls.Add(firewall));
+            }
+        });
     }
 
     public async Task FirewallSelected(AzureFirewallData firewall)
@@ -94,16 +129,37 @@ public class LoadFromArmViewModel : ReactiveObject, IRoutableViewModel, IScreen
         {
             return;
         }
-
-        var ipGroups = await ArmService.GetIpGroups(firewall);
-        var serviceTags = await ArmService.GetServiceTags(Subscription, firewall.Location);
-
-        if (serviceTags == null)
+        
+        await Load("Loading firewall...", async () =>
         {
-            return;
-        }
+            var ipGroups = await ArmService.GetIpGroups(firewall);
+            var serviceTags = await ArmService.GetServiceTags(Subscription, firewall.Location);
 
-        ConvertedFirewall = await ArmService.ConvertToFirewall(firewall, ipGroups, serviceTags);
-        await Router.Navigate.Execute(new CheckTrafficViewModel(ConvertedFirewall, Resolver, this));
+            if (serviceTags == null)
+            {
+                return;
+            }
+
+            ConvertedFirewall = await ArmService.ConvertToFirewall(firewall, ipGroups, serviceTags);
+            await Router.Navigate.Execute(new CheckTrafficViewModel(ConvertedFirewall, Resolver, this));
+        });
+    }
+
+    private async Task Load(string text, Func<Task> action)
+    {
+        var cancellationTokenSource = new CancellationTokenSource();
+        LoadIndicatorText = text;
+        ShowLoadIndicator = true;
+        _ = ChangeLoadIndicator(cancellationTokenSource.Token);
+        try
+        {
+            await action();
+        }
+        finally
+        {
+            ShowLoadIndicator = false;
+            cancellationTokenSource.Cancel();
+            LoadIndicatorText = "Loading...";
+        }
     }
 }
