@@ -87,16 +87,14 @@
                                             <ItemsRepeater x:Name="RuleSourceIps" ItemsSource="{Binding Rule.SourceIps}" x:CompileBindings="False">
                                                 <ItemsRepeater.ItemTemplate>
                                                     <DataTemplate x:CompileBindings="False">
-                                                        <StackPanel>
-                                                            <TextBlock Text="{Binding}" x:CompileBindings="False">
-                                                                <TextBlock.FontWeight>
-                                                                    <MultiBinding Converter="{StaticResource MatchFontWeightConverter}">
-                                                                        <Binding Path="." />
-                                                                        <Binding RelativeSource="{RelativeSource AncestorType=ItemsRepeater}" Path="DataContext.MatchedSourceIps"/>
-                                                                    </MultiBinding>
-                                                                </TextBlock.FontWeight>
-                                                            </TextBlock>
-                                                        </StackPanel>
+                                                        <TextBlock Text="{Binding}" x:CompileBindings="False">
+                                                            <TextBlock.FontWeight>
+                                                                <MultiBinding Converter="{StaticResource MatchFontWeightConverter}">
+                                                                    <Binding Path="." />
+                                                                    <Binding RelativeSource="{RelativeSource AncestorType=ItemsRepeater}" Path="DataContext.MatchedSourceIps"/>
+                                                                </MultiBinding>
+                                                            </TextBlock.FontWeight>
+                                                        </TextBlock>
                                                     </DataTemplate>
                                                 </ItemsRepeater.ItemTemplate>
                                                 <ItemsRepeater.Layout>
@@ -119,16 +117,14 @@
                                             <ItemsRepeater x:Name="DestinationSourceIps" ItemsSource="{Binding Rule.DestinationIps}" x:CompileBindings="False">
                                                 <ItemsRepeater.ItemTemplate>
                                                     <DataTemplate x:CompileBindings="False">
-                                                        <StackPanel>
-                                                            <TextBlock Text="{Binding}" x:CompileBindings="False">
-                                                                <TextBlock.FontWeight>
-                                                                    <MultiBinding Converter="{StaticResource MatchFontWeightConverter}">
-                                                                        <Binding Path="." />
-                                                                        <Binding RelativeSource="{RelativeSource AncestorType=ItemsRepeater}" Path="DataContext.MatchedDestinationIps"/>
-                                                                    </MultiBinding>
-                                                                </TextBlock.FontWeight>
-                                                            </TextBlock>
-                                                        </StackPanel>
+                                                        <TextBlock Text="{Binding}" x:CompileBindings="False">
+                                                            <TextBlock.FontWeight>
+                                                                <MultiBinding Converter="{StaticResource MatchFontWeightConverter}">
+                                                                    <Binding Path="." />
+                                                                    <Binding RelativeSource="{RelativeSource AncestorType=ItemsRepeater}" Path="DataContext.MatchedDestinationIps"/>
+                                                                </MultiBinding>
+                                                            </TextBlock.FontWeight>
+                                                        </TextBlock>
                                                     </DataTemplate>
                                                 </ItemsRepeater.ItemTemplate>
                                                 <ItemsRepeater.Layout>
@@ -194,16 +190,14 @@
                                             <ItemsRepeater x:Name="RuleSourceIps" ItemsSource="{Binding Rule.SourceIps}" x:CompileBindings="False">
                                                 <ItemsRepeater.ItemTemplate>
                                                     <DataTemplate x:CompileBindings="False">
-                                                        <StackPanel>
-                                                            <TextBlock Text="{Binding}" x:CompileBindings="False">
-                                                                <TextBlock.FontWeight>
-                                                                    <MultiBinding Converter="{StaticResource MatchFontWeightConverter}">
-                                                                        <Binding Path="." />
-                                                                        <Binding RelativeSource="{RelativeSource AncestorType=ItemsRepeater}" Path="DataContext.MatchedSourceIps"/>
-                                                                    </MultiBinding>
-                                                                </TextBlock.FontWeight>
-                                                            </TextBlock>
-                                                        </StackPanel>
+                                                        <TextBlock Text="{Binding}" x:CompileBindings="False">
+                                                            <TextBlock.FontWeight>
+                                                                <MultiBinding Converter="{StaticResource MatchFontWeightConverter}">
+                                                                    <Binding Path="." />
+                                                                    <Binding RelativeSource="{RelativeSource AncestorType=ItemsRepeater}" Path="DataContext.MatchedSourceIps"/>
+                                                                </MultiBinding>
+                                                            </TextBlock.FontWeight>
+                                                        </TextBlock>
                                                     </DataTemplate>
                                                 </ItemsRepeater.ItemTemplate>
                                                 <ItemsRepeater.Layout>
@@ -226,16 +220,14 @@
                                             <ItemsRepeater x:Name="DestinationFqdns" ItemsSource="{Binding Rule.DestinationFqdns}" x:CompileBindings="False">
                                                 <ItemsRepeater.ItemTemplate>
                                                     <DataTemplate x:CompileBindings="False">
-                                                        <StackPanel>
-                                                            <TextBlock Text="{Binding}" x:CompileBindings="False">
-                                                                <TextBlock.FontWeight>
-                                                                    <MultiBinding Converter="{StaticResource MatchFontWeightConverter}">
-                                                                        <Binding Path="." />
-                                                                        <Binding RelativeSource="{RelativeSource AncestorType=ItemsRepeater}" Path="DataContext.MatchedTargetFqdns"/>
-                                                                    </MultiBinding>
-                                                                </TextBlock.FontWeight>
-                                                            </TextBlock>
-                                                        </StackPanel>
+                                                        <TextBlock Text="{Binding}" x:CompileBindings="False">
+                                                            <TextBlock.FontWeight>
+                                                                <MultiBinding Converter="{StaticResource MatchFontWeightConverter}">
+                                                                    <Binding Path="." />
+                                                                    <Binding RelativeSource="{RelativeSource AncestorType=ItemsRepeater}" Path="DataContext.MatchedTargetFqdns"/>
+                                                                </MultiBinding>
+                                                            </TextBlock.FontWeight>
+                                                        </TextBlock>
                                                     </DataTemplate>
                                                 </ItemsRepeater.ItemTemplate>
                                                 <ItemsRepeater.Layout>
