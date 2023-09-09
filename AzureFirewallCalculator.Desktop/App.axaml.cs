@@ -23,6 +23,7 @@ public partial class App : Application
         Locator.CurrentMutable.RegisterViewsForViewModels(Assembly.GetCallingAssembly());
         Locator.CurrentMutable.Register(() => new LoadFromArmView(), typeof(IViewFor<LoadFromArmViewModel>));
         Locator.CurrentMutable.Register(() => new CheckTrafficView(), typeof(IViewFor<CheckTrafficViewModel>));
+        Locator.CurrentMutable.Register(() => new DefaultContentView(), typeof(IViewFor<DefaultContentViewModel>));
         Locator.CurrentMutable.RegisterLazySingleton(() => new AuthenticationService());
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)

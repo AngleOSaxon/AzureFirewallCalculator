@@ -31,7 +31,11 @@
         </StackPanel>
         <rxui:RoutedViewHost Router="{Binding Router}">
             <rxui:RoutedViewHost.DefaultContent>
-                <v:DefaultContentView />
+                <StackPanel Orientation="Vertical" VerticalAlignment="Center">
+                    <TextBlock HorizontalAlignment="Center" Text="To load your firewall information from Azure Resource Manager, this application requires authorization to use your credentials" />
+                    <TextBlock HorizontalAlignment="Center" Text="Click the button below to log in, or use one of the other options to load firewall information from files" />
+                    <Button HorizontalAlignment="Center" Command="{Binding LoginCommand}" Content="Login" />
+                </StackPanel>
             </rxui:RoutedViewHost.DefaultContent>
         </rxui:RoutedViewHost>
     </DockPanel>

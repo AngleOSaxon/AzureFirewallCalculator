@@ -21,6 +21,7 @@ namespace AzureFirewallCalculator.Desktop.ViewModels;
 public class LoadFromArmViewModel : ReactiveObject, IRoutableViewModel, IScreen
 {
     public IScreen HostScreen { get; }
+    public AuthenticationService AuthenticationService { get; }
     public string UrlPathSegment { get; } = "load-from-arm";
     public ArmService ArmService { get; }
     public AvaloniaList<SubscriptionResource> Subscriptions { get; }
@@ -72,17 +73,36 @@ public class LoadFromArmViewModel : ReactiveObject, IRoutableViewModel, IScreen
         get { return loadIndicatorText; }
         set { this.RaiseAndSetIfChanged(ref loadIndicatorText, value); }
     }
+    private bool userLoggedIn;
+    public bool UserLoggedIn
+    {
+        get { return userLoggedIn; }
+        set { this.RaiseAndSetIfChanged(ref userLoggedIn, value); }
+    }
+    public ReactiveCommand<Unit, Task> LoginCommand { get; }    
     
 
     public LoadFromArmViewModel(IScreen screen, AuthenticationService authenticationService)
     {
         HostScreen = screen;
-        
+        AuthenticationService = authenticationService;
         Resolver = new DynamicResolver();
         ArmService = new ArmService(new ArmClient(authenticationService.GetAuthenticationToken()), Resolver);
         Subscriptions = new AvaloniaList<SubscriptionResource>();
         Firewalls = new AvaloniaList<AzureFirewallData>();
-        _ = LoadSubscriptions();
+        LoginCommand = ReactiveCommand.CreateFromObservable(() => Observable.Start(() => LoadSubscriptions()));
+        _ = Init();
+    }
+
+    public async Task Init()
+    {
+        if (!await AuthenticationService.IsUserLoggedIn())
+        {
+            return;
+        }
+
+        UserLoggedIn = true;
+        await LoadSubscriptions();
     }
 
     public async Task LoadSubscriptions()
@@ -96,6 +116,7 @@ public class LoadFromArmViewModel : ReactiveObject, IRoutableViewModel, IScreen
             {
                 Dispatcher.UIThread.Invoke(() => Subscriptions.Add(subscription));
             }
+            await Dispatcher.UIThread.InvokeAsync(async () => await Router.NavigateAndReset.Execute(new DefaultContentViewModel(this)));
         });
     }
 
@@ -141,7 +162,7 @@ public class LoadFromArmViewModel : ReactiveObject, IRoutableViewModel, IScreen
             }
 
             ConvertedFirewall = await ArmService.ConvertToFirewall(firewall, ipGroups, serviceTags);
-            await Router.Navigate.Execute(new CheckTrafficViewModel(ConvertedFirewall, Resolver, this));
+            await Router.NavigateAndReset.Execute(new CheckTrafficViewModel(ConvertedFirewall, Resolver, this));
         });
     }
 

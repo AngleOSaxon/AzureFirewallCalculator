@@ -13,7 +13,7 @@ public class AuthenticationService
 {
     public AuthenticationService()
     {
-        IdentityClient = PublicClientApplicationBuilder.Create("5fb5bdf1-9e6f-4a5a-a0cd-390f7fe43ec9")
+        IdentityClient = PublicClientApplicationBuilder.Create("5fb5bdf1-9e6f-4a5a-a0cd-390f7fe43ec9") // TODO: Move this to config file
             .WithAuthority(AzureCloudInstance.AzurePublic, "common")
             .WithRedirectUri("http://localhost")
             .Build();
@@ -61,5 +61,10 @@ public class AuthenticationService
     public async Task<IAccount?> GetCurrentIdentity()
     {
         return (await IdentityClient.GetAccountsAsync()).FirstOrDefault();
+    }
+
+    public async Task<bool> IsUserLoggedIn()
+    {
+        return (await GetCurrentIdentity()) != null;
     }
 }

@@ -5,7 +5,7 @@ using ReactiveUI;
 
 namespace AzureFirewallCalculator.Desktop.Views;
 
-public partial class DefaultContentView : ReactiveUserControl<DefaultContentView>, IViewFor<DefaultContentView>, IViewFor
+public partial class DefaultContentView : ReactiveUserControl<DefaultContentViewModel>, IViewFor<DefaultContentViewModel>, IViewFor
 {
     public DefaultContentView()
     {
