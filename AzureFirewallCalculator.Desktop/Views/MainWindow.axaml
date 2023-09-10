@@ -10,7 +10,7 @@
         Height="800" Width="1600"
         x:Class="AzureFirewallCalculator.Desktop.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
-        Icon="/Assets/avalonia-logo.ico"
+        Icon="/Assets/icon.ico"
         Title="Azure Firewall Calculator">
 
     <Design.DataContext>
