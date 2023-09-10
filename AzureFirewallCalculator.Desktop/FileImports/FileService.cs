@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
@@ -24,5 +25,24 @@ public class FileService
         });
 
         return files.Count >= 1 ? files[0] : null;
+    }
+
+    public async Task SaveFileAsync(string prompt, string fileName, string extension, Stream fileStream)
+    {
+        var files = await Window.Value.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions()
+        {
+            Title = prompt,
+            SuggestedFileName = fileName,
+            DefaultExtension = extension
+        });
+
+        if (files == null)
+        {
+            return;
+        }
+
+        using var writer = await files.OpenWriteAsync();
+        await fileStream.CopyToAsync(writer);
+        await writer.FlushAsync();
     }
 }

@@ -11,6 +11,8 @@ using System.Threading;
 using System.Text.Json;
 using Avalonia.Threading;
 using System.Net;
+using System.Reflection;
+using Avalonia.Platform;
 
 namespace AzureFirewallCalculator.Desktop.ViewModels;
 
@@ -24,6 +26,7 @@ public class LoadFromFileViewModel : ReactiveObject, IRoutableViewModel, IScreen
         LoadFirewallCommand = ReactiveCommand.CreateFromTask(() => LoadFirewall());
         LoadIpGroupsCommand = ReactiveCommand.CreateFromTask(() => LoadIpGroups());
         LoadServiceTagsCommand = ReactiveCommand.CreateFromTask(() => LoadServiceTags());
+        SaveFirewallExportScriptCommand = ReactiveCommand.CreateFromTask(() => SaveFirewallExportScript());
     }
 
     public string? UrlPathSegment => "load-from-files";
@@ -34,6 +37,7 @@ public class LoadFromFileViewModel : ReactiveObject, IRoutableViewModel, IScreen
     public ReactiveCommand<Unit, Unit> LoadFirewallCommand { get; }
     public ReactiveCommand<Unit, Unit> LoadIpGroupsCommand { get; }
     public ReactiveCommand<Unit, Unit> LoadServiceTagsCommand { get; }
+    public ReactiveCommand<Unit, Unit> SaveFirewallExportScriptCommand { get; }
     private string? firewallFileName;
     public string? FirewallFileName
     {
@@ -139,6 +143,18 @@ public class LoadFromFileViewModel : ReactiveObject, IRoutableViewModel, IScreen
         });
         
         await CheckAndConvert();
+    }
+
+    public async Task SaveFirewallExportScript()
+    {
+        using var scriptStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("AzureFirewallCalculator.Desktop.IncludeScripts.Export-Firewall.ps1")
+            ?? throw new Exception("Unable to find embedded script file for export");
+        await FileService.SaveFileAsync(
+            prompt: "Save script file",
+            fileName: "Export-Firewall",
+            extension: "ps1",
+            fileStream: scriptStream
+        );
     }
 
     public async Task LoadServiceTags()

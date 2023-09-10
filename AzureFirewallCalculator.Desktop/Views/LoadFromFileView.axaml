@@ -26,6 +26,8 @@
             <rxui:RoutedViewHost.DefaultContent>
                 <StackPanel Orientation="Vertical" VerticalAlignment="Center">
                     <TextBlock HorizontalAlignment="Center" Text="Select Exported Firewall Files" />
+                    <TextBlock HorizontalAlignment="Center" Text="Download a sample script to export the Firewall and IP Groups. You *must* edit the file to enter your own subscription and firewall name." />
+                    <Button HorizontalAlignment="Center" Content="Download File" Command="{Binding SaveFirewallExportScriptCommand}" />
                 </StackPanel>
             </rxui:RoutedViewHost.DefaultContent>
         </rxui:RoutedViewHost>
