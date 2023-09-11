@@ -9,6 +9,7 @@
              x:Class="AzureFirewallCalculator.Desktop.Views.CheckTrafficView">
     <UserControl.Resources>
         <Converters:MatchFontWeightConverter x:Key="MatchFontWeightConverter" />
+        <Converters:ListConcatConverter x:Key="ListConcatConverter" />
     </UserControl.Resources>
     <UserControl.Styles>
         <Style Selector="TextBlock.Pad">
@@ -231,7 +232,13 @@
                                             </DataTemplate>
                                         </DataGridTemplateColumn.HeaderTemplate>
                                         <DataTemplate>
-                                            <ItemsRepeater x:Name="DestinationFqdns" ItemsSource="{Binding Rule.DestinationFqdns}" x:CompileBindings="False">
+                                            <ItemsRepeater x:Name="DestinationFqdns" x:CompileBindings="False">
+                                                <ItemsRepeater.ItemsSource>
+                                                    <MultiBinding Converter="{StaticResource ListConcatConverter}">
+                                                        <Binding Path="Rule.DestinationFqdns" />
+                                                        <Binding Path="Rule.PrefixWildcards"/>
+                                                    </MultiBinding>
+                                                </ItemsRepeater.ItemsSource>
                                                 <ItemsRepeater.ItemTemplate>
                                                     <DataTemplate x:CompileBindings="False">
                                                         <TextBlock Text="{Binding}" x:CompileBindings="False">
