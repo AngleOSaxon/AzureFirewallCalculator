@@ -8,7 +8,7 @@ public record class ApplicationRule
 
     public string[] DestinationFqdns { get; }
 
-    public ReadOnlyMemory<char>[] PrefixWildcards { get; }
+    public string[] PrefixWildcards { get; }
 
     public bool AllowAllDestinations { get; set; }
 
@@ -21,7 +21,7 @@ public record class ApplicationRule
         Name = name;
         SourceIps = sourceIps;
 
-        var seed = (fqdns: new List<string>(), prefixWildcards: new List<ReadOnlyMemory<char>>(), allowAllDestinations: false);
+        var seed = (fqdns: new List<string>(), prefixWildcards: new List<string>(), allowAllDestinations: false);
         var (fqdns, prefixWildcards, allowAllDestinations) = destinationFqdns.Aggregate(seed, (accumulation, destinationFqdn) =>
         {
             var (fqdns, prefixWildcards, allowAllDestinations) = accumulation;
@@ -35,7 +35,7 @@ public record class ApplicationRule
             }
             else if (destinationFqdn[0] == '*')
             {
-                prefixWildcards.Add(destinationFqdn.AsMemory(1));
+                prefixWildcards.Add(destinationFqdn);
             }
             else
             {
@@ -60,9 +60,17 @@ public record class ApplicationRule
         var sourceInRange = SourceIps.Where(item => sourceIp >= item.Start && sourceIp <= item.End);
         // TODO: Handle TargetURL postfix wildcards.  Only work in path; not in domain
         // https://learn.microsoft.com/en-us/azure/firewall/firewall-faq#how-do-wildcards-work-in-target-urls-and-target-fqdns-in-application-rules
-        var destinationMatches = AllowAllDestinations
-            ? DestinationFqdns
-            : DestinationFqdns.Where(item => item.Equals(destinationFqdn));
+
+        var destinationMatches = DestinationFqdns
+                .Where(item => item.Equals(destinationFqdn))
+                .Concat(PrefixWildcards
+                    .Where(item => item.Length - 1 <= destinationFqdn.Length && item.AsSpan(1).SequenceEqual(destinationFqdn.AsSpan(destinationFqdn.Length - item.Length + 1, item.Length - 1))));
+
+        if (AllowAllDestinations)
+        {
+            destinationMatches = destinationMatches.Concat(new string[] { "*" });
+        }
+
         var protocolMatches = Protocols.Contains(protocol);
 
         return new ApplicationRuleMatch(
