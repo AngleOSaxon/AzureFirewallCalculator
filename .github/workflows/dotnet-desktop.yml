@@ -95,8 +95,9 @@ jobs:
 
     # Decode the base 64 encoded pfx and save the Signing_Certificate
     - name: Publish the file
+      shell: pwsh
       run: |
-        $env:Publish_Script '${{ github.event.inputs.version }}'
+        ${{ env.Publish_Script }} '${{ github.event.inputs.version }}'
 
     # Upload the MSIX package: https://github.com/marketplace/actions/upload-a-build-artifact
     - name: Upload build artifacts
