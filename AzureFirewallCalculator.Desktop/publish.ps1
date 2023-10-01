@@ -1,9 +1,12 @@
 #!/usr/bin/env pwsh
+param (
+    [string]$version
+)
 
 $directory = $PSScriptRoot;
 $prevDirectory = (Get-Location).Path;
 
-$version = "0.1.0";
+$version = "0.$version";
 
 try {
     Set-Location $directory;
