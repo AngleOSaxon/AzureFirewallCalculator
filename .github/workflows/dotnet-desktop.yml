@@ -55,7 +55,7 @@ jobs:
 
     strategy:
       matrix:
-        configuration: [Debug, Release]
+        configuration: [Release]
 
     runs-on: windows-latest  # For a list of available runner types, refer to
                              # https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idruns-on
@@ -65,6 +65,7 @@ jobs:
       Test_Project_Path: AzureFirewallCalculator.Tests/AzureFirewallCalculator.Tests.csproj                # Replace with the path to your test project, i.e. MyWpfApp.Tests\MyWpfApp.Tests.csproj.
       Wap_Project_Directory: AzureFirewallCalculator.Desktop    # Replace with the Wap project directory relative to the solution, i.e. MyWpfApp.Package.
       Wap_Project_Path: AzureFirewallCalculator.Desktop/AzureFirewallCalculator.Desktop.cspoj                   # Replace with the path to your Wap project, i.e. MyWpf.App.Package\MyWpfApp.Package.wapproj.
+      Publish_Script: AzureFirewallCalculator.Desktop/publish.ps1
 
     steps:
     - name: Checkout
@@ -93,13 +94,13 @@ jobs:
         Configuration: ${{ matrix.configuration }}
 
     # Decode the base 64 encoded pfx and save the Signing_Certificate
-    - name: Decode the pfx
+    - name: Publish the file
       run: |
-        $env:Wap_Project_Directory/publish.ps1 -version '${{ github.event.inputs.version }}'
+        $env:Publish_Script -version '${{ github.event.inputs.version }}'
 
     # Upload the MSIX package: https://github.com/marketplace/actions/upload-a-build-artifact
     - name: Upload build artifacts
       uses: actions/upload-artifact@v3
       with:
-        name: MSIX Package
+        name: Built Application
         path: ${{ env.Wap_Project_Directory }}\output
