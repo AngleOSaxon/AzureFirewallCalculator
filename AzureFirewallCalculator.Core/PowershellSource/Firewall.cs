@@ -14,7 +14,7 @@ public record struct Firewall
 
     public readonly async Task<Core.Firewall> ConvertToFirewall(Dictionary<string, IpGroup> ipGroups, IDnsResolver resolver, ILogger logger)
     {
-        var serviceTags = await ServiceTagImporter.GetServiceTags();
+        var serviceTags = await ServiceTagImporter.GetServiceTags(DateTimeOffset.UtcNow);
         return await ConvertToFirewall(ipGroups, resolver, serviceTags, logger);
     }
 

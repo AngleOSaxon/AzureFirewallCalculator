@@ -166,7 +166,7 @@ public class LoadFromFileViewModel : ReactiveObject, IRoutableViewModel, IScreen
     {
         await Load("Downloading service tags", async () =>
         {
-            ServiceTags = await ServiceTagImporter.GetServiceTags();
+            ServiceTags = await ServiceTagImporter.GetServiceTags(DateTimeOffset.UtcNow);
         });
         
         await CheckAndConvert();
@@ -200,6 +200,10 @@ public class LoadFromFileViewModel : ReactiveObject, IRoutableViewModel, IScreen
         try
         {
             await action();
+        }
+        catch (Exception e)
+        {
+            Logger.LogError(e, "Error loading data: {errorMessage}", e.Message);
         }
         finally
         {
