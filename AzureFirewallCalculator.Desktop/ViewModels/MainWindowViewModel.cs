@@ -9,6 +9,7 @@ using DynamicData;
 using Microsoft.Extensions.Logging;
 using Microsoft.Identity.Client;
 using ReactiveUI;
+using Splat;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -23,6 +24,7 @@ public class MainWindowViewModel : ViewModelBase, IScreen
 
     public ReactiveCommand<Unit, IRoutableViewModel> GoToLoadFromArm { get; }
     public ReactiveCommand<Unit, IRoutableViewModel> GoToLoadFromFiles { get; }
+    public ReactiveCommand<Unit, IRoutableViewModel> GoToStaticDnsConfiguration { get; }
     public ReactiveCommand<string, Unit> FilterLogsCommand { get; }
 
     public bool ErrorFilterActive => (FilteredLogLevels & (1<<((int)LogLevel.Error))) == 0;    
@@ -59,6 +61,7 @@ public class MainWindowViewModel : ViewModelBase, IScreen
     {
         GoToLoadFromArm = ReactiveCommand.CreateFromObservable(() => Router.Navigate.Execute(new LoadFromArmViewModel(this, dnsResolver, authenticationService, armService, loggerFactory.CreateLogger<LoadFromArmViewModel>())));
         GoToLoadFromFiles = ReactiveCommand.CreateFromObservable(() => Router.Navigate.Execute(new LoadFromFileViewModel(this, dnsResolver, fileService, loggerFactory.CreateLogger<LoadFromFileViewModel>(), loggerFactory)));
+        GoToStaticDnsConfiguration = ReactiveCommand.CreateFromObservable(() => Router.Navigate.Execute(new StaticDnsConfigurationViewModel(this, Locator.Current.GetService<StaticDnsResolver>()!, loggerFactory.CreateLogger<StaticDnsConfigurationViewModel>())));
         Logs = new AvaloniaList<LogData>(inMemoryLogReader.GetLogView(100_000).Where(FilterLogs));
 
         FilterLogsCommand = ReactiveCommand.Create((string logLevel) =>

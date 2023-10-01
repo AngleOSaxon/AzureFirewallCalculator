@@ -6,6 +6,11 @@ public class StaticDnsResolver : IDnsResolver
 {
     public Dictionary<string, uint[]> FqdnLookup { get; }
 
+    public StaticDnsResolver()
+    {
+        FqdnLookup = new();
+    }
+
     public StaticDnsResolver(Dictionary<string, uint[]> fqdnLookup)
     {
         FqdnLookup = fqdnLookup;

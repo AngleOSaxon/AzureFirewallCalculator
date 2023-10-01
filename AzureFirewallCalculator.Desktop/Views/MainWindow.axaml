@@ -29,6 +29,7 @@
             <DockPanel LastChildFill="False">
                 <Button DockPanel.Dock="Top" Width="125" Content="Load From ARM" Command="{Binding GoToLoadFromArm}" />
                 <Button DockPanel.Dock="Top" Width="125" Content="Load From Files" Command="{Binding GoToLoadFromFiles}" />
+                <Button DockPanel.Dock="Top" Width="125" Content="DNS Overrides" Command="{Binding GoToStaticDnsConfiguration}" />
                 <TextBlock DockPanel.Dock="Bottom" HorizontalAlignment="Center" FontWeight="ExtraBold" FontSize="16" Text="{Binding UserName}" />
             </DockPanel>
         </Border>

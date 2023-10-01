@@ -43,7 +43,9 @@ public partial class App : Application
         Locator.CurrentMutable.Register(() => new LoadFromFileView(), typeof(IViewFor<LoadFromFileViewModel>));
         Locator.CurrentMutable.Register(() => new CheckTrafficView(), typeof(IViewFor<CheckTrafficViewModel>));
         Locator.CurrentMutable.Register(() => new DefaultContentView(), typeof(IViewFor<DefaultContentViewModel>));
+        Locator.CurrentMutable.Register(() => new StaticDnsConfigurationView(), typeof(IViewFor<StaticDnsConfigurationViewModel>));
         Locator.CurrentMutable.RegisterLazySingleton(() => new AuthenticationService(loggerFactory.CreateLogger<AuthenticationService>()));
+        Locator.CurrentMutable.RegisterLazySingleton(() => new StaticDnsResolver());
         Locator.CurrentMutable.RegisterLazySingleton(() => new ArmService(
             client: new Azure.ResourceManager.ArmClient(Locator.Current.GetService<AuthenticationService>()?.GetAuthenticationToken() ?? throw new ArgumentNullException(nameof(AuthenticationService))),
             dnsResolver:  Locator.Current.GetService<IDnsResolver>() ?? throw new ArgumentNullException(nameof(IDnsResolver)),
@@ -53,7 +55,12 @@ public partial class App : Application
         {
             Locator.CurrentMutable.RegisterLazySingleton(() => new FileService(() => desktop.MainWindow!)); // TODO: less dumb way to resolve this cycle
         }
-        Locator.CurrentMutable.RegisterLazySingleton<IDnsResolver>(() => new DynamicResolver(logger: loggerFactory.CreateLogger<DynamicResolver>()));
+        Locator.CurrentMutable.RegisterLazySingleton(() => new DynamicResolver(logger: loggerFactory.CreateLogger<DynamicResolver>()));
+        Locator.CurrentMutable.RegisterLazySingleton<IDnsResolver>(() => new CombinedResolver(
+            logger: loggerFactory.CreateLogger<CombinedResolver>(),
+            Locator.Current.GetService<StaticDnsResolver>() ?? throw new ArgumentNullException(nameof(StaticDnsResolver)),
+            Locator.Current.GetService<DynamicResolver>() ?? throw new ArgumentNullException(nameof(DynamicResolver))
+        ));
         Locator.CurrentMutable.RegisterLazySingleton(() => new InMemoryLogReader(InMemoryLogger.LogChannel.Reader, null));
 
         if (desktop != null)
