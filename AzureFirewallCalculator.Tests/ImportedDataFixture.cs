@@ -1,6 +1,7 @@
 using System.Net;
 using AzureFirewallCalculator.Core;
 using AzureFirewallCalculator.Core.Dns;
+using Microsoft.Extensions.Logging.Abstractions;
 using PowershellSource = AzureFirewallCalculator.Core.PowershellSource;
 
 namespace AzureFirewallCalculator.Tests;
@@ -15,16 +16,16 @@ public class ImportedDataFixture : IDisposable
         var ipGroupExport = File.ReadAllText("./PowershellData/IpGroups.json");
         var ipGroups = System.Text.Json.JsonSerializer.Deserialize<PowershellSource.IpGroup[]>(ipGroupExport)!.ToDictionary(item => item.Id, StringComparer.CurrentCultureIgnoreCase);
 
-        var dnsResolver = new CombinedResolver(new StaticDnsResolver(new Dictionary<string, IPAddress[]>
+        var dnsResolver = new CombinedResolver(NullLogger<CombinedResolver>.Instance, new StaticDnsResolver(new Dictionary<string, IPAddress[]>
         {
             ["sqlserver.antiwizard.net"] = new IPAddress[] { IPAddress.Parse("10.3.0.33") },
             ["mysql.antiwizard.net"] = new IPAddress[] { IPAddress.Parse("10.3.0.35") },
             ["cosmosdb.antiwizard.net"] = new IPAddress[] { IPAddress.Parse("10.3.0.37") },
             ["authserver1.antiwizard.net"] = new IPAddress[] { IPAddress.Parse("10.3.0.34") },
             ["authserver2.antiwizard.net"] = new IPAddress[] { IPAddress.Parse("10.3.0.36") }
-        }), new DynamicResolver());
+        }), new DynamicResolver(NullLogger<DynamicResolver>.Instance));
         
-        Firewall = parsedFirewall.ConvertToFirewall(ipGroups, dnsResolver).Result;
+        Firewall = parsedFirewall.ConvertToFirewall(ipGroups, dnsResolver, NullLoggerFactory.Instance.CreateLogger("")).Result;
         RuleProcessor = new RuleProcessor(dnsResolver, Firewall);
     }
 

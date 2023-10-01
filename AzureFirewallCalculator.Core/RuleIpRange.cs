@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Sockets;
 using AzureFirewallCalculator.Core.Tags;
+using Microsoft.Extensions.Logging;
 
 namespace AzureFirewallCalculator.Core;
 
@@ -30,9 +31,9 @@ public readonly record struct RuleIpRange
         return $"{start} - {end}";
     }
 
-    public static RuleIpRange[] Parse(string source, ServiceTags serviceTags)
+    public static RuleIpRange[] Parse(string source, ServiceTags serviceTags, ILogger logger)
     {
-        var result = Parse(source);
+        var result = Parse(source, logger);
         if (result != null)
         {
             return new RuleIpRange[] { result.Value };
@@ -44,13 +45,13 @@ public readonly record struct RuleIpRange
             return Array.Empty<RuleIpRange>();
         }
 
-        return serviceTag.Properties.AddressPrefixes.Select(Parse)
+        return serviceTag.Properties.AddressPrefixes.Select((item) => Parse(item, logger))
             .Where(item => item != null)
             .Cast<RuleIpRange>()
             .ToArray();
     }
 
-    public static RuleIpRange? Parse(string source)
+    public static RuleIpRange? Parse(string source, ILogger logger)
     {
         if (source == "*")
         {
@@ -68,7 +69,7 @@ public readonly record struct RuleIpRange
 
             if (startIp.AddressFamily == AddressFamily.InterNetworkV6 || endIp.AddressFamily == AddressFamily.InterNetworkV6)
             {
-                Console.WriteLine($"Skipping IPv6 Address '{source}'");
+                logger.LogInformation("Skipping IPv6 Address '{skippedAddress}'", source);
                 return null;
             }
 
@@ -89,7 +90,7 @@ public readonly record struct RuleIpRange
 
             if (ip.AddressFamily == AddressFamily.InterNetworkV6)
             {
-                Console.WriteLine($"Skipping IPv6 Address '{source}'");
+                logger.LogInformation("Skipping IPv6 Address '{skippedAddress}'", source);
                 return null;
             }
 
@@ -111,9 +112,7 @@ public readonly record struct RuleIpRange
             return new RuleIpRange(ipBytes, ipBytes);
         }
         
-        // TODO: Incorporate MS IP Ranges?
-        // TODO: Logging plans
-        Console.WriteLine($"Unparsable IP range: '{source}'");
+        logger.LogInformation("Unparsable IP range: '{unparsableIpRange}'", source);
 
         return null;
     }

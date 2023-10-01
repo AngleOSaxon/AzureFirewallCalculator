@@ -1,17 +1,20 @@
 
 using System.Net;
 using System.Net.Http.Json;
+using Microsoft.Extensions.Logging;
 
 namespace AzureFirewallCalculator.Core.Dns;
 
 public class GoogleDnsResolver : IDnsResolver
 {
-    public GoogleDnsResolver(HttpClient httpClient)
+    public GoogleDnsResolver(HttpClient httpClient, ILogger<GoogleDnsResolver> logger)
     {
         HttpClient = httpClient;
+        Logger = logger;
     }
 
     public HttpClient HttpClient { get; }
+    public ILogger<GoogleDnsResolver> Logger { get; }
 
     public async Task<uint[]> ResolveAddress(string fqdn)
     {
@@ -23,7 +26,7 @@ public class GoogleDnsResolver : IDnsResolver
         
         if ((result?.Answer?.Length ?? 0) == 0)
         {
-            Console.WriteLine($"No results from Google DNS for {fqdn}");
+            Logger.LogWarning("No results from Google DNS for {fqdn}", fqdn);
             return Array.Empty<uint>();
         }
 

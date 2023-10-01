@@ -5,19 +5,22 @@ using Azure.ResourceManager.Network.Models;
 using Azure.Core;
 using AzureFirewallCalculator.Core.Dns;
 using AzureFirewallCalculator.Core.Tags;
+using Microsoft.Extensions.Logging;
 
 namespace AzureFirewallCalculator.Core.ArmSource;
 
 public class ArmService
 {
-    public ArmService(ArmClient client, IDnsResolver dnsResolver)
+    public ArmService(ArmClient client, IDnsResolver dnsResolver, ILogger<ArmService> logger)
     {
         Client = client;
         DnsResolver = dnsResolver;
+        Logger = logger;
     }
 
     public ArmClient Client { get; }
     public IDnsResolver DnsResolver { get; }
+    public ILogger<ArmService> Logger { get; }
 
     public async Task<List<SubscriptionResource>> GetSubscriptions()
     {
@@ -67,7 +70,7 @@ public class ArmService
             var subscription = await subscriptions.GetAsync(subscriptionId);
             if (subscription == null || subscription.Value == null)
             {
-                // TODO: logging.  Alert user some IP Groups are unknown
+                Logger.LogWarning("Unable to load IP Groups for subscription '{subscriptionId}'", subscriptionId);
                 continue;
             }
 
@@ -105,14 +108,14 @@ public class ArmService
                                 sourceIps: item.SourceIPGroups
                                     .SelectMany(item => ipGroups[item].IPAddresses)
                                     .Concat(item.SourceAddresses)
-                                    .Select(item => RuleIpRange.Parse(item))
+                                    .Select(item => RuleIpRange.Parse(item, Logger))
                                     .Where(item => item is not null)
                                     .Cast<RuleIpRange>()
                                     .ToArray(), 
                                 destinationIps: item.DestinationIPGroups
                                     .SelectMany(item => ipGroups[item].IPAddresses)
                                     .Concat(item.DestinationAddresses)
-                                    .SelectMany(item => ParseWithServiceTags(item, serviceTags))
+                                    .SelectMany(item => ParseWithServiceTags(item, serviceTags, Logger))
                                     .Concat(await item.DestinationFqdns
                                         .Select(async item => await DnsResolver.ResolveAddress(item))
                                         .SelectManyAsync(async item =>(await item)
@@ -120,7 +123,7 @@ public class ArmService
                                     )
                                     .ToArray(),
                                 destinationPorts: item.DestinationPorts
-                                    .Select(item => RulePortRange.Parse(item)!)
+                                    .Select(item => RulePortRange.Parse(item, Logger)!)
                                     .Where(item => item is not null)
                                     .Cast<RulePortRange>()
                                     .ToArray(),
@@ -142,7 +145,7 @@ public class ArmService
                         sourceIps: item.SourceIPGroups
                             .SelectMany(item => ipGroups[item].IPAddresses)
                             .Concat(item.SourceAddresses)
-                            .Select(item => RuleIpRange.Parse(item))
+                            .Select(item => RuleIpRange.Parse(item, Logger))
                             .Where(item => item is not null)
                             .Cast<RuleIpRange>()
                             .ToArray(),
@@ -158,9 +161,9 @@ public class ArmService
         );
     }
 
-    private static RuleIpRange[] ParseWithServiceTags(string addressRange, ServiceTagsListResult serviceTags)
+    private static RuleIpRange[] ParseWithServiceTags(string addressRange, ServiceTagsListResult serviceTags, ILogger logger)
     {
-        var result = RuleIpRange.Parse(addressRange);
+        var result = RuleIpRange.Parse(addressRange, logger);
         if (result != null)
         {
             return new RuleIpRange[] { result.Value };
@@ -172,7 +175,7 @@ public class ArmService
             return Array.Empty<RuleIpRange>();
         }
 
-        return serviceTag.Properties.AddressPrefixes.Select(RuleIpRange.Parse)
+        return serviceTag.Properties.AddressPrefixes.Select(item => RuleIpRange.Parse(item, logger))
             .Where(item => item != null)
             .Cast<RuleIpRange>()
             .ToArray();

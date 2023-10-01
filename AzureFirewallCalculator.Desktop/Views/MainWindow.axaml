@@ -6,8 +6,10 @@
         xmlns:v="using:AzureFirewallCalculator.Desktop.Views"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:logging="using:Microsoft.Extensions.Logging"
+        xmlns:Converters="using:AzureFirewallCalculator.Desktop.Converters"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-        Height="800" Width="1600"
+        Height="800" Width="2000"
         x:Class="AzureFirewallCalculator.Desktop.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/icon.ico"
@@ -18,13 +20,32 @@
              to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
         <vm:MainWindowViewModel/>
     </Design.DataContext>
-
+    <Window.Resources>
+        <Converters:LogLevelConverter x:Key="LogLevelConverter"/>
+    </Window.Resources>
     <DockPanel>
         <Border Width="125" BorderBrush="Gray" BorderThickness="0,0,1,0" DockPanel.Dock="Left">
             <DockPanel LastChildFill="False">
                 <Button DockPanel.Dock="Top" Width="125" Content="Load From ARM" Command="{Binding GoToLoadFromArm}" />
                 <Button DockPanel.Dock="Top" Width="125" Content="Load From Files" Command="{Binding GoToLoadFromFiles}" />
                 <TextBlock DockPanel.Dock="Bottom" HorizontalAlignment="Center" FontWeight="ExtraBold" FontSize="16" Text="{Binding UserName}" />
+            </DockPanel>
+        </Border>
+        <Border Width="500" BorderBrush="Gray" BorderThickness="1,0,0,0" DockPanel.Dock="Right">
+            <DockPanel>
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Top">
+                    <Button>Clear</Button>
+                </StackPanel>
+                <ListBox ItemsSource="{Binding Logs}" Name="LogView">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBox Text="{Binding LogLevel, Converter={StaticResource LogLevelConverter}}" BorderBrush="{Binding LogLevel, Converter={StaticResource LogLevelConverter}}" />
+                                <TextBox Text="{Binding FormattedLog}" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
             </DockPanel>
         </Border>
         <rxui:RoutedViewHost Router="{Binding Router}">

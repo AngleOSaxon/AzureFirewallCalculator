@@ -1,5 +1,6 @@
 using AzureFirewallCalculator.Core.Dns;
 using AzureFirewallCalculator.Core.Tags;
+using Microsoft.Extensions.Logging;
 
 namespace AzureFirewallCalculator.Core.PowershellSource;
 
@@ -11,13 +12,13 @@ public record struct Firewall
 
     public ApplicationRuleCollection[] ApplicationRuleCollections { get; set; }
 
-    public readonly async Task<Core.Firewall> ConvertToFirewall(Dictionary<string, IpGroup> ipGroups, IDnsResolver resolver)
+    public readonly async Task<Core.Firewall> ConvertToFirewall(Dictionary<string, IpGroup> ipGroups, IDnsResolver resolver, ILogger logger)
     {
         var serviceTags = await ServiceTagImporter.GetServiceTags();
-        return await ConvertToFirewall(ipGroups, resolver, serviceTags);
+        return await ConvertToFirewall(ipGroups, resolver, serviceTags, logger);
     }
 
-    public readonly async Task<Core.Firewall> ConvertToFirewall(Dictionary<string, IpGroup> ipGroups, IDnsResolver resolver, ServiceTags serviceTags)
+    public readonly async Task<Core.Firewall> ConvertToFirewall(Dictionary<string, IpGroup> ipGroups, IDnsResolver resolver, ServiceTags serviceTags, ILogger logger)
     {
         var networkRuleCollections = await Task.WhenAll(NetworkRuleCollections
                 .Select(async collection => new Core.NetworkRuleCollection
@@ -33,14 +34,14 @@ public record struct Firewall
                                 sourceIps: item.SourceIpGroups
                                     .SelectMany(item => ipGroups[item].IpAddresses)
                                     .Concat(item.SourceAddresses)
-                                    .Select(item => RuleIpRange.Parse(item))
+                                    .Select(item => RuleIpRange.Parse(item, logger))
                                     .Where(item => item is not null)
                                     .Cast<RuleIpRange>()
                                     .ToArray(), 
                                 destinationIps: item.DestinationIpGroups
                                     .SelectMany(item => ipGroups[item].IpAddresses)
                                     .Concat(item.DestinationAddresses)
-                                    .SelectMany(item => RuleIpRange.Parse(item, serviceTags))
+                                    .SelectMany(item => RuleIpRange.Parse(item, serviceTags, logger))
                                     .Concat(await item.DestinationFqdns
                                         .Select(async item => await resolver.ResolveAddress(item))
                                         .SelectManyAsync(async item =>(await item)
@@ -48,7 +49,7 @@ public record struct Firewall
                                     )
                                     .ToArray(),
                                 destinationPorts: item.DestinationPorts
-                                    .Select(item => RulePortRange.Parse(item)!)
+                                    .Select(item => RulePortRange.Parse(item, logger)!)
                                     .Where(item => item is not null)
                                     .Cast<RulePortRange>()
                                     .ToArray(),
@@ -70,7 +71,7 @@ public record struct Firewall
                         sourceIps: item.SourceIpGroups
                             .SelectMany(item => ipGroups[item].IpAddresses)
                             .Concat(item.SourceAddresses)
-                            .Select(item => RuleIpRange.Parse(item))
+                            .Select(item => RuleIpRange.Parse(item, logger))
                             .Where(item => item is not null)
                             .Cast<RuleIpRange>()
                             .ToArray(),

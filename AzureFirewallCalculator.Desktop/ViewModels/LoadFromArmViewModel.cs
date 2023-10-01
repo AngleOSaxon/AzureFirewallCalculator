@@ -82,12 +82,12 @@ public class LoadFromArmViewModel : ReactiveObject, IRoutableViewModel, IScreen
     public ReactiveCommand<Unit, Task> LoginCommand { get; }    
     
 
-    public LoadFromArmViewModel(IScreen screen, IDnsResolver dnsResolver, AuthenticationService authenticationService)
+    public LoadFromArmViewModel(IScreen screen, IDnsResolver dnsResolver, AuthenticationService authenticationService, ArmService armService)
     {
         HostScreen = screen;
         DnsResolver = dnsResolver;
         AuthenticationService = authenticationService;
-        ArmService = new ArmService(new ArmClient(authenticationService.GetAuthenticationToken()), DnsResolver);
+        ArmService = armService;
         Subscriptions = new AvaloniaList<SubscriptionResource>();
         Firewalls = new AvaloniaList<AzureFirewallData>();
         LoginCommand = ReactiveCommand.CreateFromObservable(() => Observable.Start(() => LoadSubscriptions()));

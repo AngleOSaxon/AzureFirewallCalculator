@@ -15,7 +15,9 @@ builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services.AddHttpClient<GoogleDnsResolver>();
-builder.Services.AddScoped<IDnsResolver>(sp => new CombinedResolver(new GoogleDnsResolver(sp.GetRequiredService<HttpClient>())));
+builder.Services.AddScoped<GoogleDnsResolver>();
+builder.Services.AddScoped<CombinedResolver>();
+builder.Services.AddScoped<IDnsResolver>(sp => new CombinedResolver(sp.GetRequiredService<ILogger<CombinedResolver>>(), sp.GetRequiredService<GoogleDnsResolver>()));
 
 builder.Services.AddScoped<TokenCredential, AccessProviderTokenCredential>();
 builder.Services.AddScoped<ArmClient>();

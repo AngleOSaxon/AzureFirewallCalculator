@@ -1,12 +1,16 @@
+using Microsoft.Extensions.Logging;
+
 namespace AzureFirewallCalculator.Core.Dns;
 
 public class CombinedResolver : IDnsResolver
 {
     public IDnsResolver[] Resolvers { get; set; }
+    public ILogger<CombinedResolver> Logger { get; }
 
-    public CombinedResolver(params IDnsResolver[] resolvers)
+    public CombinedResolver(ILogger<CombinedResolver> logger, params IDnsResolver[] resolvers)
     {
         Resolvers = resolvers;
+        Logger = logger;
     }
 
     public async Task<uint[]> ResolveAddress(string fqdn)
@@ -20,8 +24,7 @@ public class CombinedResolver : IDnsResolver
             }
             catch (Exception ex)
             {
-                // TODO: Logging
-                Console.Error.WriteLine(ex);
+                Logger.LogWarning(ex, "{exceptionMessage}", ex.Message);
                 return Array.Empty<uint>();
             }
         });

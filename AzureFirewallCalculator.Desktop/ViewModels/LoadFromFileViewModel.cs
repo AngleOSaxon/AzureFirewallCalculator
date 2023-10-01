@@ -13,16 +13,18 @@ using Avalonia.Threading;
 using System.Net;
 using System.Reflection;
 using Avalonia.Platform;
+using Microsoft.Extensions.Logging;
 
 namespace AzureFirewallCalculator.Desktop.ViewModels;
 
 public class LoadFromFileViewModel : ReactiveObject, IRoutableViewModel, IScreen
 {
-    public LoadFromFileViewModel(IScreen hostScreen, IDnsResolver dnsResolver, FileService fileService)
+    public LoadFromFileViewModel(IScreen hostScreen, IDnsResolver dnsResolver, FileService fileService, ILoggerFactory loggerFactory)
     {
         HostScreen = hostScreen;
         DnsResolver = dnsResolver;
         FileService = fileService;
+        LoggerFactory = loggerFactory;
         LoadFirewallCommand = ReactiveCommand.CreateFromTask(() => LoadFirewall());
         LoadIpGroupsCommand = ReactiveCommand.CreateFromTask(() => LoadIpGroups());
         LoadServiceTagsCommand = ReactiveCommand.CreateFromTask(() => LoadServiceTags());
@@ -33,6 +35,7 @@ public class LoadFromFileViewModel : ReactiveObject, IRoutableViewModel, IScreen
     public IScreen HostScreen { get; }
     public IDnsResolver DnsResolver { get; }
     public FileService FileService { get; }
+    public ILoggerFactory LoggerFactory { get; }
     public RoutingState Router { get; } = new RoutingState();
     public ReactiveCommand<Unit, Unit> LoadFirewallCommand { get; }
     public ReactiveCommand<Unit, Unit> LoadIpGroupsCommand { get; }
@@ -176,7 +179,7 @@ public class LoadFromFileViewModel : ReactiveObject, IRoutableViewModel, IScreen
         await Load("Importing firewall", async () =>
         {
             var ipGroupDictionary = ipGroups.ToDictionary(item => item.Id, StringComparer.CurrentCultureIgnoreCase);
-            var convertedFirewall = await firewall.Value.ConvertToFirewall(ipGroupDictionary, DnsResolver, serviceTags);
+            var convertedFirewall = await firewall.Value.ConvertToFirewall(ipGroupDictionary, DnsResolver, serviceTags, LoggerFactory.CreateLogger<Firewall>());
             Dispatcher.UIThread.Invoke(() => Router.Navigate.Execute(new CheckTrafficViewModel(convertedFirewall, DnsResolver, this)));
         });
     }

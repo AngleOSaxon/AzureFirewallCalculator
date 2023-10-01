@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Logging;
+
 namespace AzureFirewallCalculator.Core;
 
 public readonly record struct RulePortRange
@@ -12,7 +14,7 @@ public readonly record struct RulePortRange
         End = end;
     }
 
-    public static RulePortRange? Parse(string source)
+    public static RulePortRange? Parse(string source, ILogger logger)
     {
         if (source == "*")
         {
@@ -30,8 +32,7 @@ public readonly record struct RulePortRange
             return new RulePortRange(port, port);
         }
 
-        // TODO: Logging plans
-        Console.Error.WriteLine($"Unable to parse port '{source}'");
+        logger.LogWarning("Unable to parse port '{unparsablePort}'", source);
         return null;
     }
 }

@@ -1,9 +1,18 @@
+using System.ComponentModel;
+using Microsoft.Extensions.Logging;
 using SystemDns = System.Net.Dns;
 
 namespace AzureFirewallCalculator.Core.Dns;
 
 public class DynamicResolver : IDnsResolver
 {
+    public DynamicResolver(ILogger<DynamicResolver> logger)
+    {
+        Logger = logger;
+    }
+
+    public ILogger<DynamicResolver> Logger { get; }
+
     // TODO: investigate allowing custom DNS servers
     // may require implementing simple DNS client: https://stackoverflow.com/a/47277960
     // see also Julia Evans?
@@ -18,9 +27,9 @@ public class DynamicResolver : IDnsResolver
                 .Select(item => item.ConvertToUint())
                 .ToArray();
         }
-        catch
+        catch (Exception ex)
         {
-
+            Logger.LogWarning(ex, "Unable to resolve fqdn '{fqdn}'", fqdn);
         }
         return Array.Empty<uint>();
     }

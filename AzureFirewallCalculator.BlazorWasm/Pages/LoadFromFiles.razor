@@ -5,6 +5,7 @@
 
 @page "/load-from-files"
 @inject IDnsResolver DnsResolver
+@inject ILoggerFactory LoggerFactory
 
 <PageTitle>Firewall</PageTitle>
 
@@ -55,6 +56,6 @@
             return;
         }
 
-        Firewall = await PowershellFirewall.Value.ConvertToFirewall(IpGroups, DnsResolver, ServiceTags);
+        Firewall = await PowershellFirewall.Value.ConvertToFirewall(IpGroups, DnsResolver, ServiceTags, LoggerFactory.CreateLogger<Firewall>());
     }
 }
