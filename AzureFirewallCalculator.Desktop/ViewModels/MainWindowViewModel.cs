@@ -4,6 +4,7 @@ using AzureFirewallCalculator.Core.Dns;
 using AzureFirewallCalculator.Desktop.Authentication;
 using AzureFirewallCalculator.Desktop.FileImports;
 using AzureFirewallCalculator.Desktop.Logging;
+using AzureFirewallCalculator.Desktop.Views;
 using DynamicData;
 using Microsoft.Extensions.Logging;
 using Microsoft.Identity.Client;
@@ -56,8 +57,8 @@ public class MainWindowViewModel : ViewModelBase, IScreen
 
     public MainWindowViewModel(AuthenticationService authenticationService, FileService fileService, IDnsResolver dnsResolver, InMemoryLogReader inMemoryLogReader, ArmService armService, ILoggerFactory loggerFactory)
     {
-        GoToLoadFromArm = ReactiveCommand.CreateFromObservable(() => Router.Navigate.Execute(new LoadFromArmViewModel(this, dnsResolver, authenticationService, armService)));
-        GoToLoadFromFiles = ReactiveCommand.CreateFromObservable(() => Router.Navigate.Execute(new LoadFromFileViewModel(this, dnsResolver, fileService, loggerFactory)));
+        GoToLoadFromArm = ReactiveCommand.CreateFromObservable(() => Router.Navigate.Execute(new LoadFromArmViewModel(this, dnsResolver, authenticationService, armService, loggerFactory.CreateLogger<LoadFromArmViewModel>())));
+        GoToLoadFromFiles = ReactiveCommand.CreateFromObservable(() => Router.Navigate.Execute(new LoadFromFileViewModel(this, dnsResolver, fileService, loggerFactory.CreateLogger<LoadFromFileViewModel>(), loggerFactory)));
         Logs = new AvaloniaList<LogData>(inMemoryLogReader.GetLogView(100_000).Where(FilterLogs));
 
         FilterLogsCommand = ReactiveCommand.Create((string logLevel) =>

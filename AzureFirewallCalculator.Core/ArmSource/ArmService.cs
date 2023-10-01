@@ -88,10 +88,16 @@ public class ArmService
     {
         var serviceTags = await subscription.GetServiceTagAsync(location);
 
+        var rawResponse = serviceTags.GetRawResponse();
+        if(rawResponse.IsError)
+        {
+            Logger.LogError("Error loading service tags, error code {errorCode}, error message {errorMessage}", rawResponse.Status, rawResponse.ToString());
+        }
+
         return serviceTags?.Value;
     }
 
-    public async Task<Firewall> ConvertToFirewall(AzureFirewallData firewallData, List<IPGroupData> allIpGroups, ServiceTagsListResult serviceTags)
+    public async Task<Firewall> ConvertToFirewall(AzureFirewallData firewallData, List<IPGroupData> allIpGroups, ServiceTagsListResult? serviceTags)
     {
         var ipGroups = allIpGroups.ToDictionary(item => item.Id.ToString(), StringComparer.CurrentCultureIgnoreCase);
         var networkRuleCollections = await Task.WhenAll(firewallData.NetworkRuleCollections
@@ -161,7 +167,7 @@ public class ArmService
         );
     }
 
-    private static RuleIpRange[] ParseWithServiceTags(string addressRange, ServiceTagsListResult serviceTags, ILogger logger)
+    private static RuleIpRange[] ParseWithServiceTags(string addressRange, ServiceTagsListResult? serviceTags, ILogger logger)
     {
         var result = RuleIpRange.Parse(addressRange, logger);
         if (result != null)
@@ -169,7 +175,7 @@ public class ArmService
             return new RuleIpRange[] { result.Value };
         }
 
-        var serviceTag = serviceTags.Values.FirstOrDefault(item => item.Name.Equals(addressRange, StringComparison.CurrentCultureIgnoreCase));
+        var serviceTag = serviceTags?.Values.FirstOrDefault(item => item.Name.Equals(addressRange, StringComparison.CurrentCultureIgnoreCase));
         if (serviceTag == null)
         {
             return Array.Empty<RuleIpRange>();

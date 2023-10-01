@@ -15,6 +15,7 @@ using System.Reactive;
 using System.Reactive.Linq;
 using System.Threading;
 using Avalonia.Threading;
+using Microsoft.Extensions.Logging;
 
 namespace AzureFirewallCalculator.Desktop.ViewModels;
 
@@ -25,6 +26,7 @@ public class LoadFromArmViewModel : ReactiveObject, IRoutableViewModel, IScreen
     public AuthenticationService AuthenticationService { get; }
     public string UrlPathSegment { get; } = "load-from-arm";
     public ArmService ArmService { get; }
+    public ILogger<LoadFromArmViewModel> Logger { get; }
     public AvaloniaList<SubscriptionResource> Subscriptions { get; }
     private SubscriptionResource? subscription;
     public SubscriptionResource? Subscription 
@@ -82,12 +84,13 @@ public class LoadFromArmViewModel : ReactiveObject, IRoutableViewModel, IScreen
     public ReactiveCommand<Unit, Task> LoginCommand { get; }    
     
 
-    public LoadFromArmViewModel(IScreen screen, IDnsResolver dnsResolver, AuthenticationService authenticationService, ArmService armService)
+    public LoadFromArmViewModel(IScreen screen, IDnsResolver dnsResolver, AuthenticationService authenticationService, ArmService armService, ILogger<LoadFromArmViewModel> logger)
     {
         HostScreen = screen;
         DnsResolver = dnsResolver;
         AuthenticationService = authenticationService;
         ArmService = armService;
+        Logger = logger;
         Subscriptions = new AvaloniaList<SubscriptionResource>();
         Firewalls = new AvaloniaList<AzureFirewallData>();
         LoginCommand = ReactiveCommand.CreateFromObservable(() => Observable.Start(() => LoadSubscriptions()));
@@ -148,9 +151,10 @@ public class LoadFromArmViewModel : ReactiveObject, IRoutableViewModel, IScreen
     {
         if (firewall?.Location == null || Subscription == null)
         {
+            Logger.LogInformation("Unable to load firewall. {nullResource} was null", Subscription == null ? nameof(Subscription) : nameof(firewall));
             return;
         }
-        
+
         await Load("Loading firewall...", async () =>
         {
             var ipGroups = await ArmService.GetIpGroups(firewall);
@@ -158,7 +162,7 @@ public class LoadFromArmViewModel : ReactiveObject, IRoutableViewModel, IScreen
 
             if (serviceTags == null)
             {
-                return;
+                Logger.LogError("Unable to load service tags.  Rules using service tags will not be processed properly.");
             }
 
             ConvertedFirewall = await ArmService.ConvertToFirewall(firewall, ipGroups, serviceTags);

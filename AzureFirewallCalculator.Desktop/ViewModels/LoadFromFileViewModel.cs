@@ -19,11 +19,12 @@ namespace AzureFirewallCalculator.Desktop.ViewModels;
 
 public class LoadFromFileViewModel : ReactiveObject, IRoutableViewModel, IScreen
 {
-    public LoadFromFileViewModel(IScreen hostScreen, IDnsResolver dnsResolver, FileService fileService, ILoggerFactory loggerFactory)
+    public LoadFromFileViewModel(IScreen hostScreen, IDnsResolver dnsResolver, FileService fileService, ILogger<LoadFromFileViewModel> logger, ILoggerFactory loggerFactory)
     {
         HostScreen = hostScreen;
         DnsResolver = dnsResolver;
         FileService = fileService;
+        Logger = logger;
         LoggerFactory = loggerFactory;
         LoadFirewallCommand = ReactiveCommand.CreateFromTask(() => LoadFirewall());
         LoadIpGroupsCommand = ReactiveCommand.CreateFromTask(() => LoadIpGroups());
@@ -35,6 +36,7 @@ public class LoadFromFileViewModel : ReactiveObject, IRoutableViewModel, IScreen
     public IScreen HostScreen { get; }
     public IDnsResolver DnsResolver { get; }
     public FileService FileService { get; }
+    public ILogger<LoadFromFileViewModel> Logger { get; }
     public ILoggerFactory LoggerFactory { get; }
     public RoutingState Router { get; } = new RoutingState();
     public ReactiveCommand<Unit, Unit> LoadFirewallCommand { get; }
@@ -174,6 +176,11 @@ public class LoadFromFileViewModel : ReactiveObject, IRoutableViewModel, IScreen
     {
         if (ipGroups == null || firewall == null || serviceTags == null)
         {
+            Logger.LogInformation("Unable to load firewall. {nullResource} was null", ipGroups == null 
+                ? "IPGroups"
+                : firewall == null
+                    ? "Firewall"
+                    : "ServiceTags");
             return;
         }
         await Load("Importing firewall", async () =>
