@@ -19,7 +19,7 @@ public class ServiceTagImporter
         {
             throw new Exception($"Incorrect date calculation; found {postedDate.DayOfWeek} instead of {DayOfWeek.Monday}");
         }
-        var postedDateString = postedDate.ToString("yyyyMMDD");
+        var postedDateString = postedDate.ToString("yyyyMMdd");
         var tagUrl = $"https://download.microsoft.com/download/7/1/D/71D86715-5596-4529-9B13-DA13A5DE5B63/ServiceTags_Public_{postedDateString}.json";
 
         return (await HttpClient.GetFromJsonAsync<ServiceTags>(tagUrl))!;
