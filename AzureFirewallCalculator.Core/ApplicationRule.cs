@@ -32,6 +32,7 @@ public record class ApplicationRule
             if (destinationFqdn == "*")
             {
                 allowAllDestinations |= true;
+                fqdns.Add(destinationFqdn);
             }
             else if (destinationFqdn[0] == '*')
             {
@@ -57,11 +58,15 @@ public record class ApplicationRule
     {
         var (sourceIp, destinationFqdn, protocol) = request;
 
-        var sourceInRange = SourceIps.Where(item => sourceIp >= item.Start && sourceIp <= item.End);
+        var sourceInRange = sourceIp == null
+            ? SourceIps
+            : SourceIps.Where(item => sourceIp >= item.Start && sourceIp <= item.End);
         // TODO: Handle TargetURL postfix wildcards.  Only work in path; not in domain
         // https://learn.microsoft.com/en-us/azure/firewall/firewall-faq#how-do-wildcards-work-in-target-urls-and-target-fqdns-in-application-rules
 
-        var destinationMatches = DestinationFqdns
+        var destinationMatches = destinationFqdn == "*"
+            ? DestinationFqdns.Concat(PrefixWildcards)
+            : DestinationFqdns
                 .Where(item => item.Equals(destinationFqdn))
                 .Concat(PrefixWildcards
                     .Where(item => item.Length - 1 <= destinationFqdn.Length && item.AsSpan(1).SequenceEqual(destinationFqdn.AsSpan(destinationFqdn.Length - item.Length + 1, item.Length - 1))));

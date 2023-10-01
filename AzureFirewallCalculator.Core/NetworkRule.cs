@@ -26,8 +26,12 @@ public record class NetworkRule
     public NetworkRuleMatch Matches(NetworkRequest request)
     {
         var (source, destination, destinationPort, protocol) = request;
-        var sourcesInRange = SourceIps.Where(item => source >= item.Start && source <= item.End).ToArray();
-        var destinationsInRange = DestinationIps.Where(item => destination >= item.Start && destination <= item.End).ToArray();
+        var sourcesInRange = source == null
+            ? SourceIps 
+            : SourceIps.Where(item => source >= item.Start && source <= item.End).ToArray();
+        var destinationsInRange = destination == null
+            ? DestinationIps
+            : DestinationIps.Where(item => destination >= item.Start && destination <= item.End).ToArray();
         // No ports in ICMP
         var destinationPortInRange = DestinationPorts.Any(item => (destinationPort >= item.Start && destinationPort <= item.End) || protocol.HasFlag(NetworkProtocols.ICMP));
 

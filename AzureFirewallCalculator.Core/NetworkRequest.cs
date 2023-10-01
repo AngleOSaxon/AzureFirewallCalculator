@@ -5,15 +5,15 @@ namespace AzureFirewallCalculator.Core;
 
 public readonly record struct NetworkRequest
 {
-    public uint SourceIp { get; }
+    public uint? SourceIp { get; }
 
-    public uint DestinationIp { get; }
+    public uint? DestinationIp { get; }
 
     public ushort DestinationPort { get; }
 
     public NetworkProtocols Protocol { get; }
 
-    public NetworkRequest(uint sourceIp, uint destinationIp, ushort destinationPort, NetworkProtocols protocol)
+    public NetworkRequest(uint? sourceIp, uint? destinationIp, ushort destinationPort, NetworkProtocols protocol)
     {
         SourceIp = sourceIp;
         DestinationIp = destinationIp;
@@ -28,7 +28,7 @@ public readonly record struct NetworkRequest
         : this(IPAddress.Parse(sourceIp), IPAddress.Parse(destinationIp), destinationPort, protocol) { }
 
 
-    public void Deconstruct(out uint sourceIp, out uint destinationIp, out ushort destinationPort, out NetworkProtocols protocol)
+    public void Deconstruct(out uint? sourceIp, out uint? destinationIp, out ushort destinationPort, out NetworkProtocols protocol)
     {
         sourceIp = SourceIp;
         destinationIp = DestinationIp;

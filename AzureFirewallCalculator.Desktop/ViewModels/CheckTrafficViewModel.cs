@@ -11,6 +11,7 @@ using System.Reactive;
 using System.Collections.ObjectModel;
 using DynamicData;
 using Avalonia.Threading;
+using System.Net;
 
 namespace AzureFirewallCalculator.Desktop.ViewModels;
 
@@ -74,7 +75,14 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel
         NetworkProcessingResponses.Clear();
         ApplicationProcessingResponses.Clear();
 
-        var request = new NetworkRequest(NetworkSourceIp, NetworkDestinationIp, (ushort)NetworkDestinationPort.Value, NetworkProtocol);
+        uint? numericSourceIp = NetworkSourceIp == "*"
+            ? null
+            : IPAddress.Parse(NetworkSourceIp).ConvertToUint();
+        uint? numericDestinationIp = NetworkDestinationIp == "*"
+            ? null
+            : IPAddress.Parse(NetworkDestinationIp).ConvertToUint();
+
+        var request = new NetworkRequest(numericSourceIp, numericDestinationIp, (ushort)NetworkDestinationPort.Value, NetworkProtocol);
 
         var ruleProcessor = new RuleProcessor(DnsResolver, Firewall);
         NetworkProcessingResponses.AddRange(ruleProcessor.ProcessNetworkRequest(request).OrderBy(item => item.Priority));
@@ -100,7 +108,10 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel
             ApplicationProcessingResponses.Clear();
         });
 
-        var request = new ApplicationRequest(ApplicationSourceIp, DestinationFqdn, new ApplicationProtocolPort(ApplicationProtocol.Value, (ushort)ApplicationDestinationPort.Value));
+        var portProtocol = new ApplicationProtocolPort(ApplicationProtocol.Value, (ushort)ApplicationDestinationPort.Value);
+        var request = ApplicationSourceIp == "*"
+            ? new ApplicationRequest(numericSourceIp: null, DestinationFqdn, portProtocol)
+            : new ApplicationRequest(ApplicationSourceIp, DestinationFqdn, portProtocol);
 
         var ruleProcessor = new RuleProcessor(DnsResolver, Firewall);
         var responses = await ruleProcessor.ProcessApplicationRequest(request);
