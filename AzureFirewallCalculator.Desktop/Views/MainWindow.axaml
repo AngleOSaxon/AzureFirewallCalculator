@@ -22,6 +22,7 @@
     </Design.DataContext>
     <Window.Resources>
         <Converters:LogLevelConverter x:Key="LogLevelConverter"/>
+        <Converters:BoolBrushConverter x:Key="BoolBrushConverter"/>
     </Window.Resources>
     <DockPanel>
         <Border Width="125" BorderBrush="Gray" BorderThickness="0,0,1,0" DockPanel.Dock="Left">
@@ -34,7 +35,34 @@
         <Border Width="500" BorderBrush="Gray" BorderThickness="1,0,0,0" DockPanel.Dock="Right">
             <DockPanel>
                 <StackPanel Orientation="Horizontal" DockPanel.Dock="Top">
-                    <Button>Clear</Button>
+                    <Button 
+                        Command="{Binding FilterLogsCommand}" 
+                        Background="{Binding ErrorFilterActive, Converter={StaticResource BoolBrushConverter}, ConverterParameter=LightGray;Transparent;1.0, Mode=OneWay}}"
+                        BorderBrush="{Binding ErrorFilterActive, Converter={StaticResource BoolBrushConverter}, ConverterParameter=Transparent;Black;1.0, Mode=OneWay}}"
+                        CommandParameter="Error" >
+                        ERR
+                    </Button>
+                    <Button 
+                        Command="{Binding FilterLogsCommand}" 
+                        CommandParameter="Information"
+                        Background="{Binding InformationFilterActive, Converter={StaticResource BoolBrushConverter}, ConverterParameter=LightGray;Transparent;1.0, Mode=OneWay}}"
+                        BorderBrush="{Binding InformationFilterActive, Converter={StaticResource BoolBrushConverter}, ConverterParameter=Transparent;Black;1.0, Mode=OneWay}}">
+                        INF
+                    </Button>
+                    <Button 
+                        Command="{Binding FilterLogsCommand}"
+                        CommandParameter="Warning"
+                        Background="{Binding WarningFilterActive, Converter={StaticResource BoolBrushConverter}, ConverterParameter=LightGray;Transparent;1.0, Mode=OneWay}}"
+                        BorderBrush="{Binding WarningFilterActive, Converter={StaticResource BoolBrushConverter}, ConverterParameter=Transparent;Black;1.0, Mode=OneWay}}">
+                        WRN
+                    </Button>
+                    <Button 
+                        Command="{Binding FilterLogsCommand}" 
+                        CommandParameter="Debug"
+                        Background="{Binding DebugFilterActive, Converter={StaticResource BoolBrushConverter}, ConverterParameter=LightGray;Transparent;1.0, Mode=OneWay}}"
+                        BorderBrush="{Binding DebugFilterActive, Converter={StaticResource BoolBrushConverter}, ConverterParameter=Transparent;Black;1.0, Mode=OneWay}}">
+                        DBG
+                    </Button>
                 </StackPanel>
                 <ListBox ItemsSource="{Binding Logs}" Name="LogView">
                     <ListBox.ItemTemplate>

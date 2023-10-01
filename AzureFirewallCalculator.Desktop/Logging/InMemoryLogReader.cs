@@ -34,9 +34,9 @@ public class InMemoryLogReader
         }
     }
 
-    public ReadOnlyMemory<LogData> GetLogView(int from, int count)
+    public LogData[] GetLogView(int count)
     {
-        return logs.AsMemory(0, currentLogCounter < count ? currentLogCounter : count);
+        return logs[0..(currentLogCounter < count ? currentLogCounter : count)];
     }
 
     public EventHandler<LogData>? LogPosted;
