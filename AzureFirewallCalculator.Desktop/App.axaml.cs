@@ -42,8 +42,8 @@ public partial class App : Application
         Locator.CurrentMutable.RegisterLazySingleton(() => new AuthenticationService(loggerFactory.CreateLogger<AuthenticationService>()));
         Locator.CurrentMutable.RegisterLazySingleton(() => new StaticDnsResolver());
         Locator.CurrentMutable.RegisterLazySingleton(() => new ArmService(
-            client: new Azure.ResourceManager.ArmClient(Locator.Current.GetService<AuthenticationService>()?.GetAuthenticationToken() ?? throw new ArgumentNullException(nameof(AuthenticationService))),
-            dnsResolver:  Locator.Current.GetService<IDnsResolver>() ?? throw new ArgumentNullException(nameof(IDnsResolver)),
+            client: new Azure.ResourceManager.ArmClient(Locator.Current.GetRequiredService<AuthenticationService>().GetAuthenticationToken()),
+            dnsResolver:  Locator.Current.GetRequiredService<IDnsResolver>(),
             logger: loggerFactory.CreateLogger<ArmService>())
         );
         if (desktop != null)
@@ -53,8 +53,8 @@ public partial class App : Application
         Locator.CurrentMutable.RegisterLazySingleton(() => new DynamicResolver(logger: loggerFactory.CreateLogger<DynamicResolver>()));
         Locator.CurrentMutable.RegisterLazySingleton<IDnsResolver>(() => new CombinedResolver(
             logger: loggerFactory.CreateLogger<CombinedResolver>(),
-            Locator.Current.GetService<StaticDnsResolver>() ?? throw new ArgumentNullException(nameof(StaticDnsResolver)),
-            Locator.Current.GetService<DynamicResolver>() ?? throw new ArgumentNullException(nameof(DynamicResolver))
+            Locator.Current.GetRequiredService<StaticDnsResolver>(),
+            Locator.Current.GetRequiredService<DynamicResolver>()
         ));
         Locator.CurrentMutable.RegisterLazySingleton(() => new InMemoryLogReader(InMemoryLogger.LogChannel.Reader, null));
 
@@ -63,11 +63,11 @@ public partial class App : Application
             desktop.MainWindow = new MainWindow
             {
                 DataContext = new MainWindowViewModel(
-                    authenticationService: Locator.Current.GetService<AuthenticationService>() ?? throw new ArgumentNullException(nameof(AuthenticationService)),
-                    fileService: Locator.Current.GetService<FileService>() ?? throw new ArgumentNullException(nameof(FileService)),
-                    dnsResolver: Locator.Current.GetService<IDnsResolver>() ?? throw new ArgumentNullException(nameof(IDnsResolver)),
-                    inMemoryLogReader: Locator.Current.GetService<InMemoryLogReader>() ?? throw new ArgumentNullException(nameof(InMemoryLogReader)),
-                    armService: Locator.Current.GetService<ArmService>() ?? throw new ArgumentNullException(nameof(ArmService)),
+                    authenticationService: Locator.Current.GetRequiredService<AuthenticationService>(),
+                    fileService: Locator.Current.GetRequiredService<FileService>(),
+                    dnsResolver: Locator.Current.GetRequiredService<IDnsResolver>(),
+                    inMemoryLogReader: Locator.Current.GetRequiredService<InMemoryLogReader>(),
+                    armService: Locator.Current.GetRequiredService<ArmService>(),
                     loggerFactory: loggerFactory
                 )
             };
