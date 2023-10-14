@@ -38,12 +38,7 @@ public partial class App : Application
         var loggerFactory = builder.Build().Services.CreateScope().ServiceProvider.GetRequiredService<ILoggerFactory>();
         Locator.CurrentMutable.Register(() => loggerFactory);
 
-        Locator.CurrentMutable.RegisterViewsForViewModels(Assembly.GetCallingAssembly());
-        Locator.CurrentMutable.Register(() => new LoadFromArmView(), typeof(IViewFor<LoadFromArmViewModel>));
-        Locator.CurrentMutable.Register(() => new LoadFromFileView(), typeof(IViewFor<LoadFromFileViewModel>));
-        Locator.CurrentMutable.Register(() => new CheckTrafficView(), typeof(IViewFor<CheckTrafficViewModel>));
-        Locator.CurrentMutable.Register(() => new DefaultContentView(), typeof(IViewFor<DefaultContentViewModel>));
-        Locator.CurrentMutable.Register(() => new StaticDnsConfigurationView(), typeof(IViewFor<StaticDnsConfigurationViewModel>));
+        Locator.CurrentMutable.RegisterViewsForViewModels(Assembly.GetExecutingAssembly());
         Locator.CurrentMutable.RegisterLazySingleton(() => new AuthenticationService(loggerFactory.CreateLogger<AuthenticationService>()));
         Locator.CurrentMutable.RegisterLazySingleton(() => new StaticDnsResolver());
         Locator.CurrentMutable.RegisterLazySingleton(() => new ArmService(
