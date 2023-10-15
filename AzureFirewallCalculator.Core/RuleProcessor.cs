@@ -34,14 +34,26 @@ public class RuleProcessor
     public async Task<ProcessingResponseBase[]> ProcessApplicationRequest(ApplicationRequest applicationRequest)
     {
         var responseSeed = new List<ProcessingResponseBase>();
-        var ips = await DnsResolver.ResolveAddress(applicationRequest.DestinationFqdn);
-        var networkRequests = ips.Select(ip => new NetworkRequest (
-            sourceIp: applicationRequest.SourceIp,
-            destinationIp: ip,
-            destinationPort: applicationRequest.Protocol.Port,
-            protocol: NetworkProtocols.TCP // I don't think there's any UDP protocols?  Maybe also have UDP for everything?  Maybe just Any?
-        ))
-        .ToArray();
+        var networkRequests = applicationRequest.DestinationFqdn != "*"
+            ? 
+                (await DnsResolver.ResolveAddress(applicationRequest.DestinationFqdn))
+                .Select(ip => new NetworkRequest (
+                    sourceIp: applicationRequest.SourceIp,
+                    destinationIp: ip,
+                    destinationPort: applicationRequest.Protocol.Port,
+                    protocol: NetworkProtocols.TCP // I don't think there's any UDP protocols?  Maybe also have UDP for everything?  Maybe just Any?
+                ))
+                .ToArray()
+            :
+                new NetworkRequest[] 
+                {
+                    new (
+                        sourceIp: applicationRequest.SourceIp,
+                        destinationIp: null,
+                        applicationRequest.Protocol.Port,
+                        protocol: NetworkProtocols.TCP // I don't think there's any UDP protocols?  Maybe also have UDP for everything?  Maybe just Any?
+                    ) 
+                };
 
         var networkRequestTask = Task.Run(() => ProcessNetworkRequests(networkRequests));
 
