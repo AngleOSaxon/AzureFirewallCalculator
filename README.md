@@ -30,16 +30,15 @@ Load a firewall's configuration one of two ways:
 - Includes IPs from referenced [service tags](https://learn.microsoft.com/en-us/azure/virtual-network/service-tags-overview#available-service-tags) in rules
 - Wildcard processing for [FQDN prefix wildcards](https://learn.microsoft.com/en-us/azure/firewall/firewall-faq#how-do-wildcards-work-in-target-urls-and-target-fqdns-in-application-rules) in application rules
   - Does not support wildcards in TargetUrl
+- Resolves names in Source and Destination fields
+- Wildcard searches (using `*`) in Source and Destination
+- Static DNS configuration
 
 ### Missing features
 
 - Does not support any rule-matching related to TargetUrl in HTTP requests
 - Does not support Firewall Manager rulesets
 - Does not support [FQDN Tags](https://learn.microsoft.com/en-us/azure/firewall/fqdn-tags), primarily because I can't find a source to load the tag values from
-- FQDN resolution for manual network requests is not performed--when creating a network request yourself, you must enter the target IP
-  - The automatically-created network requests for application requests do use DNS resolution
-- File loading currently uses a fixed version of the Service Tag file, rather than loading the latest version as the ARM loading does
-- Supplying static DNS values or specific DNS servers
 
 ## Other Notes
 
