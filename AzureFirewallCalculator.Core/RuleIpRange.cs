@@ -69,7 +69,7 @@ public readonly record struct RuleIpRange
 
             if (startIp.AddressFamily == AddressFamily.InterNetworkV6 || endIp.AddressFamily == AddressFamily.InterNetworkV6)
             {
-                logger.LogInformation("Skipping IPv6 Address '{skippedAddress}'", source);
+                // logger.LogInformation("Skipping IPv6 Address '{skippedAddress}'", source);
                 return null;
             }
 
@@ -90,7 +90,7 @@ public readonly record struct RuleIpRange
 
             if (ip.AddressFamily == AddressFamily.InterNetworkV6)
             {
-                logger.LogInformation("Skipping IPv6 Address '{skippedAddress}'", source);
+                // logger.LogInformation("Skipping IPv6 Address '{skippedAddress}'", source);
                 return null;
             }
 
