@@ -14,6 +14,15 @@ public readonly record struct RulePortRange
         End = end;
     }
 
+    public override string ToString()
+    {
+        if (Start == End)
+        {
+            return Start.ToString();
+        }
+        return $"{Start}-{End}";
+    }
+
     public static RulePortRange? Parse(string source, ILogger logger)
     {
         if (source == "*")

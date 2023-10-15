@@ -38,6 +38,8 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel
     public ApplicationProtocol[] SelectableApplicationProtocols { get; } = new [] { Core.ApplicationProtocol.Mssql, Core.ApplicationProtocol.Https, Core.ApplicationProtocol.Http };
     public ApplicationProtocol? ApplicationProtocol { get; set; } 
     public int? ApplicationDestinationPort { get; set; }
+    // Use Object list to stop cast exceptions when the Selected event fires.  Jesus.
+    public AvaloniaList<object> RuleProcessingResponses { get; set; } = new();
     public ObservableCollection<NetworkProcessingResponse> NetworkProcessingResponses { get; set; } = new();
     public AvaloniaList<ApplicationProcessingResponse> ApplicationProcessingResponses { get; set; } = new();
     public ReactiveCommand<Unit, Unit> CheckNetworkRuleCommand { get; }
@@ -138,6 +140,8 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel
 
         Dispatcher.UIThread.Invoke(() =>
         {
+            RuleProcessingResponses.Clear();
+            RuleProcessingResponses.AddRange(responses);
             NetworkProcessingResponses.AddRange(network.OrderBy(item => item.Priority));
             ApplicationProcessingResponses.AddRange(application.OrderBy(item => item.Priority));
         });
