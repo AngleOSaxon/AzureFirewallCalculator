@@ -40,7 +40,7 @@
                 </rxui:RoutedViewHost.DefaultContent>
             </rxui:RoutedViewHost>
             <GridSplitter Grid.Column="1" ResizeDirection="Columns" Background="LightGray" MaxWidth="6" />
-            <Border Grid.Column="2" IsVisible="True" Name="LogDisplay" BorderBrush="Gray" BorderThickness="1,0,0,0" DockPanel.Dock="Right">
+            <Border Grid.Column="2" IsVisible="True" Name="LogDisplay" BorderThickness="1,0,0,0" DockPanel.Dock="Right">
                 <DockPanel>
                     <StackPanel Orientation="Horizontal" DockPanel.Dock="Top">
                         <Button 
