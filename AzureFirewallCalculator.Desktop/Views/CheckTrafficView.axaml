@@ -53,11 +53,8 @@
         </Grid>
         <DockPanel>
             <DockPanel LastChildFill="False" DockPanel.Dock="Top">
-                <SelectableTextBlock DockPanel.Dock="Left" Classes="Pad" Text="No network rules hit" IsVisible="{Binding !NetworkProcessingResponses.Count}" />
-                <SelectableTextBlock DockPanel.Dock="Right" Classes="Pad Alert" Text="{Binding NetworkRuleError}" IsVisible="{Binding !NetworkProcessingResponses.Count}" />
-            </DockPanel>
-            <DockPanel LastChildFill="False" DockPanel.Dock="Top">
-                <SelectableTextBlock Classes="Pad" Text="No application rules hit" IsVisible="{Binding !ApplicationProcessingResponses.Count}" />
+                <SelectableTextBlock DockPanel.Dock="Left" Classes="Pad" Text="No rules hit" IsVisible="{Binding !RuleProcessingResponses.Count}" />
+                <SelectableTextBlock DockPanel.Dock="Right" Classes="Pad Alert" Text="{Binding NetworkRuleError}" IsVisible="{Binding !RuleProcessingResponses.Count}" />
                 <SelectableTextBlock DockPanel.Dock="Right" Classes="Pad Alert" Text="{Binding ApplicationRuleError}" IsVisible="{Binding !ApplicationRuleError}" />
             </DockPanel>
             <TreeView ItemsSource="{Binding RuleProcessingResponses}" Name="ProcessingResponses">

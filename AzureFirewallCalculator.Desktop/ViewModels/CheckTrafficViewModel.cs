@@ -40,8 +40,6 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel
     public int? ApplicationDestinationPort { get; set; }
     // Use Object list to stop cast exceptions when the Selected event fires.  Jesus.
     public AvaloniaList<object> RuleProcessingResponses { get; set; } = new();
-    public ObservableCollection<NetworkProcessingResponse> NetworkProcessingResponses { get; set; } = new();
-    public AvaloniaList<ApplicationProcessingResponse> ApplicationProcessingResponses { get; set; } = new();
     public ReactiveCommand<Unit, Unit> CheckNetworkRuleCommand { get; }
     public ReactiveCommand<Unit, Task> CheckApplicationRuleCommand { get; }
     public string? UrlPathSegment => "check-traffic";
@@ -74,9 +72,6 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel
 
         NetworkRuleError = null;
 
-        NetworkProcessingResponses.Clear();
-        ApplicationProcessingResponses.Clear();
-
         uint? numericSourceIp = NetworkSourceIp == "*"
             ? null
             : IPAddress.Parse(NetworkSourceIp).ConvertToUint();
@@ -87,7 +82,8 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel
         var request = new NetworkRequest(numericSourceIp, numericDestinationIp, (ushort)NetworkDestinationPort.Value, NetworkProtocol);
 
         var ruleProcessor = new RuleProcessor(DnsResolver, Firewall);
-        NetworkProcessingResponses.AddRange(ruleProcessor.ProcessNetworkRequest(request).OrderBy(item => item.Priority));
+        RuleProcessingResponses.Clear();
+        RuleProcessingResponses.AddRange(ruleProcessor.ProcessNetworkRequest(request));
     }
 
     public async Task CheckApplicationRule()
@@ -104,11 +100,8 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel
 
         ApplicationRuleError = null;
 
-        Dispatcher.UIThread.Invoke(() =>
-        {
-            NetworkProcessingResponses.Clear();
-            ApplicationProcessingResponses.Clear();
-        });
+        // Should be safe; haven't made async call yet
+        RuleProcessingResponses.Clear();
 
         var portProtocol = new ApplicationProtocolPort(ApplicationProtocol.Value, (ushort)ApplicationDestinationPort.Value);
         var request = ApplicationSourceIp == "*"
@@ -118,32 +111,10 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel
         var ruleProcessor = new RuleProcessor(DnsResolver, Firewall);
         var responses = await ruleProcessor.ProcessApplicationRequest(request);
 
-        var (network, application) = responses.Aggregate((networkRules: new List<NetworkProcessingResponse>(), applicationRules: new List<ApplicationProcessingResponse>()), (aggregate, item) =>
-        {
-            var (networkRules, applicationRules) = aggregate;
-
-            if (item is NetworkProcessingResponse networkResponse)
-            {
-                networkRules.Add(networkResponse);
-            }
-            else if (item is ApplicationProcessingResponse applicationResponse)
-            {
-                applicationRules.Add(applicationResponse);
-            }
-            else
-            {
-                throw new Exception($"Received item of unexpected type '{item.GetType().FullName}'");
-            }
-
-            return aggregate;
-        });
-
         Dispatcher.UIThread.Invoke(() =>
         {
             RuleProcessingResponses.Clear();
             RuleProcessingResponses.AddRange(responses);
-            NetworkProcessingResponses.AddRange(network.OrderBy(item => item.Priority));
-            ApplicationProcessingResponses.AddRange(application.OrderBy(item => item.Priority));
         });
     }
 }
