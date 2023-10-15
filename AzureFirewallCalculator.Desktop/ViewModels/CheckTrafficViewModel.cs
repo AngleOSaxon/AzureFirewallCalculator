@@ -58,7 +58,7 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel
     }
     
 
-    public void CheckNetworkRule()
+    public async void CheckNetworkRule()
     {
         if (string.IsNullOrWhiteSpace(NetworkSourceIp) 
             || string.IsNullOrWhiteSpace(NetworkDestinationIp) 
@@ -70,20 +70,40 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel
             return;
         }
 
+        RuleProcessingResponses.Clear();
         NetworkRuleError = null;
 
-        uint? numericSourceIp = NetworkSourceIp == "*"
-            ? null
-            : IPAddress.Parse(NetworkSourceIp).ConvertToUint();
-        uint? numericDestinationIp = NetworkDestinationIp == "*"
-            ? null
-            : IPAddress.Parse(NetworkDestinationIp).ConvertToUint();
+        IEnumerable<uint?> numericSourceIps = NetworkSourceIp == "*"
+            ? new uint?[] { null }
+            : IPAddress.TryParse(NetworkSourceIp, out var sourceIp)
+                ? new uint?[] { sourceIp.ConvertToUint() }
+                : (await DnsResolver.ResolveAddress(NetworkSourceIp)).Cast<uint?>();
 
-        var request = new NetworkRequest(numericSourceIp, numericDestinationIp, (ushort)NetworkDestinationPort.Value, NetworkProtocol);
+        if (!numericSourceIps.Any())
+        {
+            NetworkRuleError = $"Unable to resolve '{NetworkSourceIp}' or treat it as an IP address";
+            return;
+        }
+        
+        IEnumerable<uint?> numericDestinationIps = NetworkDestinationIp == "*"
+            ? new uint?[] { null }
+            : IPAddress.TryParse(NetworkDestinationIp, out var destinationIp)
+                ? new uint?[] { destinationIp.ConvertToUint() }
+                : (await DnsResolver.ResolveAddress(NetworkDestinationIp)).Cast<uint?>();
+
+        if (!numericDestinationIps.Any())
+        {
+            NetworkRuleError = $"Unable to resolve '{NetworkDestinationIp}' or treat it as an IP address";
+            return;
+        }
+
+        var requests = numericSourceIps.SelectMany(numericSourceIp => numericDestinationIps.Select(numericDestinationIp => new NetworkRequest(numericSourceIp, numericDestinationIp, (ushort)NetworkDestinationPort.Value, NetworkProtocol)));
 
         var ruleProcessor = new RuleProcessor(DnsResolver, Firewall);
-        RuleProcessingResponses.Clear();
-        RuleProcessingResponses.AddRange(ruleProcessor.ProcessNetworkRequest(request));
+        Dispatcher.UIThread.Invoke(() =>
+        {
+            RuleProcessingResponses.AddRange(ruleProcessor.ProcessNetworkRequests(requests.ToArray()));
+        });
     }
 
     public async Task CheckApplicationRule()
@@ -98,22 +118,34 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel
             return;
         }
 
-        ApplicationRuleError = null;
-
         // Should be safe; haven't made async call yet
         RuleProcessingResponses.Clear();
 
         var portProtocol = new ApplicationProtocolPort(ApplicationProtocol.Value, (ushort)ApplicationDestinationPort.Value);
-        var request = ApplicationSourceIp == "*"
-            ? new ApplicationRequest(numericSourceIp: null, DestinationFqdn, portProtocol)
-            : new ApplicationRequest(ApplicationSourceIp, DestinationFqdn, portProtocol);
+
+        // TODO: Move all this into the RuleProcessor stuff.
+        IEnumerable<uint?> numericSourceIps = ApplicationSourceIp == "*"
+            ? new uint?[] { null }
+            : IPAddress.TryParse(ApplicationSourceIp, out var sourceIp)
+                ? new uint?[] { sourceIp.ConvertToUint() }
+                : (await DnsResolver.ResolveAddress(ApplicationSourceIp)).Cast<uint?>();
+        
+        if (!numericSourceIps.Any())
+        {
+            ApplicationRuleError = $"Unable to resolve '{ApplicationSourceIp}' or treat it as an IP address";
+            return;
+        }
+
+        var requests = numericSourceIps.Select(item => new ApplicationRequest(item, DestinationFqdn, portProtocol));
+
+        ApplicationRuleError = null;
 
         var ruleProcessor = new RuleProcessor(DnsResolver, Firewall);
-        var responses = await ruleProcessor.ProcessApplicationRequest(request);
+
+        var responses = (await Task.WhenAll(requests.Select(ruleProcessor.ProcessApplicationRequest))).SelectMany(item => item);
 
         Dispatcher.UIThread.Invoke(() =>
         {
-            RuleProcessingResponses.Clear();
             RuleProcessingResponses.AddRange(responses);
         });
     }
