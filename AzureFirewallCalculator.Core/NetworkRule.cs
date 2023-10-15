@@ -33,12 +33,16 @@ public record class NetworkRule
             ? DestinationIps
             : DestinationIps.Where(item => destination >= item.Start && destination <= item.End).ToArray();
         // No ports in ICMP
-        var destinationPortInRange = DestinationPorts.Any(item => (destinationPort >= item.Start && destinationPort <= item.End) || protocol.HasFlag(NetworkProtocols.ICMP));
+        var destinationPortInRange = DestinationPorts.Where(item => (destinationPort >= item.Start && destinationPort <= item.End) || protocol.HasFlag(NetworkProtocols.ICMP));
+
+        var matchedProtocols = request.Protocol & NetworkProtocols;
 
         return new NetworkRuleMatch(
-            Matched: protocol != NetworkProtocols.None && sourcesInRange.Any() && destinationsInRange.Any() && destinationPortInRange && NetworkProtocols.HasFlag(protocol),
+            Matched: protocol != NetworkProtocols.None && sourcesInRange.Any() && destinationsInRange.Any() && destinationPortInRange.Any() && NetworkProtocols.HasFlag(protocol),
             MatchedSourceIps: sourcesInRange,
             MatchedDestinationIps: destinationsInRange,
+            MatchedProtocols: matchedProtocols,
+            MatchedPorts: destinationPortInRange.ToArray(),
             Rule: this
         );
     }

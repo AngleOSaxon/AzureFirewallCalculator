@@ -33,6 +33,14 @@ public class MatchFontWeightConverter : IMultiValueConverter
         {
             return matchedDomainNames.Contains(domainName) ? FontWeight.ExtraBold : FontWeight.Regular;
         }
+        if (values[0] is RulePortRange ports && values[1] is RulePortRange[] matchedPorts)
+        {
+            return matchedPorts.Contains(ports) ? FontWeight.ExtraBold : FontWeight.Regular;
+        }
+        if (values[0] is ApplicationProtocolPort applicationProtocolPorts && values[1] is ApplicationProtocolPort[] matchedApplicationProtocolPorts)
+        {
+            return matchedApplicationProtocolPorts.Contains(applicationProtocolPorts) ? FontWeight.ExtraBold : FontWeight.Regular;
+        }
 
         throw new ArgumentException($"Invalid input values. Expected '{nameof(RuleIpRange)}' and '{typeof(RuleIpRange[]).GetType().FullName}' or '{nameof(String)}' and '{typeof(string[]).GetType().FullName}', received '{values[0]?.GetType().FullName}' and '{values[1]?.GetType().FullName}'");
     }

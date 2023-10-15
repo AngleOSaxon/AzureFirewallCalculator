@@ -7,9 +7,9 @@ public record struct ApplicationProtocolPort(ApplicationProtocol Protocol, ushor
 
 public record class Firewall(NetworkRuleCollection[] NetworkRuleCollections, ApplicationRuleCollection[] ApplicationRuleCollections);
 
-public record class NetworkRuleMatch(bool Matched, RuleIpRange[] MatchedSourceIps, RuleIpRange[] MatchedDestinationIps, NetworkRule Rule);
+public record class NetworkRuleMatch(bool Matched, RuleIpRange[] MatchedSourceIps, RuleIpRange[] MatchedDestinationIps, NetworkProtocols MatchedProtocols, RulePortRange[] MatchedPorts, NetworkRule Rule);
 
-public record class ApplicationRuleMatch(bool Matched, RuleIpRange[] MatchedSourceIps, string[] MatchedTargetFqdns, ApplicationRule Rule);
+public record class ApplicationRuleMatch(bool Matched, RuleIpRange[] MatchedSourceIps, string[] MatchedTargetFqdns, ApplicationProtocolPort[] MatchedProtocolPorts, ApplicationRule Rule);
 
 public abstract record class ProcessingResponseBase(int Priority, string CollectionName, RuleAction RuleAction);
 

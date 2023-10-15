@@ -112,7 +112,14 @@
                             <ItemsRepeater Grid.Column="4" Grid.Row="1" x:Name="RuleDestinationPorts" ItemsSource="{Binding Rule.DestinationPorts}" x:CompileBindings="False">
                                 <ItemsRepeater.ItemTemplate>
                                     <DataTemplate x:CompileBindings="False">
-                                        <SelectableTextBlock Text="{Binding}" />
+                                        <SelectableTextBlock Text="{Binding}" x:CompileBindings="False">
+                                            <SelectableTextBlock.FontWeight>
+                                                <MultiBinding Converter="{StaticResource MatchFontWeightConverter}">
+                                                    <Binding Path="." />
+                                                    <Binding RelativeSource="{RelativeSource AncestorType=ItemsRepeater}" Path="DataContext.MatchedPorts"/>
+                                                </MultiBinding>
+                                            </SelectableTextBlock.FontWeight>
+                                        </SelectableTextBlock>
                                     </DataTemplate>
                                 </ItemsRepeater.ItemTemplate>
                                 <ItemsRepeater.Layout>
@@ -172,9 +179,14 @@
                             <ItemsRepeater Grid.Column="3" Grid.Row="1" x:Name="RuleDestinationPorts" ItemsSource="{Binding Rule.Protocols}" x:CompileBindings="False">
                                 <ItemsRepeater.ItemTemplate>
                                     <DataTemplate x:CompileBindings="False">
-                                        <StackPanel Orientation="Horizontal">
-                                            <SelectableTextBlock Text="{Binding}" />
-                                        </StackPanel>
+                                        <SelectableTextBlock Text="{Binding}" x:CompileBindings="False">
+                                            <SelectableTextBlock.FontWeight>
+                                                <MultiBinding Converter="{StaticResource MatchFontWeightConverter}">
+                                                    <Binding Path="." />
+                                                    <Binding RelativeSource="{RelativeSource AncestorType=ItemsRepeater}" Path="DataContext.MatchedProtocolPorts"/>
+                                                </MultiBinding>
+                                            </SelectableTextBlock.FontWeight>
+                                        </SelectableTextBlock>
                                     </DataTemplate>
                                 </ItemsRepeater.ItemTemplate>
                                 <ItemsRepeater.Layout>
