@@ -9,7 +9,7 @@
         xmlns:logging="using:Microsoft.Extensions.Logging"
         xmlns:Converters="using:AzureFirewallCalculator.Desktop.Converters"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-        Height="800" Width="2000"
+        Height="800" Width="1600"
         x:Class="AzureFirewallCalculator.Desktop.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/icon.ico"
@@ -33,55 +33,58 @@
                 <TextBlock DockPanel.Dock="Bottom" HorizontalAlignment="Center" FontWeight="ExtraBold" FontSize="16" Text="{Binding UserName}" />
             </DockPanel>
         </Border>
-        <Border Width="500" BorderBrush="Gray" BorderThickness="1,0,0,0" DockPanel.Dock="Right">
-            <DockPanel>
-                <StackPanel Orientation="Horizontal" DockPanel.Dock="Top">
-                    <Button 
-                        Command="{Binding FilterLogsCommand}" 
-                        Background="{Binding ErrorFilterActive, Converter={StaticResource BoolBrushConverter}, ConverterParameter=LightGray;Transparent;1.0, Mode=OneWay}}"
-                        BorderBrush="{Binding ErrorFilterActive, Converter={StaticResource BoolBrushConverter}, ConverterParameter=Transparent;Black;1.0, Mode=OneWay}}"
-                        CommandParameter="Error" >
-                        ERR
-                    </Button>
-                    <Button 
-                        Command="{Binding FilterLogsCommand}" 
-                        CommandParameter="Information"
-                        Background="{Binding InformationFilterActive, Converter={StaticResource BoolBrushConverter}, ConverterParameter=LightGray;Transparent;1.0, Mode=OneWay}}"
-                        BorderBrush="{Binding InformationFilterActive, Converter={StaticResource BoolBrushConverter}, ConverterParameter=Transparent;Black;1.0, Mode=OneWay}}">
-                        INF
-                    </Button>
-                    <Button 
-                        Command="{Binding FilterLogsCommand}"
-                        CommandParameter="Warning"
-                        Background="{Binding WarningFilterActive, Converter={StaticResource BoolBrushConverter}, ConverterParameter=LightGray;Transparent;1.0, Mode=OneWay}}"
-                        BorderBrush="{Binding WarningFilterActive, Converter={StaticResource BoolBrushConverter}, ConverterParameter=Transparent;Black;1.0, Mode=OneWay}}">
-                        WRN
-                    </Button>
-                    <Button 
-                        Command="{Binding FilterLogsCommand}" 
-                        CommandParameter="Debug"
-                        Background="{Binding DebugFilterActive, Converter={StaticResource BoolBrushConverter}, ConverterParameter=LightGray;Transparent;1.0, Mode=OneWay}}"
-                        BorderBrush="{Binding DebugFilterActive, Converter={StaticResource BoolBrushConverter}, ConverterParameter=Transparent;Black;1.0, Mode=OneWay}}">
-                        DBG
-                    </Button>
-                </StackPanel>
-                <ListBox ItemsSource="{Binding Logs}" Name="LogView">
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <StackPanel Orientation="Horizontal">
-                                <TextBox Text="{Binding LogLevel, Converter={StaticResource LogLevelConverter}}" BorderBrush="{Binding LogLevel, Converter={StaticResource LogLevelConverter}}" />
-                                <TextBox Text="{Binding FormattedLog}" />
-                            </StackPanel>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
-            </DockPanel>
-        </Border>
-        <rxui:RoutedViewHost Router="{Binding Router}">
-            <rxui:RoutedViewHost.DefaultContent>
-                <v:DefaultContentView />
-            </rxui:RoutedViewHost.DefaultContent>
-        </rxui:RoutedViewHost>
+        <Grid ColumnDefinitions="195*,1*,65*">
+            <rxui:RoutedViewHost Router="{Binding Router}" Grid.Column="0">
+                <rxui:RoutedViewHost.DefaultContent>
+                    <v:DefaultContentView />
+                </rxui:RoutedViewHost.DefaultContent>
+            </rxui:RoutedViewHost>
+            <GridSplitter Grid.Column="1" ResizeDirection="Columns" Background="LightGray" MaxWidth="6" />
+            <Border Grid.Column="2" IsVisible="True" Name="LogDisplay" BorderBrush="Gray" BorderThickness="1,0,0,0" DockPanel.Dock="Right">
+                <DockPanel>
+                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Top">
+                        <Button 
+                            Command="{Binding FilterLogsCommand}" 
+                            Background="{Binding ErrorFilterActive, Converter={StaticResource BoolBrushConverter}, ConverterParameter=LightGray;Transparent;1.0, Mode=OneWay}}"
+                            BorderBrush="{Binding ErrorFilterActive, Converter={StaticResource BoolBrushConverter}, ConverterParameter=Transparent;Black;1.0, Mode=OneWay}}"
+                            CommandParameter="Error" >
+                            ERR
+                        </Button>
+                        <Button 
+                            Command="{Binding FilterLogsCommand}" 
+                            CommandParameter="Information"
+                            Background="{Binding InformationFilterActive, Converter={StaticResource BoolBrushConverter}, ConverterParameter=LightGray;Transparent;1.0, Mode=OneWay}}"
+                            BorderBrush="{Binding InformationFilterActive, Converter={StaticResource BoolBrushConverter}, ConverterParameter=Transparent;Black;1.0, Mode=OneWay}}">
+                            INF
+                        </Button>
+                        <Button 
+                            Command="{Binding FilterLogsCommand}"
+                            CommandParameter="Warning"
+                            Background="{Binding WarningFilterActive, Converter={StaticResource BoolBrushConverter}, ConverterParameter=LightGray;Transparent;1.0, Mode=OneWay}}"
+                            BorderBrush="{Binding WarningFilterActive, Converter={StaticResource BoolBrushConverter}, ConverterParameter=Transparent;Black;1.0, Mode=OneWay}}">
+                            WRN
+                        </Button>
+                        <Button 
+                            Command="{Binding FilterLogsCommand}" 
+                            CommandParameter="Debug"
+                            Background="{Binding DebugFilterActive, Converter={StaticResource BoolBrushConverter}, ConverterParameter=LightGray;Transparent;1.0, Mode=OneWay}}"
+                            BorderBrush="{Binding DebugFilterActive, Converter={StaticResource BoolBrushConverter}, ConverterParameter=Transparent;Black;1.0, Mode=OneWay}}">
+                            DBG
+                        </Button>
+                    </StackPanel>
+                    <ListBox ItemsSource="{Binding Logs}" Name="LogView">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBox Text="{Binding LogLevel, Converter={StaticResource LogLevelConverter}}" BorderBrush="{Binding LogLevel, Converter={StaticResource LogLevelConverter}}" />
+                                    <TextBox Text="{Binding FormattedLog}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </DockPanel>
+            </Border>
+        </Grid>
     </DockPanel>
 
 </Window>
