@@ -180,6 +180,10 @@ public class LoadFromArmViewModel : ReactiveObject, IRoutableViewModel, IScreen
         {
             await action();
         }
+        catch (Exception e)
+        {
+            Logger.LogError(e, "Error while loading: {errorMessage}", e.Message);
+        }
         finally
         {
             ShowLoadIndicator = false;

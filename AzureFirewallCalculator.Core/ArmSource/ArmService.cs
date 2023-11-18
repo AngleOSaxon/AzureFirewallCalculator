@@ -67,17 +67,24 @@ public class ArmService
         var subscriptions = Client.GetSubscriptions();
         foreach (var subscriptionId in referencedSubscriptions)
         {
-            var subscription = await subscriptions.GetAsync(subscriptionId);
-            if (subscription == null || subscription.Value == null)
+            try
             {
-                Logger.LogWarning("Unable to load IP Groups for subscription '{subscriptionId}'", subscriptionId);
-                continue;
-            }
+                var subscription = await subscriptions.GetAsync(subscriptionId);
+                if (subscription == null || subscription.Value == null)
+                {
+                    Logger.LogWarning("Unable to load IP Groups for subscription '{subscriptionId}'", subscriptionId);
+                    continue;
+                }
 
-            var subscriptionGroups = subscription.Value.GetIPGroupsAsync();
-            await foreach (var ipGroup in subscriptionGroups)
+                var subscriptionGroups = subscription.Value.GetIPGroupsAsync();
+                await foreach (var ipGroup in subscriptionGroups)
+                {
+                    ipGroups.Add(ipGroup.Data);
+                }
+            }
+            catch (Exception e)
             {
-                ipGroups.Add(ipGroup.Data);
+                Logger.LogError(e, "Error trying to load IP Groups for subscription '{subscriptionId}': {errorMessage}", subscriptionId, e.Message);
             }
         }
 
