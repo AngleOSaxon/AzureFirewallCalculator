@@ -34,7 +34,7 @@
             </DockPanel>
         </Border>
         <Grid ColumnDefinitions="195*,1*,65*">
-            <rxui:RoutedViewHost Router="{Binding Router}" Grid.Column="0">
+            <rxui:RoutedViewHost Router="{Binding Router}" Grid.Column="0" Padding="10,0,10,0">
                 <rxui:RoutedViewHost.DefaultContent>
                     <v:DefaultContentView />
                 </rxui:RoutedViewHost.DefaultContent>
