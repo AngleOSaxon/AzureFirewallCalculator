@@ -18,3 +18,5 @@ public record class NetworkProcessingResponse(int Priority, string CollectionNam
 
 public record class ApplicationProcessingResponse(int Priority, string CollectionName, RuleAction RuleAction, ApplicationRuleMatch[] MatchedRules) 
     : ProcessingResponseBase(Priority, CollectionName, RuleAction);
+
+public record class ServiceTag(string Name, string[] AddressPrefixes);

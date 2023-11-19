@@ -14,6 +14,8 @@ using System.Net;
 using System.Reflection;
 using Avalonia.Platform;
 using Microsoft.Extensions.Logging;
+using AzureFirewallCalculator.Core;
+using Firewall = AzureFirewallCalculator.Core.PowershellSource.Firewall;
 
 namespace AzureFirewallCalculator.Desktop.ViewModels;
 
@@ -26,6 +28,7 @@ public class LoadFromFileViewModel : ReactiveObject, IRoutableViewModel, IScreen
         FileService = fileService;
         Logger = logger;
         LoggerFactory = loggerFactory;
+        serviceTags = Array.Empty<ServiceTag>();
         LoadFirewallCommand = ReactiveCommand.CreateFromTask(() => LoadFirewall());
         LoadIpGroupsCommand = ReactiveCommand.CreateFromTask(() => LoadIpGroups());
         LoadServiceTagsCommand = ReactiveCommand.CreateFromTask(() => LoadServiceTags());
@@ -87,8 +90,8 @@ public class LoadFromFileViewModel : ReactiveObject, IRoutableViewModel, IScreen
         get { return ipGroupsLoaded; }
         set { this.RaiseAndSetIfChanged(ref ipGroupsLoaded, value); }
     }
-    private ServiceTags? serviceTags;
-    public ServiceTags? ServiceTags
+    private ServiceTag[] serviceTags;
+    public ServiceTag[] ServiceTags
     {
         get { return serviceTags; }
         set 

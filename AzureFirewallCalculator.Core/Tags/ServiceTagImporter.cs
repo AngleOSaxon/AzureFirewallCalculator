@@ -6,7 +6,7 @@ public class ServiceTagImporter
 {
     private static readonly HttpClient HttpClient = new();
 
-    public static async Task<ServiceTags> GetServiceTags(DateTimeOffset dateTime)
+    public static async Task<ServiceTag[]> GetServiceTags(DateTimeOffset dateTime)
     {
         DayOfWeek currentDay = dateTime.DayOfWeek;
         var offset = (int)currentDay - (int)DayOfWeek.Monday;
@@ -22,6 +22,11 @@ public class ServiceTagImporter
         var postedDateString = postedDate.ToString("yyyyMMdd");
         var tagUrl = $"https://download.microsoft.com/download/7/1/D/71D86715-5596-4529-9B13-DA13A5DE5B63/ServiceTags_Public_{postedDateString}.json";
 
-        return (await HttpClient.GetFromJsonAsync<ServiceTags>(tagUrl))!;
+        var tags = await HttpClient.GetFromJsonAsync<ServiceTags>(tagUrl);
+        if (tags == null)
+        {
+            return Array.Empty<ServiceTag>();
+        }
+        return tags.Values.Select(item => new ServiceTag(Name: item.Name, AddressPrefixes: item.Properties.AddressPrefixes.ToArray())).ToArray();
     }
 }

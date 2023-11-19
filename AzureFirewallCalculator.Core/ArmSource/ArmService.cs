@@ -91,7 +91,7 @@ public class ArmService
         return ipGroups;
     }
 
-    public async Task<ServiceTagsListResult?> GetServiceTags(SubscriptionResource subscription, string location)
+    public async Task<ServiceTag[]> GetServiceTags(SubscriptionResource subscription, string location)
     {
         var serviceTags = await subscription.GetServiceTagAsync(location);
 
@@ -101,10 +101,10 @@ public class ArmService
             Logger.LogError("Error loading service tags, error code {errorCode}, error message {errorMessage}", rawResponse.Status, rawResponse.ToString());
         }
 
-        return serviceTags?.Value;
+        return serviceTags.Value.Values.Select(item => new ServiceTag(Name: item.Name, AddressPrefixes: item.Properties.AddressPrefixes.ToArray())).ToArray();
     }
 
-    public async Task<Firewall> ConvertToFirewall(AzureFirewallData firewallData, List<IPGroupData> allIpGroups, ServiceTagsListResult? serviceTags)
+    public async Task<Firewall> ConvertToFirewall(AzureFirewallData firewallData, List<IPGroupData> allIpGroups, ServiceTag[] serviceTags)
     {
         var ipGroups = allIpGroups.ToDictionary(item => item.Id.ToString(), StringComparer.CurrentCultureIgnoreCase);
         var networkRuleCollections = await Task.WhenAll(firewallData.NetworkRuleCollections
@@ -174,7 +174,7 @@ public class ArmService
         );
     }
 
-    private static RuleIpRange[] ParseWithServiceTags(string addressRange, ServiceTagsListResult? serviceTags, ILogger logger)
+    private static RuleIpRange[] ParseWithServiceTags(string addressRange, ServiceTag[] serviceTags, ILogger logger)
     {
         var result = RuleIpRange.Parse(addressRange, logger);
         if (result != null)
@@ -182,13 +182,13 @@ public class ArmService
             return new RuleIpRange[] { result.Value };
         }
 
-        var serviceTag = serviceTags?.Values.FirstOrDefault(item => item.Name.Equals(addressRange, StringComparison.CurrentCultureIgnoreCase));
+        var serviceTag = serviceTags.FirstOrDefault(item => item.Name.Equals(addressRange, StringComparison.CurrentCultureIgnoreCase));
         if (serviceTag == null)
         {
             return Array.Empty<RuleIpRange>();
         }
 
-        return serviceTag.Properties.AddressPrefixes.Select(item => RuleIpRange.Parse(item, logger))
+        return serviceTag.AddressPrefixes.Select(item => RuleIpRange.Parse(item, logger))
             .Where(item => item != null)
             .Cast<RuleIpRange>()
             .ToArray();

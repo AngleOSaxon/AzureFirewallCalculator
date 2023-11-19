@@ -18,7 +18,7 @@ public record struct Firewall
         return await ConvertToFirewall(ipGroups, resolver, serviceTags, logger);
     }
 
-    public readonly async Task<Core.Firewall> ConvertToFirewall(Dictionary<string, IpGroup> ipGroups, IDnsResolver resolver, ServiceTags serviceTags, ILogger logger)
+    public readonly async Task<Core.Firewall> ConvertToFirewall(Dictionary<string, IpGroup> ipGroups, IDnsResolver resolver, ServiceTag[] serviceTags, ILogger logger)
     {
         var networkRuleCollections = await Task.WhenAll(NetworkRuleCollections
                 .Select(async collection => new Core.NetworkRuleCollection

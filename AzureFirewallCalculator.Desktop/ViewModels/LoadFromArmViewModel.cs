@@ -160,12 +160,14 @@ public class LoadFromArmViewModel : ReactiveObject, IRoutableViewModel, IScreen
             var ipGroups = await ArmService.GetIpGroups(firewall);
             var serviceTags = await ArmService.GetServiceTags(Subscription, firewall.Location);
 
+            serviceTags ??= await Core.Tags.ServiceTagImporter.GetServiceTags(DateTimeOffset.UtcNow);
+
             if (serviceTags == null)
             {
                 Logger.LogError("Unable to load service tags.  Rules using service tags will not be processed properly.");
             }
 
-            ConvertedFirewall = await ArmService.ConvertToFirewall(firewall, ipGroups, serviceTags);
+            ConvertedFirewall = await ArmService.ConvertToFirewall(firewall, ipGroups, serviceTags ?? Array.Empty<ServiceTag>());
             await Router.NavigateAndReset.Execute(new CheckTrafficViewModel(ConvertedFirewall, DnsResolver, this));
         });
     }

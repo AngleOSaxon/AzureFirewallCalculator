@@ -31,7 +31,7 @@ public readonly record struct RuleIpRange
         return $"{start} - {end}";
     }
 
-    public static RuleIpRange[] Parse(string source, ServiceTags serviceTags, ILogger logger)
+    public static RuleIpRange[] Parse(string source, ServiceTag[] serviceTags, ILogger logger)
     {
         var result = Parse(source, logger);
         if (result != null)
@@ -39,13 +39,13 @@ public readonly record struct RuleIpRange
             return new RuleIpRange[] { result.Value };
         }
 
-        var serviceTag = serviceTags.Values.FirstOrDefault(item => item.Name.Equals(source, StringComparison.CurrentCultureIgnoreCase));
+        var serviceTag = serviceTags.FirstOrDefault(item => item.Name.Equals(source, StringComparison.CurrentCultureIgnoreCase));
         if (serviceTag == null)
         {
             return Array.Empty<RuleIpRange>();
         }
 
-        return serviceTag.Properties.AddressPrefixes.Select((item) => Parse(item, logger))
+        return serviceTag.AddressPrefixes.Select((item) => Parse(item, logger))
             .Where(item => item != null)
             .Cast<RuleIpRange>()
             .ToArray();

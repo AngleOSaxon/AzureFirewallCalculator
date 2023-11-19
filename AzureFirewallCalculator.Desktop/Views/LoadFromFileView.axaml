@@ -20,7 +20,7 @@
             <TextBlock Text="IP Group Count:" IsVisible="{Binding IpGroupsLoaded}" />
             <TextBlock Margin="0,0,20,0" Text="{Binding IpGroups.Length}" IsVisible="{Binding IpGroupsLoaded}" />
             <TextBlock Text="Service Tag Count:" IsVisible="{Binding ServiceTagsLoaded}" />
-            <TextBlock Text="{Binding ServiceTags.Values.Length}" IsVisible="{Binding ServiceTagsLoaded}" />
+            <TextBlock Text="{Binding ServiceTags.Length}" IsVisible="{Binding ServiceTagsLoaded}" />
         </StackPanel>
         <rxui:RoutedViewHost Router="{Binding Router}">
             <rxui:RoutedViewHost.DefaultContent>
