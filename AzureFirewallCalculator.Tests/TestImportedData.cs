@@ -31,6 +31,8 @@ public class TestImportedData : IClassFixture<ImportedDataFixture>
 
         yield return new object[] { new NetworkRequest("10.2.0.5", "13.65.211.125", 443, NetworkProtocols.TCP) };
         yield return new object[] { new NetworkRequest("10.2.0.5", "13.66.141.155", 443, NetworkProtocols.TCP) };
+
+        yield return new object[] { new NetworkRequest("10.2.0.5", "13.66.141.155", null, NetworkProtocols.TCP) };
     }
 
     public TestImportedData(ImportedDataFixture importedDataFixture)

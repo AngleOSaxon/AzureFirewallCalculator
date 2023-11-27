@@ -76,10 +76,10 @@ public record class ApplicationRule
             destinationMatches = destinationMatches.Concat(new string[] { "*" });
         }
 
-        var protocolMatches = Protocols.FirstOrDefault(item => item == protocol);
+        var protocolMatches = Protocols.FirstOrDefault(item => item.Protocol == protocol.Protocol && (item.Port == protocol.Port || protocol.Port == null));
 
         return new ApplicationRuleMatch(
-            Matched: sourceInRange.Any() && destinationMatches.Any() && protocolMatches != default(ApplicationProtocolPort),
+            Matched: sourceInRange.Any() && destinationMatches.Any() && protocolMatches != default,
             MatchedSourceIps: sourceInRange.ToArray(),
             MatchedTargetFqdns: destinationMatches.ToArray(),
             MatchedProtocolPorts: new ApplicationProtocolPort[] { protocolMatches },

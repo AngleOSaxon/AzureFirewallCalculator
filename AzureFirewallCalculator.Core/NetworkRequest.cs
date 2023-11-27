@@ -9,11 +9,11 @@ public readonly record struct NetworkRequest
 
     public uint? DestinationIp { get; }
 
-    public ushort DestinationPort { get; }
+    public ushort? DestinationPort { get; }
 
     public NetworkProtocols Protocol { get; }
 
-    public NetworkRequest(uint? sourceIp, uint? destinationIp, ushort destinationPort, NetworkProtocols protocol)
+    public NetworkRequest(uint? sourceIp, uint? destinationIp, ushort? destinationPort, NetworkProtocols protocol)
     {
         SourceIp = sourceIp;
         DestinationIp = destinationIp;
@@ -21,14 +21,14 @@ public readonly record struct NetworkRequest
         Protocol  = protocol;
     }
 
-    public NetworkRequest(IPAddress sourceIp, IPAddress destinationIp, ushort destinationPort, NetworkProtocols protocol)
+    public NetworkRequest(IPAddress sourceIp, IPAddress destinationIp, ushort? destinationPort, NetworkProtocols protocol)
         : this(sourceIp.ConvertToUint(), destinationIp.ConvertToUint(), destinationPort, protocol) { }
 
-    public NetworkRequest(string sourceIp, string destinationIp, ushort destinationPort, NetworkProtocols protocol)
+    public NetworkRequest(string sourceIp, string destinationIp, ushort? destinationPort, NetworkProtocols protocol)
         : this(IPAddress.Parse(sourceIp), IPAddress.Parse(destinationIp), destinationPort, protocol) { }
 
 
-    public void Deconstruct(out uint? sourceIp, out uint? destinationIp, out ushort destinationPort, out NetworkProtocols protocol)
+    public void Deconstruct(out uint? sourceIp, out uint? destinationIp, out ushort? destinationPort, out NetworkProtocols protocol)
     {
         sourceIp = SourceIp;
         destinationIp = DestinationIp;

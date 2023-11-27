@@ -33,7 +33,9 @@ public record class NetworkRule
             ? DestinationIps
             : DestinationIps.Where(item => destination >= item.Start && destination <= item.End).ToArray();
         // No ports in ICMP
-        var destinationPortInRange = DestinationPorts.Where(item => (destinationPort >= item.Start && destinationPort <= item.End) || protocol.HasFlag(NetworkProtocols.ICMP));
+        var destinationPortInRange = request.DestinationPort == null
+            ? DestinationPorts
+            : DestinationPorts.Where(item => (destinationPort >= item.Start && destinationPort <= item.End) || protocol.HasFlag(NetworkProtocols.ICMP));
 
         var matchedProtocols = request.Protocol & NetworkProtocols;
 

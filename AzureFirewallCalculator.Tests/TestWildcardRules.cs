@@ -44,13 +44,25 @@ public class TestWildcardRules
             new ApplicationRequest(uint.MinValue, "foo.example.com", new ApplicationProtocolPort(ApplicationProtocol.Https, 443)),
             true
         };
+        yield return new object[] 
+        {
+            new ApplicationRule("", new RuleIpRange[] { new(uint.MinValue, uint.MinValue) }, new string[] { "foo.example.com" }, Array.Empty<string>(), new ApplicationProtocolPort[] { new(ApplicationProtocol.Https, 8080) }),
+            new ApplicationRequest(uint.MinValue, "foo.example.com", new ApplicationProtocolPort(ApplicationProtocol.Https, 443)),
+            false
+        };
+        yield return new object[] 
+        {
+            new ApplicationRule("", new RuleIpRange[] { new(uint.MinValue, uint.MinValue) }, new string[] { "foo.example.com" }, Array.Empty<string>(), new ApplicationProtocolPort[] { new(ApplicationProtocol.Https, 8080) }),
+            new ApplicationRequest(uint.MinValue, "foo.example.com", new ApplicationProtocolPort(ApplicationProtocol.Https, null)),
+            true
+        };
     }
 
     [Theory]
     [MemberData(nameof(SourceData))]
     public void TestApplicationWildcardRules(ApplicationRule rule, ApplicationRequest request, bool shouldBeAllowed)
     {
-        Assert.Equal(rule.Matches(request).Matched, shouldBeAllowed);
+        Assert.Equal(expected: shouldBeAllowed, actual: rule.Matches(request).Matched);
     }
 
     [Fact]

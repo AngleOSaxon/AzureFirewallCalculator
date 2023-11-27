@@ -8,7 +8,6 @@ using AzureFirewallCalculator.Core;
 using System.Reactive.Linq;
 using System.Collections.Generic;
 using System.Reactive;
-using System.Collections.ObjectModel;
 using DynamicData;
 using Avalonia.Threading;
 using System.Net;
@@ -32,12 +31,12 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel
     public string NetworkDestinationIp { get; set; } = string.Empty;
     public NetworkProtocols[] SelectableNetworkProtocols { get; } = new [] { NetworkProtocols.TCP, NetworkProtocols.UDP, NetworkProtocols.ICMP };
     public NetworkProtocols NetworkProtocol { get; set; } 
-    public int? NetworkDestinationPort { get; set; }
+    public string NetworkDestinationPort { get; set; } = string.Empty;
     public string ApplicationSourceIp { get; set; } = string.Empty;
     public string DestinationFqdn { get; set; } = string.Empty;
     public ApplicationProtocol[] SelectableApplicationProtocols { get; } = new [] { Core.ApplicationProtocol.Mssql, Core.ApplicationProtocol.Https, Core.ApplicationProtocol.Http };
     public ApplicationProtocol? ApplicationProtocol { get; set; } 
-    public int? ApplicationDestinationPort { get; set; }
+    public string ApplicationDestinationPort { get; set; } = string.Empty;
     // Use Object list to stop cast exceptions when the Selected event fires.  Jesus.
     public AvaloniaList<object> RuleProcessingResponses { get; set; } = new();
     public ReactiveCommand<Unit, Unit> CheckNetworkRuleCommand { get; }
@@ -60,10 +59,13 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel
 
     public async void CheckNetworkRule()
     {
+        ushort? destinationPort = ushort.TryParse(NetworkDestinationPort, out var parsedDestinationPort)
+            ? parsedDestinationPort
+            : null;
         if (string.IsNullOrWhiteSpace(NetworkSourceIp) 
             || string.IsNullOrWhiteSpace(NetworkDestinationIp) 
-            || NetworkDestinationPort == null 
             || NetworkProtocol == NetworkProtocols.None
+            || (destinationPort == null && NetworkDestinationPort != "*")
             || Firewall == null)
         {
             NetworkRuleError = "Check input";
@@ -97,7 +99,7 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel
             return;
         }
 
-        var requests = numericSourceIps.SelectMany(numericSourceIp => numericDestinationIps.Select(numericDestinationIp => new NetworkRequest(numericSourceIp, numericDestinationIp, (ushort)NetworkDestinationPort.Value, NetworkProtocol)));
+        var requests = numericSourceIps.SelectMany(numericSourceIp => numericDestinationIps.Select(numericDestinationIp => new NetworkRequest(numericSourceIp, numericDestinationIp, destinationPort, NetworkProtocol)));
 
         var ruleProcessor = new RuleProcessor(DnsResolver, Firewall);
         Dispatcher.UIThread.Invoke(() =>
@@ -108,9 +110,12 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel
 
     public async Task CheckApplicationRule()
     {
+        ushort? destinationPort = ushort.TryParse(ApplicationDestinationPort, out var parsedDestination)
+            ? parsedDestination
+            : null;
         if (string.IsNullOrWhiteSpace(ApplicationSourceIp) 
             || string.IsNullOrWhiteSpace(DestinationFqdn) 
-            || ApplicationDestinationPort == null 
+            || (destinationPort == null && ApplicationDestinationPort != "*")
             || ApplicationProtocol == null
             || Firewall == null)
         {
@@ -121,7 +126,7 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel
         // Should be safe; haven't made async call yet
         RuleProcessingResponses.Clear();
 
-        var portProtocol = new ApplicationProtocolPort(ApplicationProtocol.Value, (ushort)ApplicationDestinationPort.Value);
+        var portProtocol = new ApplicationProtocolPort(ApplicationProtocol.Value, destinationPort);
 
         // TODO: Move all this into the RuleProcessor stuff.
         IEnumerable<uint?> numericSourceIps = ApplicationSourceIp == "*"

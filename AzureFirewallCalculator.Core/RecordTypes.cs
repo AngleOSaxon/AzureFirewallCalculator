@@ -1,8 +1,8 @@
 namespace AzureFirewallCalculator.Core;
 
-public record struct ApplicationProtocolPort(ApplicationProtocol Protocol, ushort Port)
+public record struct ApplicationProtocolPort(ApplicationProtocol Protocol, ushort? Port)
 {
-    public override readonly string ToString() => $"{Protocol}:{Port}";
+    public override readonly string ToString() => $"{Protocol}:{Port?.ToString() ?? "*"}";
 }
 
 public record class Firewall(NetworkRuleCollection[] NetworkRuleCollections, ApplicationRuleCollection[] ApplicationRuleCollections);
