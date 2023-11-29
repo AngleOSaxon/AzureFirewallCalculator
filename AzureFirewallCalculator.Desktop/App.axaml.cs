@@ -1,5 +1,6 @@
 using System;
 using System.Reflection;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -57,6 +58,22 @@ public partial class App : Application
             Locator.Current.GetRequiredService<DynamicResolver>()
         ));
         Locator.CurrentMutable.RegisterLazySingleton(() => new InMemoryLogReader(InMemoryLogger.LogChannel.Reader, null));
+
+        var unhandledFailureLogger = loggerFactory.CreateLogger("UnhandledTaskException");
+        TaskScheduler.UnobservedTaskException += (object? sender, UnobservedTaskExceptionEventArgs e) =>
+        {
+            if (e.Exception is AggregateException aggregateException)
+            {
+                foreach (var exception in aggregateException.InnerExceptions)
+                {
+                    unhandledFailureLogger.LogError(exception, "Unexpected error: {errorMessage}", exception);
+                }
+            }
+            else
+            {
+                unhandledFailureLogger.LogError(e.Exception, "Unexpected error: {errorMessage}", e.Exception.ToString());
+            }
+        };
 
         if (desktop != null)
         {
