@@ -27,14 +27,18 @@
             <Setter Property="HorizontalAlignment" Value="Stretch" />
         </Style>
         <Style Selector="Grid.SearchOptions ComboBox">
-            <Setter Property="VerticalAlignment" Value="Stretch" />
+            <Setter Property="VerticalAlignment" Value="Top" />
             <Setter Property="HorizontalAlignment" Value="Stretch" />
         </Style>
         <Style Selector="Grid.SearchOptions Button">
             <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="VerticalAlignment" Value="Top" />
         </Style>
         <Style Selector="Grid.SearchOptions Button AccessText">
             <Setter Property="HorizontalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Grid.SearchOptions TextBox">
+            <Setter Property="VerticalAlignment" Value="Top" />
         </Style>
     </UserControl.Styles>
     <DockPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch" LastChildFill="True">

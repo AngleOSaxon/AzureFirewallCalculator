@@ -16,6 +16,7 @@ public class TestImportedData : IClassFixture<ImportedDataFixture>
         yield return new object[] { new ApplicationRequest("10.2.0.55", "sqlserver.antiwizard.net", new ApplicationProtocolPort(ApplicationProtocol.Mssql, 1433)) };
         yield return new object[] { new ApplicationRequest("10.10.0.55", "reddit.com", new ApplicationProtocolPort(ApplicationProtocol.Https, 443)) };
         yield return new object[] { new ApplicationRequest("10.2.1.55", "cosmosdb.antiwizard.net", new ApplicationProtocolPort(ApplicationProtocol.Https, 443)) };
+        yield return new object[] { new ApplicationRequest("10.2.1.55", "cosmosdb.antiwizard.net", new ApplicationProtocolPort(ApplicationProtocol.Https, null)) };
     }
 
     public static IEnumerable<object[]> NetworkRuleTests()
