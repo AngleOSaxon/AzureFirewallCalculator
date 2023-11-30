@@ -82,7 +82,7 @@ public record class ApplicationRule
             Matched: sourceInRange.Any() && destinationMatches.Any() && protocolMatches != default,
             MatchedSourceIps: sourceInRange.ToArray(),
             MatchedTargetFqdns: destinationMatches.ToArray(),
-            MatchedProtocolPorts: new ApplicationProtocolPort[] { protocolMatches },
+            MatchedProtocolPorts: [protocolMatches],
             Rule: this
         );
     }

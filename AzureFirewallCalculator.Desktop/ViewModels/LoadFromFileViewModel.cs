@@ -16,6 +16,7 @@ using Avalonia.Platform;
 using Microsoft.Extensions.Logging;
 using AzureFirewallCalculator.Core;
 using Firewall = AzureFirewallCalculator.Core.PowershellSource.Firewall;
+using AzureFirewallCalculator.Core.Serialization;
 
 namespace AzureFirewallCalculator.Desktop.ViewModels;
 
@@ -28,7 +29,7 @@ public class LoadFromFileViewModel : ReactiveObject, IRoutableViewModel, IScreen
         FileService = fileService;
         Logger = logger;
         LoggerFactory = loggerFactory;
-        serviceTags = Array.Empty<ServiceTag>();
+        serviceTags = [];
         LoadFirewallCommand = ReactiveCommand.CreateFromTask(() => LoadFirewall());
         LoadIpGroupsCommand = ReactiveCommand.CreateFromTask(() => LoadIpGroups());
         LoadServiceTagsCommand = ReactiveCommand.CreateFromTask(() => LoadServiceTags());
@@ -132,7 +133,7 @@ public class LoadFromFileViewModel : ReactiveObject, IRoutableViewModel, IScreen
             {
                 return;
             }
-            Firewall = await JsonSerializer.DeserializeAsync<Firewall>(await filestream.OpenReadAsync());
+            Firewall = await JsonSerializer.DeserializeAsync(await filestream.OpenReadAsync(), SourceGenerationContext.Default.Firewall);
         });
         
         await CheckAndConvert();
@@ -147,7 +148,7 @@ public class LoadFromFileViewModel : ReactiveObject, IRoutableViewModel, IScreen
             {
                 return;
             }
-            IpGroups = await JsonSerializer.DeserializeAsync<IpGroup[]>(await filestream.OpenReadAsync());
+            IpGroups = await JsonSerializer.DeserializeAsync(await filestream.OpenReadAsync(), SourceGenerationContext.Default.IpGroupArray);
         });
         
         await CheckAndConvert();

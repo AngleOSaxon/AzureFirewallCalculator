@@ -25,7 +25,7 @@ public class CombinedResolver : IDnsResolver
             catch (Exception ex)
             {
                 Logger.LogWarning(ex, "{exceptionMessage}", ex.Message);
-                return Array.Empty<uint>();
+                return [];
             }
         });
         foreach (var task in tasks)
@@ -37,6 +37,6 @@ public class CombinedResolver : IDnsResolver
             }
         }
 
-        return Array.Empty<uint>();
+        return [];
     }
 }

@@ -31,6 +31,6 @@ public class DynamicResolver : IDnsResolver
         {
             Logger.LogWarning(ex, "Unable to resolve fqdn '{fqdn}'", fqdn);
         }
-        return Array.Empty<uint>();
+        return [];
     }
 }

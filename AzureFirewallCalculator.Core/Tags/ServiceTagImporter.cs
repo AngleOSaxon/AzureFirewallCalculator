@@ -1,5 +1,8 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
+using AzureFirewallCalculator.Core.Serialization;
 
 namespace AzureFirewallCalculator.Core.Tags;
 
@@ -32,11 +35,11 @@ public class ServiceTagImporter
             tagResult = await HttpClient.GetAsync(tagUrl);
         }
 
-        var tags = await tagResult.Content.ReadFromJsonAsync<ServiceTags>();
+        var tags = await tagResult.Content.ReadFromJsonAsync(SourceGenerationContext.Default.ServiceTags);
         
         if (tags == null)
         {
-            return Array.Empty<ServiceTag>();
+            return [];
         }
         return tags.Values.Select(item => new ServiceTag(Name: item.Name, AddressPrefixes: item.Properties.AddressPrefixes.ToArray())).ToArray();
     }

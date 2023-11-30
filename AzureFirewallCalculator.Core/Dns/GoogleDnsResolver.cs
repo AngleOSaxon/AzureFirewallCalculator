@@ -1,6 +1,9 @@
 
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
+using AzureFirewallCalculator.Core.Serialization;
 using Microsoft.Extensions.Logging;
 
 namespace AzureFirewallCalculator.Core.Dns;
@@ -22,12 +25,12 @@ public class GoogleDnsResolver : IDnsResolver
         {
             Query = $"name={fqdn}"
         };
-        var result = await HttpClient.GetFromJsonAsync<GoogleDnsResponse>(builder.Uri);
+        var result = await HttpClient.GetFromJsonAsync(builder.Uri, SourceGenerationContext.Default.GoogleDnsResponse);
         
         if ((result?.Answer?.Length ?? 0) == 0)
         {
             Logger.LogWarning("No results from Google DNS for {fqdn}", fqdn);
-            return Array.Empty<uint>();
+            return [];
         }
 
         // Null-checking should be covered by previous if-statement
