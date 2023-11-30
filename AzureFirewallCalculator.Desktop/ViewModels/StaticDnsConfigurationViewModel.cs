@@ -3,6 +3,8 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Net;
 using System.Reactive;
+using System.Reactive.Disposables;
+using System.Reactive.Linq;
 using AzureFirewallCalculator.Core;
 using AzureFirewallCalculator.Core.Dns;
 using DynamicData;
@@ -11,7 +13,7 @@ using ReactiveUI;
 
 namespace AzureFirewallCalculator.Desktop.ViewModels;
 
-public class StaticDnsConfigurationViewModel : ReactiveObject, IRoutableViewModel
+public class StaticDnsConfigurationViewModel : ReactiveObject, IRoutableViewModel, IActivatableViewModel
 {
     public record class Row(string Fqdn, string IpAddress);
 
@@ -20,14 +22,8 @@ public class StaticDnsConfigurationViewModel : ReactiveObject, IRoutableViewMode
         DnsResolver = dnsResolver;
         Logger = logger;
         HostScreen = hostScreen;
-        SaveDnsCommand = ReactiveCommand.Create(() =>
-        {
-            dnsResolver.FqdnLookup.Clear();
-            foreach (var (fqdn, ipAddress) in ConfiguredDns)
-            {
-                dnsResolver.FqdnLookup.Add(fqdn, new [] { IPAddress.Parse(ipAddress).ConvertToUint() });
-            }
-        });
+        Activator = new ViewModelActivator();
+        SaveDnsCommand = ReactiveCommand.Create(SaveDns);
         AddNewDnsNameCommand = ReactiveCommand.Create(() =>
         {
             ConfiguredDns.Add(new Row(string.Empty, string.Empty));
@@ -42,6 +38,19 @@ public class StaticDnsConfigurationViewModel : ReactiveObject, IRoutableViewMode
         });
 
         ConfiguredDns.AddRange(dnsResolver.FqdnLookup.Select(item => item.Value.Select(ip => new Row(item.Key, ip.ConvertToIpAddress().ToString()))).SelectMany(item => item));
+
+        this.WhenActivated((CompositeDisposable disposables) =>
+        {
+            var subscription = HostScreen.Router.CurrentViewModel.Subscribe(Observer.Create((IRoutableViewModel? viewModel) =>
+            {
+                if (viewModel is not StaticDnsConfigurationViewModel)
+                {
+                    SaveDns();
+                }
+            }))
+            .DisposeWith(disposables);
+        });
+        
     }
 
     public StaticDnsResolver DnsResolver { get; }
@@ -58,4 +67,15 @@ public class StaticDnsConfigurationViewModel : ReactiveObject, IRoutableViewMode
     public string? UrlPathSegment => "static-dns";
 
     public IScreen HostScreen { get; }
+
+    public ViewModelActivator Activator { get; }
+
+    private void SaveDns()
+    {
+        DnsResolver.FqdnLookup.Clear();
+        foreach (var (fqdn, ipAddress) in ConfiguredDns)
+        {
+            DnsResolver.FqdnLookup.Add(fqdn, [IPAddress.Parse(ipAddress).ConvertToUint()]);
+        }
+    }
 }
