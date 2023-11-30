@@ -75,7 +75,10 @@ public class StaticDnsConfigurationViewModel : ReactiveObject, IRoutableViewMode
         DnsResolver.FqdnLookup.Clear();
         foreach (var (fqdn, ipAddress) in ConfiguredDns)
         {
-            DnsResolver.FqdnLookup.Add(fqdn, [IPAddress.Parse(ipAddress).ConvertToUint()]);
+            if (IPAddress.TryParse(ipAddress, out var parsedAddress))
+            {
+                DnsResolver.FqdnLookup.Add(fqdn, [parsedAddress.ConvertToUint()]);
+            }
         }
     }
 }
