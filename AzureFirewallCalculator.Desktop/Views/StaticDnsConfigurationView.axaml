@@ -11,7 +11,7 @@
             <Button Content="Save" Command="{Binding SaveDnsCommand}" />
         </StackPanel>
         <StackPanel Orientation="Vertical">
-            <ItemsRepeater ItemsSource="{Binding ConfiguredDns}" Margin="10,0,10,0">
+            <ItemsRepeater ItemsSource="{Binding ConfiguredDns}" Margin="10,0,10,0" KeyboardNavigation.TabNavigation="Continue">
                 <ItemsRepeater.ItemTemplate>
                     <DataTemplate>
                         <StackPanel Orientation="Vertical">
