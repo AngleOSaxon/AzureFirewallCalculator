@@ -18,11 +18,11 @@ public class ImportedDataFixture : IDisposable
 
         var dnsResolver = new CombinedResolver(NullLogger<CombinedResolver>.Instance, new StaticDnsResolver(new Dictionary<string, IPAddress[]>
         {
-            ["sqlserver.antiwizard.net"] = new IPAddress[] { IPAddress.Parse("10.3.0.33") },
-            ["mysql.antiwizard.net"] = new IPAddress[] { IPAddress.Parse("10.3.0.35") },
-            ["cosmosdb.antiwizard.net"] = new IPAddress[] { IPAddress.Parse("10.3.0.37") },
-            ["authserver1.antiwizard.net"] = new IPAddress[] { IPAddress.Parse("10.3.0.34") },
-            ["authserver2.antiwizard.net"] = new IPAddress[] { IPAddress.Parse("10.3.0.36") }
+            ["sqlserver.antiwizard.net"] = [IPAddress.Parse("10.3.0.33")],
+            ["mysql.antiwizard.net"] = [IPAddress.Parse("10.3.0.35")],
+            ["cosmosdb.antiwizard.net"] = [IPAddress.Parse("10.3.0.37")],
+            ["authserver1.antiwizard.net"] = [IPAddress.Parse("10.3.0.34")],
+            ["authserver2.antiwizard.net"] = [IPAddress.Parse("10.3.0.36")]
         }), new DynamicResolver(NullLogger<DynamicResolver>.Instance));
         
         Firewall = parsedFirewall.ConvertToFirewall(ipGroups, dnsResolver, NullLoggerFactory.Instance.CreateLogger("")).Result;

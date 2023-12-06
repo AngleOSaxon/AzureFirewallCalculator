@@ -41,6 +41,6 @@ public class ServiceTagImporter
         {
             return [];
         }
-        return tags.Values.Select(item => new ServiceTag(Name: item.Name, AddressPrefixes: item.Properties.AddressPrefixes.ToArray())).ToArray();
+        return tags.Values.Select(item => new ServiceTag(Name: item.Name, AddressPrefixes: [.. item.Properties.AddressPrefixes])).ToArray();
     }
 }

@@ -7,7 +7,7 @@ using AzureFirewallCalculator.Core.Tags;
 
 namespace AzureFirewallCalculator.Core.Serialization;
 
-[JsonSourceGenerationOptions(WriteIndented = true)]
+[JsonSourceGenerationOptions(WriteIndented = true, PropertyNameCaseInsensitive = true)]
 [JsonSerializable(typeof(ServiceTags))]
 [JsonSerializable(typeof(ServiceTag[]))]
 [JsonSerializable(typeof(ServiceTag))]
