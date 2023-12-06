@@ -14,8 +14,8 @@ try {
     dotnet publish -c Release --self-contained -r linux-x64 -p:PublishSingleFile=true
     dotnet publish -c Release --self-contained -r osx-x64 -p:PublishSingleFile=true
 
-    $builtFilePath = "bin/Release/net7.0/{0}/publish/*";
-    $compressedFilePath = "bin/Release/net7.0/{0}/AzureFirewallCalculator.Desktop.{0}.v$version.zip";
+    $builtFilePath = "bin/Release/net8.0/{0}/publish/*";
+    $compressedFilePath = "bin/Release/net8.0/{0}/AzureFirewallCalculator.Desktop.{0}.v$version.zip";
 
     $win64Spec = "win-x64";
     $linux64Spec = "linux-x64";
