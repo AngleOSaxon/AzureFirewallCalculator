@@ -99,11 +99,6 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel, INotify
             port => port
         );
 
-        if (string.IsNullOrWhiteSpace(DestinationFqdn))
-        {
-            errorMessages[nameof(DestinationFqdn)] = new List<string> { "Value is required" };
-        }
-
         if (NetworkProtocol == NetworkProtocols.None)
         {
             errorMessages[nameof(NetworkProtocol)] = new List<string> { "Value is required" };
@@ -111,7 +106,7 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel, INotify
 
         SetErrors(nameof(NetworkSourceIp), nameof(NetworkDestinationPort), nameof(NetworkDestinationIp), nameof(NetworkProtocol));
 
-        if (Firewall == null || errorMessages.Any() || numericSourceIps == null || numericDestinationIps == null)
+        if (Firewall == null || errorMessages.Count != 0 || numericSourceIps == null || numericDestinationIps == null)
         {
             return;
         }
