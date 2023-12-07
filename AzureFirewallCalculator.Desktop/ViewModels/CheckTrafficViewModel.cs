@@ -33,16 +33,16 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel, INotify
     public IDnsResolver DnsResolver { get; }
     public string NetworkSourceIp { get; set; } = string.Empty;
     public string NetworkDestinationIp { get; set; } = string.Empty;
-    public NetworkProtocols[] SelectableNetworkProtocols { get; } = new [] { NetworkProtocols.TCP, NetworkProtocols.UDP, NetworkProtocols.ICMP };
+    public NetworkProtocols[] SelectableNetworkProtocols { get; } = [NetworkProtocols.TCP, NetworkProtocols.UDP, NetworkProtocols.ICMP];
     public NetworkProtocols NetworkProtocol { get; set; } 
     public string NetworkDestinationPort { get; set; } = string.Empty;
     public string ApplicationSourceIp { get; set; } = string.Empty;
     public string DestinationFqdn { get; set; } = string.Empty;
-    public ApplicationProtocol[] SelectableApplicationProtocols { get; } = new [] { Core.ApplicationProtocol.Mssql, Core.ApplicationProtocol.Https, Core.ApplicationProtocol.Http };
+    public ApplicationProtocol[] SelectableApplicationProtocols { get; } = [Core.ApplicationProtocol.Mssql, Core.ApplicationProtocol.Https, Core.ApplicationProtocol.Http];
     public ApplicationProtocol? ApplicationProtocol { get; set; } 
     public string ApplicationDestinationPort { get; set; } = string.Empty;
     // Use Object list to stop cast exceptions when the Selected event fires.  Jesus.
-    public AvaloniaList<object> RuleProcessingResponses { get; set; } = new();
+    public AvaloniaList<object> RuleProcessingResponses { get; set; } = [];
     public ReactiveCommand<Unit, Unit> CheckNetworkRuleCommand { get; }
     public ReactiveCommand<Unit, Task> CheckApplicationRuleCommand { get; }
     public string? UrlPathSegment => "check-traffic";
@@ -119,9 +119,10 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel, INotify
         var requests = numericSourceIps.SelectMany(numericSourceIp => numericDestinationIps.Select(numericDestinationIp => new NetworkRequest(numericSourceIp, numericDestinationIp, destinationPort, NetworkProtocol)));
 
         var ruleProcessor = new RuleProcessor(DnsResolver, Firewall);
+        var results = ruleProcessor.ProcessNetworkRequests(requests.ToArray());
         Dispatcher.UIThread.Invoke(() =>
         {
-            RuleProcessingResponses.AddRange(ruleProcessor.ProcessNetworkRequests(requests.ToArray()));
+            RuleProcessingResponses.AddRange(results);
         });
     }
 
@@ -161,7 +162,7 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel, INotify
 
         SetErrors(nameof(ApplicationSourceIp), nameof(ApplicationDestinationPort), nameof(DestinationFqdn), nameof(ApplicationProtocol));
 
-        if (Firewall == null || errorMessages.Any() || numericSourceIps == null)
+        if (Firewall == null || errorMessages.Count != 0 || numericSourceIps == null)
         {
             return;
         }
@@ -182,7 +183,7 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel, INotify
         });
     }
 
-    private OneOf<List<string>, ushort?> ValidatePort(string port)
+    private static OneOf<List<string>, ushort?> ValidatePort(string port)
     {
         if (ushort.TryParse(port, out var parsedPort))
         {
