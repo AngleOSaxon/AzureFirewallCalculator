@@ -205,7 +205,7 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel, INotify
     {
         var errors = new List<string>();
 
-        if (IPAddress.TryParse(ApplicationSourceIp, out var ipAddress))
+        if (IPAddress.TryParse(ipAddressValue, out var ipAddress))
         {
             var bytes = new uint?[] { ipAddress.ConvertToUint() };
             return OneOf<List<string>, IEnumerable<uint?>?>.FromT1(bytes);
