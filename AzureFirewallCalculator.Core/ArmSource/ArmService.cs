@@ -20,6 +20,22 @@ public class ArmService(ArmClient client, IDnsResolver dnsResolver, ILogger<ArmS
 
     private CancellationTokenSource cacheEviction = new();
 
+    // Cached so that it gets evicted with everything else
+    private const string selectedSubscriptionCacheKey = "SelectedSubscription";
+    public SubscriptionResource? SelectedSubscription
+    {
+        get => Cache.Get<SubscriptionResource>(selectedSubscriptionCacheKey);
+        set => Cache.Set(selectedSubscriptionCacheKey, value, new CancellationChangeToken(cacheEviction.Token));
+    }
+
+    // Cached so that it gets evicted with everything else
+    private const string selectedFirewallCacheKey = "SelectedFirewall";
+    public AzureFirewallData? SelectedFirewall
+    {
+        get => Cache.Get<AzureFirewallData>(selectedFirewallCacheKey);
+        set => Cache.Set(selectedFirewallCacheKey, value, new CancellationChangeToken(cacheEviction.Token));
+    }
+
     private const string subscriptionCacheKey = "Subscriptions";
     public async Task<List<SubscriptionResource>> GetSubscriptions()
     {

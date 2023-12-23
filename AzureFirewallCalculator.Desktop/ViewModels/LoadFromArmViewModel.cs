@@ -30,6 +30,7 @@ public class LoadFromArmViewModel : ReactiveObject, IRoutableViewModel, IScreen
     public ILogger<LoadFromArmViewModel> Logger { get; }
     public AvaloniaList<SubscriptionResource> Subscriptions { get; }
     private SubscriptionResource? subscription;
+    private Task subscriptionSelecting = Task.CompletedTask;
     public SubscriptionResource? Subscription 
     { 
         get => subscription;
@@ -41,7 +42,7 @@ public class LoadFromArmViewModel : ReactiveObject, IRoutableViewModel, IScreen
                 return;
             }
 
-            _ = SubscriptionSelected(value);
+            subscriptionSelecting = SubscriptionSelected(value);
         }
     }
     public AvaloniaList<AzureFirewallData> Firewalls { get; }
@@ -92,8 +93,8 @@ public class LoadFromArmViewModel : ReactiveObject, IRoutableViewModel, IScreen
         AuthenticationService = authenticationService;
         ArmService = armService;
         Logger = logger;
-        Subscriptions = new AvaloniaList<SubscriptionResource>();
-        Firewalls = new AvaloniaList<AzureFirewallData>();
+        Subscriptions = [];
+        Firewalls = [];
         LoginCommand = ReactiveCommand.CreateFromObservable(() => Observable.Start(() => LoadSubscriptions()));
         _ = Init();
     }
@@ -107,6 +108,11 @@ public class LoadFromArmViewModel : ReactiveObject, IRoutableViewModel, IScreen
 
         UserLoggedIn = true;
         await LoadSubscriptions();
+
+        Subscription = ArmService.SelectedSubscription;
+        // Make sure the firewalls have been reloaded before selecting the firewall
+        await subscriptionSelecting;
+        Firewall = ArmService.SelectedFirewall;
     }
 
     public async Task LoadSubscriptions()
@@ -138,6 +144,7 @@ public class LoadFromArmViewModel : ReactiveObject, IRoutableViewModel, IScreen
     public async Task SubscriptionSelected(SubscriptionResource subscription)
     {
         Firewalls.Clear();
+        ArmService.SelectedSubscription = subscription;
         await Load("Loading firewalls...", async () =>
         {
             var firewalls = await ArmService.GetFirewalls(subscription);
@@ -155,6 +162,8 @@ public class LoadFromArmViewModel : ReactiveObject, IRoutableViewModel, IScreen
             Logger.LogInformation("Unable to load firewall. {nullResource} was null", Subscription == null ? nameof(Subscription) : nameof(firewall));
             return;
         }
+
+        ArmService.SelectedFirewall = firewall;
 
         await Load("Loading firewall...", async () =>
         {
