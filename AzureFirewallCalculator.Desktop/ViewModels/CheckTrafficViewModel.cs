@@ -70,23 +70,23 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel, INotify
         errorMessages.Clear();
 
         var sourceIpValidationResult = await ValidateIpAddress(NetworkSourceIp);
-        var numericSourceIps = sourceIpValidationResult.Match(
+        IEnumerable<uint?>? numericSourceIps = sourceIpValidationResult.Match(
             errors => 
             {
                 errorMessages[nameof(NetworkSourceIp)] = errors;
-                return null;
+                return null!;
             },
-            bytes => bytes
+            bytes => bytes.ipBytes
         );
 
         var destinationIpValidationResult = await ValidateIpAddress(NetworkDestinationIp);
-        var numericDestinationIps = destinationIpValidationResult.Match(
+        IEnumerable<uint?>? numericDestinationIps = destinationIpValidationResult.Match(
             errors => 
             {
                 errorMessages[nameof(NetworkDestinationIp)] = errors;
-                return null;
+                return null!;
             },
-            bytes => bytes
+            bytes => bytes.ipBytes
         );
 
         var destinationPortValidationResult = ValidatePort(NetworkDestinationPort);
@@ -131,13 +131,13 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel, INotify
         errorMessages.Clear();
 
         var sourceIpValidationResult = await ValidateIpAddress(ApplicationSourceIp);
-        var numericSourceIps = sourceIpValidationResult.Match(
+        IEnumerable<uint?>? numericSourceIps = sourceIpValidationResult.Match(
             errors => 
             {
                 errorMessages[nameof(ApplicationSourceIp)] = errors;
-                return null;
+                return null!;
             },
-            bytes => bytes
+            bytes => bytes.ipBytes
         );
 
         var destinationPortValidationResult = ValidatePort(ApplicationDestinationPort);
@@ -197,14 +197,14 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel, INotify
         return new List<string>() { $"Must be a number between 1 and {ushort.MaxValue}, or a *" };
     }
 
-    private async Task<OneOf<List<string>, IEnumerable<uint?>?>> ValidateIpAddress(string ipAddressValue)
+    private async Task<OneOf<List<string>, (IEnumerable<uint?> ipBytes, bool dnsResolved)>> ValidateIpAddress(string ipAddressValue)
     {
         var errors = new List<string>();
 
         if (IPAddress.TryParse(ipAddressValue, out var ipAddress))
         {
             var bytes = new uint?[] { ipAddress.ConvertToUint() };
-            return OneOf<List<string>, IEnumerable<uint?>?>.FromT1(bytes);
+            return OneOf<List<string>, (IEnumerable<uint?>, bool)>.FromT1((bytes, false));
         }
         else if (string.IsNullOrWhiteSpace(ipAddressValue))
         {
@@ -214,11 +214,11 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel, INotify
         IEnumerable<uint?> resolvedIps = (await DnsResolver.ResolveAddress(ipAddressValue)).Cast<uint?>() ?? new List<uint?>();
         if (resolvedIps.Any())
         {
-            return OneOf<List<string>, IEnumerable<uint?>?>.FromT1(resolvedIps);
+            return OneOf<List<string>, (IEnumerable<uint?>, bool)>.FromT1((resolvedIps, true));
         }
         else if (ipAddressValue == "*")
         {
-            return OneOf<List<string>, IEnumerable<uint?>?>.FromT1(new List<uint?> { null });
+            return OneOf<List<string>, (IEnumerable<uint?>, bool)>.FromT1((new List<uint?> { null }, false));
         }
         else
         {
