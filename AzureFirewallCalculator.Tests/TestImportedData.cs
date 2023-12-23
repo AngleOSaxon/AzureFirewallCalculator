@@ -51,9 +51,9 @@ public class TestImportedData : IClassFixture<ImportedDataFixture>
 
     [Theory]
     [MemberData(nameof(NetworkRuleTests))]
-    public void TestAllowNetworkRules(NetworkRequest request)
+    public async Task TestAllowNetworkRules(NetworkRequest request)
     {
-        var result = importedDataFixture.RuleProcessor.ProcessNetworkRequest(request);
+        var result = await importedDataFixture.RuleProcessor.ProcessNetworkRequest(request);
         Assert.True(result.OrderBy(item => item.Priority).First().RuleAction == RuleAction.Allow);
     }
 }

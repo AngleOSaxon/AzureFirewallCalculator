@@ -16,7 +16,7 @@ public class ImportedDataFixture : IDisposable
         var ipGroupExport = File.ReadAllText("./PowershellData/IpGroups.json");
         var ipGroups = System.Text.Json.JsonSerializer.Deserialize<PowershellSource.IpGroup[]>(ipGroupExport)!.ToDictionary(item => item.Id, StringComparer.CurrentCultureIgnoreCase);
 
-        var dnsResolver = new CombinedResolver(NullLogger<CombinedResolver>.Instance, new StaticDnsResolver(new Dictionary<string, IPAddress[]>
+        var dnsResolver = new CachingResolver(new StaticDnsResolver(new Dictionary<string, IPAddress[]>
         {
             ["sqlserver.antiwizard.net"] = [IPAddress.Parse("10.3.0.33")],
             ["mysql.antiwizard.net"] = [IPAddress.Parse("10.3.0.35")],

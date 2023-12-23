@@ -11,7 +11,7 @@ using Microsoft.Extensions.Primitives;
 
 namespace AzureFirewallCalculator.Core.ArmSource;
 
-public class ArmService(ArmClient client, IDnsResolver dnsResolver, ILogger<ArmService> logger, IMemoryCache cache)
+public class ArmService(ArmClient client, CachingResolver dnsResolver, ILogger<ArmService> logger, IMemoryCache cache)
 {
     public ArmClient Client { get; } = client;
     public IDnsResolver DnsResolver { get; } = dnsResolver;
@@ -141,14 +141,22 @@ public class ArmService(ArmClient client, IDnsResolver dnsResolver, ILogger<ArmS
         {
             entry.ExpirationTokens.Add(new CancellationChangeToken(cacheEviction.Token));
             var ipGroups = allIpGroups.ToDictionary(item => item.Id.ToString(), StringComparer.CurrentCultureIgnoreCase);
-            var networkRuleCollections = await Task.WhenAll(firewallData.NetworkRuleCollections
-                    .Select(async collection => new NetworkRuleCollection
+
+            var destinationFqdns = firewallData.NetworkRuleCollections
+                .SelectMany(item => item.Rules.Select(item => item.DestinationFqdns).SelectMany(item => item))
+                .Distinct(StringComparer.OrdinalIgnoreCase);
+            // Run lookups for all known DNS entries so that they're cached ahead of time
+            var dnsTasks = destinationFqdns.Select(item => DnsResolver.ResolveAddress(item));
+            await Task.WhenAll(dnsTasks);
+
+            var networkRuleCollections = firewallData.NetworkRuleCollections
+                    .Select(collection => new NetworkRuleCollection
                     (
                         name: collection.Name,
                         priority: collection.Priority ?? 0,
                         action: GetRuleAction(collection.ActionType),
-                        rules: await Task.WhenAll(collection.Rules
-                            .Select(async item => 
+                        rules: [.. collection.Rules
+                            .Select(item => 
                             {
                                 return new NetworkRule(
                                     name: item.Name, 
@@ -163,21 +171,18 @@ public class ArmService(ArmClient client, IDnsResolver dnsResolver, ILogger<ArmS
                                         .SelectMany(item => ipGroups[item].IPAddresses)
                                         .Concat(item.DestinationAddresses)
                                         .SelectMany(item => ParseWithServiceTags(item, serviceTags, Logger))
-                                        .Concat(await item.DestinationFqdns
-                                            .Select(async item => await DnsResolver.ResolveAddress(item))
-                                            .SelectManyAsync(async item =>(await item)
-                                                .Select(item => new RuleIpRange(start: item, end: item)))
-                                        )
                                         .ToArray(),
+                                    destinationFqdns: [.. item.DestinationFqdns],
                                     destinationPorts: item.DestinationPorts
                                         .Select(item => RulePortRange.Parse(item, Logger)!)
                                         .Where(item => item is not null)
                                         .Cast<RulePortRange>()
                                         .ToArray(),
-                                    networkProtocols: Utils.ParseNetworkProtocols(item.Protocols.Select(item => item.ToString()).ToArray())
+                                    networkProtocols: Utils.ParseNetworkProtocols(item.Protocols.Select(item => item.ToString()).ToArray()),
+                                    dnsResolver: DnsResolver
                                 );
-                            })
-                    ))));
+                            })]
+                    ));
 
             var applicationRuleCollections = firewallData.ApplicationRuleCollections
                 .Select(collection => new ApplicationRuleCollection
@@ -203,8 +208,8 @@ public class ArmService(ArmClient client, IDnsResolver dnsResolver, ILogger<ArmS
                 ).ToArray();
 
             return new Firewall(
-                NetworkRuleCollections: networkRuleCollections,
-                ApplicationRuleCollections: applicationRuleCollections
+                NetworkRuleCollections: [.. networkRuleCollections],
+                ApplicationRuleCollections: [.. applicationRuleCollections]
             );
         }) ?? throw new NullReferenceException("This shouldn't be possible");
     }

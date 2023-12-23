@@ -12,22 +12,29 @@ public record struct Firewall
 
     public ApplicationRuleCollection[] ApplicationRuleCollections { get; set; }
 
-    public readonly async Task<Core.Firewall> ConvertToFirewall(Dictionary<string, IpGroup> ipGroups, IDnsResolver resolver, ILogger logger)
+    public readonly async Task<Core.Firewall> ConvertToFirewall(Dictionary<string, IpGroup> ipGroups, CachingResolver resolver, ILogger logger)
     {
         var serviceTags = await ServiceTagImporter.GetServiceTags(DateTimeOffset.UtcNow);
         return await ConvertToFirewall(ipGroups, resolver, serviceTags, logger);
     }
 
-    public readonly async Task<Core.Firewall> ConvertToFirewall(Dictionary<string, IpGroup> ipGroups, IDnsResolver resolver, ServiceTag[] serviceTags, ILogger logger)
+    public readonly async Task<Core.Firewall> ConvertToFirewall(Dictionary<string, IpGroup> ipGroups, CachingResolver resolver, ServiceTag[] serviceTags, ILogger logger)
     {
-        var networkRuleCollections = await Task.WhenAll(NetworkRuleCollections
-                .Select(async collection => new Core.NetworkRuleCollection
+        var destinationFqdns = NetworkRuleCollections
+                .SelectMany(item => item.Rules.Select(item => item.DestinationFqdns).SelectMany(item => item))
+                .Distinct(StringComparer.OrdinalIgnoreCase);
+        // Run lookups for all known DNS entries so that they're cached ahead of time
+        var dnsTasks = destinationFqdns.Select(resolver.ResolveAddress);
+        await Task.WhenAll(dnsTasks);
+
+        var networkRuleCollections = NetworkRuleCollections
+                .Select(collection => new Core.NetworkRuleCollection
                 (
                     name: collection.Name,
                     priority: collection.Priority,
                     action: Enum.Parse<Core.RuleAction>(collection.Action.Type),
-                    rules: await Task.WhenAll(collection.Rules
-                        .Select(async item => 
+                    rules: [.. collection.Rules
+                        .Select(item => 
                         {
                             return new Core.NetworkRule(
                                 name: item.Name, 
@@ -42,21 +49,18 @@ public record struct Firewall
                                     .SelectMany(item => ipGroups[item].IpAddresses)
                                     .Concat(item.DestinationAddresses)
                                     .SelectMany(item => RuleIpRange.Parse(item, serviceTags, logger))
-                                    .Concat(await item.DestinationFqdns
-                                        .Select(async item => await resolver.ResolveAddress(item))
-                                        .SelectManyAsync(async item =>(await item)
-                                            .Select(item => new RuleIpRange(start: item, end: item)))
-                                    )
                                     .ToArray(),
+                                destinationFqdns: item.DestinationFqdns,
                                 destinationPorts: item.DestinationPorts
                                     .Select(item => RulePortRange.Parse(item, logger)!)
                                     .Where(item => item is not null)
                                     .Cast<RulePortRange>()
                                     .ToArray(),
-                                networkProtocols: Utils.ParseNetworkProtocols(item.Protocols)
+                                networkProtocols: Utils.ParseNetworkProtocols(item.Protocols),
+                                dnsResolver: resolver
                             );
-                        })
-                ))));
+                        })]
+                ));
 
         var applicationRuleCollections = ApplicationRuleCollections
             .Select(collection => new Core.ApplicationRuleCollection
@@ -83,7 +87,7 @@ public record struct Firewall
 
         return new Core.Firewall
         (
-            NetworkRuleCollections: networkRuleCollections,
+            NetworkRuleCollections: [.. networkRuleCollections],
             ApplicationRuleCollections: applicationRuleCollections
         );
     }

@@ -13,23 +13,26 @@ public class RuleProcessor
     public IDnsResolver DnsResolver { get; }
     public Firewall Firewall { get; }
 
-    public NetworkProcessingResponse[] ProcessNetworkRequests(NetworkRequest[] networkRequests)
+    public async Task<NetworkProcessingResponse[]> ProcessNetworkRequests(NetworkRequest[] networkRequests)
     {
-        var responseSeed = new List<NetworkProcessingResponse>();
-        var networkRequestResults = Firewall.NetworkRuleCollections.Aggregate(responseSeed, (accumulator, collection) => 
-        {
-            var matches = networkRequests.SelectMany(request => collection.GetMatches(request)).ToArray();
-            if (matches.Any())
-            {
-                accumulator.Add(new NetworkProcessingResponse(collection.Priority, collection.Name, collection.RuleAction, matches));
-            }
-            return accumulator;
-        });
+        var networkRequestResults = new List<NetworkProcessingResponse>();
 
-        return networkRequestResults.Distinct().OrderBy(item => item.Priority).ToArray();
+        foreach (var request in networkRequests)
+        {
+            foreach (var collection in Firewall.NetworkRuleCollections)
+            {
+                var matches = await collection.GetMatches(request);
+                if (matches.Length > 0)
+                {
+                    networkRequestResults.Add(new NetworkProcessingResponse(collection.Priority, collection.Name, collection.RuleAction, matches));
+                }
+            }
+        }
+
+        return [.. networkRequestResults.Distinct().OrderBy(item => item.Priority)];
     }
 
-    public NetworkProcessingResponse[] ProcessNetworkRequest(NetworkRequest networkRequest) => ProcessNetworkRequests(new NetworkRequest[] { networkRequest });
+    public async Task<NetworkProcessingResponse[]> ProcessNetworkRequest(NetworkRequest networkRequest) => await ProcessNetworkRequests([networkRequest]);
 
     public async Task<ProcessingResponseBase[]> ProcessApplicationRequest(ApplicationRequest applicationRequest)
     {
@@ -45,15 +48,14 @@ public class RuleProcessor
                 ))
                 .ToArray()
             :
-                new NetworkRequest[] 
-                {
+                [
                     new (
                         sourceIp: applicationRequest.SourceIp,
                         destinationIp: null,
                         applicationRequest.Protocol.Port,
                         protocol: NetworkProtocols.TCP // I don't think there's any UDP protocols?  Maybe also have UDP for everything?  Maybe just Any?
                     ) 
-                };
+                ];
 
         var networkRequestTask = Task.Run(() => ProcessNetworkRequests(networkRequests));
 

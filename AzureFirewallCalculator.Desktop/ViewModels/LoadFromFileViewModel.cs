@@ -22,7 +22,7 @@ namespace AzureFirewallCalculator.Desktop.ViewModels;
 
 public class LoadFromFileViewModel : ReactiveObject, IRoutableViewModel, IScreen
 {
-    public LoadFromFileViewModel(IScreen hostScreen, IDnsResolver dnsResolver, FileService fileService, ILogger<LoadFromFileViewModel> logger, ILoggerFactory loggerFactory)
+    public LoadFromFileViewModel(IScreen hostScreen, CachingResolver dnsResolver, FileService fileService, ILogger<LoadFromFileViewModel> logger, ILoggerFactory loggerFactory)
     {
         HostScreen = hostScreen;
         DnsResolver = dnsResolver;
@@ -38,7 +38,7 @@ public class LoadFromFileViewModel : ReactiveObject, IRoutableViewModel, IScreen
 
     public string? UrlPathSegment => "load-from-files";
     public IScreen HostScreen { get; }
-    public IDnsResolver DnsResolver { get; }
+    public CachingResolver DnsResolver { get; }
     public FileService FileService { get; }
     public ILogger<LoadFromFileViewModel> Logger { get; }
     public ILoggerFactory LoggerFactory { get; }

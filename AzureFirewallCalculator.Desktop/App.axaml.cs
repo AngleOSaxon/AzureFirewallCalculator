@@ -47,7 +47,7 @@ public partial class App : Application
         Locator.CurrentMutable.RegisterLazySingleton(() => new StaticDnsResolver());
         Locator.CurrentMutable.RegisterLazySingleton(() => new ArmService(
             client: new Azure.ResourceManager.ArmClient(Locator.Current.GetRequiredService<AuthenticationService>().GetAuthenticationToken()),
-            dnsResolver:  Locator.Current.GetRequiredService<IDnsResolver>(),
+            dnsResolver:  Locator.Current.GetRequiredService<CachingResolver>(),
             logger: loggerFactory.CreateLogger<ArmService>(),
             cache: Locator.Current.GetRequiredService<IMemoryCache>()
         ));
@@ -56,11 +56,11 @@ public partial class App : Application
             Locator.CurrentMutable.RegisterLazySingleton(() => new FileService(() => desktop.MainWindow!)); // TODO: less dumb way to resolve this cycle
         }
         Locator.CurrentMutable.RegisterLazySingleton(() => new DynamicResolver(logger: loggerFactory.CreateLogger<DynamicResolver>()));
-        Locator.CurrentMutable.RegisterLazySingleton<IDnsResolver>(() => new CombinedResolver(
-            logger: loggerFactory.CreateLogger<CombinedResolver>(),
-            Locator.Current.GetRequiredService<StaticDnsResolver>(),
-            Locator.Current.GetRequiredService<DynamicResolver>()
+        Locator.CurrentMutable.RegisterLazySingleton(() => new CachingResolver(
+            manualDns: Locator.Current.GetRequiredService<StaticDnsResolver>(),
+            fallbackResolver: Locator.Current.GetRequiredService<DynamicResolver>()
         ));
+        Locator.CurrentMutable.RegisterLazySingleton<IDnsResolver>(() => Locator.Current.GetRequiredService<CachingResolver>());
         Locator.CurrentMutable.RegisterLazySingleton(() => new InMemoryLogReader(InMemoryLogger.LogChannel.Reader, null));
 
         var unhandledFailureLogger = loggerFactory.CreateLogger("UnhandledTaskException");
@@ -86,7 +86,7 @@ public partial class App : Application
                 DataContext = new MainWindowViewModel(
                     authenticationService: Locator.Current.GetRequiredService<AuthenticationService>(),
                     fileService: Locator.Current.GetRequiredService<FileService>(),
-                    dnsResolver: Locator.Current.GetRequiredService<IDnsResolver>(),
+                    dnsResolver: Locator.Current.GetRequiredService<CachingResolver>(),
                     inMemoryLogReader: Locator.Current.GetRequiredService<InMemoryLogReader>(),
                     armService: Locator.Current.GetRequiredService<ArmService>(),
                     loggerFactory: loggerFactory

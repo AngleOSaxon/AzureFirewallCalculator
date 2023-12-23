@@ -57,7 +57,7 @@ public class MainWindowViewModel : ViewModelBase, IScreen
 
     private ushort FilteredLogLevels = ushort.MaxValue ^ (1<<((int)LogLevel.Information));
 
-    public MainWindowViewModel(AuthenticationService authenticationService, FileService fileService, IDnsResolver dnsResolver, InMemoryLogReader inMemoryLogReader, ArmService armService, ILoggerFactory loggerFactory)
+    public MainWindowViewModel(AuthenticationService authenticationService, FileService fileService, CachingResolver dnsResolver, InMemoryLogReader inMemoryLogReader, ArmService armService, ILoggerFactory loggerFactory)
     {
         GoToLoadFromArm = ReactiveCommand.CreateFromObservable(() => Router.Navigate.Execute(new LoadFromArmViewModel(this, dnsResolver, authenticationService, armService, loggerFactory.CreateLogger<LoadFromArmViewModel>())));
         GoToLoadFromFiles = ReactiveCommand.CreateFromObservable(() => Router.Navigate.Execute(new LoadFromFileViewModel(this, dnsResolver, fileService, loggerFactory.CreateLogger<LoadFromFileViewModel>(), loggerFactory)));

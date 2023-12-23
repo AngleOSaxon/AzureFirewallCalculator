@@ -119,7 +119,7 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel, INotify
         var requests = numericSourceIps.SelectMany(numericSourceIp => numericDestinationIps.Select(numericDestinationIp => new NetworkRequest(numericSourceIp, numericDestinationIp, destinationPort, NetworkProtocol)));
 
         var ruleProcessor = new RuleProcessor(DnsResolver, Firewall);
-        var results = ruleProcessor.ProcessNetworkRequests(requests.ToArray());
+        var results = await ruleProcessor.ProcessNetworkRequests(requests.ToArray());
         Dispatcher.UIThread.Invoke(() =>
         {
             RuleProcessingResponses.AddRange(results);
