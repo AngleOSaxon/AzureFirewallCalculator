@@ -24,6 +24,7 @@
                     </DataTemplate>
                 </ComboBox.ItemTemplate>
             </ComboBox>
+            <Button x:Name="ResetCache" Content="Reload" Command="{Binding ReloadData}" />
             <ProgressBar Margin="20,0,20,0" IsVisible="{Binding ShowLoadIndicator}"
                 Minimum="0" Maximum="100" Value="{Binding LoadIndicator}"
                 ShowProgressText="False" />

@@ -7,6 +7,7 @@ using AzureFirewallCalculator.Core.Dns;
 using AzureFirewallCalculator.Core.Tags;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Primitives;
 
 namespace AzureFirewallCalculator.Core.ArmSource;
 
@@ -17,11 +18,14 @@ public class ArmService(ArmClient client, IDnsResolver dnsResolver, ILogger<ArmS
     public ILogger<ArmService> Logger { get; } = logger;
     public IMemoryCache Cache { get; } = cache;
 
+    private CancellationTokenSource cacheEviction = new();
+
     private const string subscriptionCacheKey = "Subscriptions";
     public async Task<List<SubscriptionResource>> GetSubscriptions()
     {
         return (await Cache.GetOrCreateAsync(subscriptionCacheKey, async (entry) =>
         {
+            entry.ExpirationTokens.Add(new CancellationChangeToken(cacheEviction.Token));
             var collection = Client.GetSubscriptions();
             List<SubscriptionResource> subscriptions = [];
             await foreach (var item in collection.GetAllAsync())
@@ -36,6 +40,7 @@ public class ArmService(ArmClient client, IDnsResolver dnsResolver, ILogger<ArmS
     {
         return (await Cache.GetOrCreateAsync(subscription, async (entry) =>
         {
+            entry.ExpirationTokens.Add(new CancellationChangeToken(cacheEviction.Token));
             List<AzureFirewallData> firewalls = [];
             await foreach (var item in subscription.GetAzureFirewallsAsync())
             {
@@ -49,6 +54,7 @@ public class ArmService(ArmClient client, IDnsResolver dnsResolver, ILogger<ArmS
     {
         return (await Cache.GetOrCreateAsync(firewall, async (entry) =>
         {
+            entry.ExpirationTokens.Add(new CancellationChangeToken(cacheEviction.Token));
             var ipGroups = new List<IPGroupData>();
             var referencedSubscriptions = firewall.IPGroups
                 .Select(item => item.Id.SubscriptionId)
@@ -98,7 +104,9 @@ public class ArmService(ArmClient client, IDnsResolver dnsResolver, ILogger<ArmS
 
     public async Task<ServiceTag[]> GetServiceTags(SubscriptionResource subscription, string location)
     {
-        return (await Cache.GetOrCreateAsync((subscription, location), async (entry) => {
+        return (await Cache.GetOrCreateAsync((subscription, location), async (entry) => 
+        {
+            entry.ExpirationTokens.Add(new CancellationChangeToken(cacheEviction.Token));
              var serviceTags = await subscription.GetServiceTagAsync(location);
 
             var rawResponse = serviceTags.GetRawResponse();
@@ -115,6 +123,7 @@ public class ArmService(ArmClient client, IDnsResolver dnsResolver, ILogger<ArmS
     {
         return await Cache.GetOrCreateAsync((firewallData, allIpGroups, serviceTags), async (entry) =>
         {
+            entry.ExpirationTokens.Add(new CancellationChangeToken(cacheEviction.Token));
             var ipGroups = allIpGroups.ToDictionary(item => item.Id.ToString(), StringComparer.CurrentCultureIgnoreCase);
             var networkRuleCollections = await Task.WhenAll(firewallData.NetworkRuleCollections
                     .Select(async collection => new NetworkRuleCollection
@@ -182,6 +191,12 @@ public class ArmService(ArmClient client, IDnsResolver dnsResolver, ILogger<ArmS
                 ApplicationRuleCollections: applicationRuleCollections
             );
         }) ?? throw new NullReferenceException("This shouldn't be possible");
+    }
+
+    public void ResetCache()
+    {
+        cacheEviction.Cancel();
+        cacheEviction = new();
     }
 
     private static RuleIpRange[] ParseWithServiceTags(string addressRange, ServiceTag[] serviceTags, ILogger logger)

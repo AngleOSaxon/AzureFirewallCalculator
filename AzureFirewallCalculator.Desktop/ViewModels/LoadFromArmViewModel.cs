@@ -16,6 +16,7 @@ using System.Reactive.Linq;
 using System.Threading;
 using Avalonia.Threading;
 using Microsoft.Extensions.Logging;
+using Azure.Core;
 
 namespace AzureFirewallCalculator.Desktop.ViewModels;
 
@@ -34,7 +35,7 @@ public class LoadFromArmViewModel : ReactiveObject, IRoutableViewModel, IScreen
         get => subscription;
         set
         {
-            subscription = value;
+            this.RaiseAndSetIfChanged(ref subscription, value);
             if (value == null)
             {
                 return;
@@ -50,7 +51,7 @@ public class LoadFromArmViewModel : ReactiveObject, IRoutableViewModel, IScreen
         get => firewall;
         set
         {
-            firewall = value;
+            this.RaiseAndSetIfChanged(ref firewall, value);
             if (value == null)
             {
                 return;
@@ -170,6 +171,36 @@ public class LoadFromArmViewModel : ReactiveObject, IRoutableViewModel, IScreen
             ConvertedFirewall = await ArmService.ConvertToFirewall(firewall, ipGroups, serviceTags ?? Array.Empty<ServiceTag>());
             await Router.NavigateAndReset.Execute(new CheckTrafficViewModel(ConvertedFirewall, DnsResolver, this));
         });
+    }
+
+    public async Task ReloadData()
+    {
+        var subscriptionId = Subscription?.Data.SubscriptionId;
+        var firewallId = Firewall?.Id;
+
+        Subscription = null;
+        Firewall = null;
+        ConvertedFirewall = null;
+
+        ArmService.ResetCache();
+
+        await LoadSubscriptions();
+
+        Subscription = Subscriptions.FirstOrDefault(item => item.Data.SubscriptionId == subscriptionId);
+        if (Subscription == null)
+        {
+            return;
+        }
+
+        await Dispatcher.UIThread.Invoke(async () => await SubscriptionSelected(Subscription));
+
+        Firewall = Firewalls.FirstOrDefault(item => item.Id == (firewallId ?? new ResourceIdentifier(string.Empty)));
+        if (Firewall == null)
+        {
+            return;
+        }
+
+        await Dispatcher.UIThread.Invoke(async () => await FirewallSelected(Firewall));
     }
 
     private async Task Load(string text, Func<Task> action)
