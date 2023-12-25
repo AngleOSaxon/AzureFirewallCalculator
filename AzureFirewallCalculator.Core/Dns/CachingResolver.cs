@@ -6,7 +6,7 @@ public class CachingResolver(StaticDnsResolver manualDns, DynamicResolver fallba
     public StaticDnsResolver ManualDns { get; } = manualDns;
     public DynamicResolver FallbackResolver { get; } = fallbackResolver;
     public StaticDnsResolver CachingDns { get; } = new StaticDnsResolver();
-    private HashSet<string> failedLookups = new(StringComparer.CurrentCultureIgnoreCase);
+    private readonly HashSet<string> failedLookups = new(StringComparer.CurrentCultureIgnoreCase);
 
     public async Task<uint[]> ResolveAddress(string fqdn)
     {
@@ -33,5 +33,11 @@ public class CachingResolver(StaticDnsResolver manualDns, DynamicResolver fallba
         }
 
         return result;
+    }
+
+    public void FlushCache()
+    {
+        CachingDns.FqdnLookup.Clear();
+        failedLookups.Clear();
     }
 }

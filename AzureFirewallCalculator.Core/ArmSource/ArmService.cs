@@ -14,7 +14,7 @@ namespace AzureFirewallCalculator.Core.ArmSource;
 public class ArmService(ArmClient client, CachingResolver dnsResolver, ILogger<ArmService> logger, IMemoryCache cache)
 {
     public ArmClient Client { get; } = client;
-    public IDnsResolver DnsResolver { get; } = dnsResolver;
+    public CachingResolver DnsResolver { get; } = dnsResolver;
     public ILogger<ArmService> Logger { get; } = logger;
     public IMemoryCache Cache { get; } = cache;
 
@@ -217,6 +217,7 @@ public class ArmService(ArmClient client, CachingResolver dnsResolver, ILogger<A
     public void ResetCache()
     {
         cacheEviction.Cancel();
+        DnsResolver.FlushCache();
         cacheEviction = new();
     }
 
