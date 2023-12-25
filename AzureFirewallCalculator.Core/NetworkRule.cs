@@ -30,6 +30,24 @@ public record class NetworkRule
         DnsResolver = dnsResolver;
     }
 
+    /// <summary>
+    /// Clone this rule with the <see cref="this.DestinationFqdns" /> removed and the resolved IPs
+    /// from the FQDNs added to the list of <see cref="this.DestinationIps"/>.  Allows the rule
+    /// to be used as if the FQDNs had been resolved at rule creation, the way they were in earlier
+    /// iterations of the program
+    /// </summary>
+    /// <param name="resolvedIps">The IPs that were resolved from <see cref="DestinationFqdns"/> using <see cref="DnsResolver"/></param>
+    /// <returns>A clone of this <see cref="NetworkRule"/></returns>
+    private NetworkRule CloneWithResolvedIps(RuleIpRange[] resolvedIps) => new (
+            name: Name,
+            sourceIps: SourceIps,
+            destinationIps: [.. DestinationIps, .. resolvedIps],
+            destinationFqdns: [],
+            destinationPorts: DestinationPorts,
+            networkProtocols: NetworkProtocols,
+            dnsResolver: DnsResolver
+        );
+
     public async Task<NetworkRuleMatch> Matches(NetworkRequest request)
     {
         var (source, destination, destinationPort, protocol) = request;
@@ -37,11 +55,12 @@ public record class NetworkRule
             ? SourceIps 
             : SourceIps.Where(item => source >= item.Start && source <= item.End).ToArray();
 
-        var resolvedFqdns = await Task.WhenAll(DestinationFqdns.Select(item => DnsResolver.ResolveAddress(item)));
+        var resolvedFqdns = (await Task.WhenAll(DestinationFqdns.Select(item => DnsResolver.ResolveAddress(item))))
+            .SelectMany(item => item.Select(ip => new RuleIpRange(ip, ip)))
+            .ToArray();
         var destinationIps = DestinationIps
-            .Concat(resolvedFqdns
-                .SelectMany(item => item.Select(ip => new RuleIpRange(ip, ip)))
-            ).ToArray();
+            .Concat(resolvedFqdns)
+            .ToArray();
         
         var destinationsInRange = destination == null
             ? destinationIps
@@ -59,7 +78,7 @@ public record class NetworkRule
             MatchedDestinationIps: destinationsInRange,
             MatchedProtocols: matchedProtocols,
             MatchedPorts: destinationPortInRange.ToArray(),
-            Rule: this
+            Rule: CloneWithResolvedIps(resolvedFqdns) // Clone this rule so that it will show the resolved IPs on the UI
         );
     }
 }
