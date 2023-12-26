@@ -40,6 +40,13 @@
         <Style Selector="Grid.SearchOptions TextBox">
             <Setter Property="VerticalAlignment" Value="Top" />
         </Style>
+        <Style Selector="ItemsRepeater.ResolvedDns >> Border.ShowLast">
+            <Setter Property="IsVisible" Value="False" />
+            <Setter Property="Margin" Value="0 10 0 10" />
+        </Style>
+        <Style Selector="ItemsRepeater.ResolvedDns > Grid:nth-last-child(1) > Border.ShowLast">
+            <Setter Property="IsVisible" Value="True" />
+        </Style>
     </UserControl.Styles>
     <DockPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch" LastChildFill="True">
         <Grid Classes="SearchOptions" DockPanel.Dock="Top" ColumnDefinitions="4*,4*,2*,2*,4*" RowDefinitions="Auto,Auto,*,Auto">
@@ -71,9 +78,27 @@
         <DockPanel>
             <DockPanel LastChildFill="False" DockPanel.Dock="Top">
                 <SelectableTextBlock DockPanel.Dock="Left" Classes="Pad" Text="No rules hit" IsVisible="{Binding !RuleProcessingResponses.Count}" />
-                <SelectableTextBlock DockPanel.Dock="Right" Classes="Pad Alert" Text="{Binding NetworkRuleError}" IsVisible="{Binding !RuleProcessingResponses.Count}" />
-                <SelectableTextBlock DockPanel.Dock="Right" Classes="Pad Alert" Text="{Binding ApplicationRuleError}" />
             </DockPanel>
+            <TextBlock DockPanel.Dock="Top" Text="Resolved DNS:" Classes="Pad" FontWeight="Bold" IsVisible="{Binding ResolvedIps.Count}" />
+            <ItemsRepeater Classes="ResolvedDns" ItemsSource="{Binding ResolvedIps}" Margin="50 0 0 0" DockPanel.Dock="Top">
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate>
+                        <Grid ColumnDefinitions="250,200,*" RowDefinitions="Auto,Auto,Auto">
+                            <TextBlock Grid.Column="0" Grid.Row="0" Text="{Binding Fqdn}"/>
+                            <ItemsRepeater Grid.Column="1" Grid.Row="1" ItemsSource="{Binding Addresses}">
+                                <ItemsRepeater.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Vertical">
+                                            <SelectableTextBlock Text="{Binding .}" x:DataType="vm:ResolvedDns" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsRepeater.ItemTemplate>
+                            </ItemsRepeater>
+                            <Border Classes="ShowLast" BorderBrush="Gray" BorderThickness="0 0 0 1" Grid.ColumnSpan="3" Grid.Row="3" />
+                        </Grid>
+                    </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
             <TreeView ItemsSource="{Binding RuleProcessingResponses}" Name="ProcessingResponses">
                 <TreeView.Styles>
                     <Style Selector="TreeViewItem:selected">
@@ -83,7 +108,7 @@
                 </TreeView.Styles>
                 <TreeView.DataTemplates>
                     <DataTemplate DataType="core:NetworkRuleMatch">
-                        <Grid ColumnDefinitions="1*,1*,1*,1*,1*" RowDefinitions="Auto,Auto" Classes="Header">
+                        <Grid ColumnDefinitions="3*,2*,2*,1*,1*" RowDefinitions="Auto,Auto" Classes="Header">
                             <TextBlock Grid.Column="0" Grid.Row="0" Text="Rule Name" />
                             <TextBlock Grid.Column="1" Grid.Row="0" Text="Source Ips" />
                             <TextBlock Grid.Column="2" Grid.Row="0" Text="Destinations" />
@@ -146,7 +171,7 @@
                         </Grid>
                     </DataTemplate>
                     <DataTemplate DataType="core:ApplicationRuleMatch">
-                        <Grid ColumnDefinitions="1*,1*,1*,1*,1*" RowDefinitions="Auto,Auto" Classes="Header">
+                        <Grid ColumnDefinitions="3*,2*,2*,1*,1*" RowDefinitions="Auto,Auto" Classes="Header">
                             <TextBlock Grid.Column="0" Grid.Row="0" Text="Rule Name" />
                             <TextBlock Grid.Column="1" Grid.Row="0" Text="Source Ips" />
                             <TextBlock Grid.Column="2" Grid.Row="0" Text="Destinations" />

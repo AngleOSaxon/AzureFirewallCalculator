@@ -17,6 +17,8 @@ using OneOf;
 
 namespace AzureFirewallCalculator.Desktop.ViewModels;
 
+public record struct ResolvedDns(string Fqdn, IPAddress[] Addresses);
+
 public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel, INotifyDataErrorInfo
 {
     public CheckTrafficViewModel(Firewall? firewall, IDnsResolver dnsResolver, IScreen hostScreen)
@@ -47,46 +49,34 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel, INotify
     public ReactiveCommand<Unit, Task> CheckApplicationRuleCommand { get; }
     public string? UrlPathSegment => "check-traffic";
     public IScreen HostScreen { get; }
-    private string? networkRuleError;
-    public string? NetworkRuleError
-    {
-        get { return networkRuleError; }
-        set { this.RaiseAndSetIfChanged(ref networkRuleError, value); }
-    }
-    private string? applicationRuleError;
-
     public event EventHandler<DataErrorsChangedEventArgs>? ErrorsChanged;
-
-    public string? ApplicationRuleError
-    {
-        get { return applicationRuleError; }
-        set { this.RaiseAndSetIfChanged(ref applicationRuleError, value); }
-    }
+    public AvaloniaList<ResolvedDns> ResolvedIps { get; } = [];
 
     public bool HasErrors => throw new NotImplementedException();
 
     public async void CheckNetworkRule()
     {
         errorMessages.Clear();
+        ResolvedIps.Clear();
 
         var sourceIpValidationResult = await ValidateIpAddress(NetworkSourceIp);
-        IEnumerable<uint?>? numericSourceIps = sourceIpValidationResult.Match(
+        (IEnumerable<uint?>? numericSourceIps, bool sourceIpDnsResolved) = sourceIpValidationResult.Match(
             errors => 
             {
                 errorMessages[nameof(NetworkSourceIp)] = errors;
-                return null!;
+                return (null!, false);
             },
-            bytes => bytes.ipBytes
+            bytes => bytes
         );
 
         var destinationIpValidationResult = await ValidateIpAddress(NetworkDestinationIp);
-        IEnumerable<uint?>? numericDestinationIps = destinationIpValidationResult.Match(
+        (IEnumerable<uint?>? numericDestinationIps, bool destinationDnsResolved) = destinationIpValidationResult.Match(
             errors => 
             {
                 errorMessages[nameof(NetworkDestinationIp)] = errors;
-                return null!;
+                return (null!, false);
             },
-            bytes => bytes.ipBytes
+            bytes => bytes
         );
 
         var destinationPortValidationResult = ValidatePort(NetworkDestinationPort);
@@ -112,7 +102,18 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel, INotify
         }
 
         Dispatcher.UIThread.Invoke(() =>
+
         {
+            if (sourceIpDnsResolved && numericSourceIps != null)
+            {
+                IPAddress[] convertedIps = numericSourceIps.Select(item => item?.ConvertToIpAddress()).Where(item => item != null).ToArray()!;
+                ResolvedIps.Add(new ResolvedDns(NetworkSourceIp, convertedIps));
+            }
+            if (destinationDnsResolved && numericDestinationIps != null)
+            {
+                IPAddress[] convertedIps = numericDestinationIps.Select(item => item?.ConvertToIpAddress()).Where(item => item != null).ToArray()!;
+                ResolvedIps.Add(new ResolvedDns(NetworkDestinationIp, convertedIps));
+            }
             RuleProcessingResponses.Clear();
         });
 
@@ -131,13 +132,13 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel, INotify
         errorMessages.Clear();
 
         var sourceIpValidationResult = await ValidateIpAddress(ApplicationSourceIp);
-        IEnumerable<uint?>? numericSourceIps = sourceIpValidationResult.Match(
+        (IEnumerable<uint?>? numericSourceIps, bool sourceIpDnsResolved) = sourceIpValidationResult.Match(
             errors => 
             {
                 errorMessages[nameof(ApplicationSourceIp)] = errors;
-                return null!;
+                return (null!, false);
             },
-            bytes => bytes.ipBytes
+            bytes => bytes
         );
 
         var destinationPortValidationResult = ValidatePort(ApplicationDestinationPort);
@@ -169,6 +170,11 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel, INotify
 
         Dispatcher.UIThread.Invoke(() =>
         {
+            if (sourceIpDnsResolved && numericSourceIps != null)
+            {
+                IPAddress[] convertedIps = numericSourceIps.Select(item => item?.ConvertToIpAddress()).Where(item => item != null).ToArray()!;
+                ResolvedIps.Add(new ResolvedDns(ApplicationSourceIp, convertedIps));
+            }
             RuleProcessingResponses.Clear();
         });
 
@@ -211,7 +217,9 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel, INotify
             errors.Add("Please supply a value");
             return errors;
         }
-        IEnumerable<uint?> resolvedIps = (await DnsResolver.ResolveAddress(ipAddressValue)).Cast<uint?>() ?? new List<uint?>();
+        IEnumerable<uint?> resolvedIps = ipAddressValue == "*" 
+            ? []
+            : (await DnsResolver.ResolveAddress(ipAddressValue)).Cast<uint?>() ?? new List<uint?>();
         if (resolvedIps.Any())
         {
             return OneOf<List<string>, (IEnumerable<uint?>, bool)>.FromT1((resolvedIps, true));

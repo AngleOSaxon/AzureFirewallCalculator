@@ -2,16 +2,12 @@ using AzureFirewallCalculator.Core.Dns;
 
 namespace AzureFirewallCalculator.Core;
 
-public class RuleProcessor
+public class RuleProcessor(IDnsResolver dnsResolver, Firewall firewall)
 {
-    public RuleProcessor(IDnsResolver dnsResolver, Firewall firewall)
-    {
-        DnsResolver = dnsResolver;
-        Firewall = firewall;
-    }
+    public IDnsResolver DnsResolver { get; } = dnsResolver;
+    public Firewall Firewall { get; } = firewall;
 
-    public IDnsResolver DnsResolver { get; }
-    public Firewall Firewall { get; }
+    private readonly NetworkProcessingResponseComparer Comparer = new();
 
     public async Task<NetworkProcessingResponse[]> ProcessNetworkRequests(NetworkRequest[] networkRequests)
     {
@@ -29,7 +25,7 @@ public class RuleProcessor
             }
         }
 
-        return [.. networkRequestResults.Distinct().OrderBy(item => item.Priority)];
+        return [.. networkRequestResults.Distinct(Comparer).OrderBy(item => item.Priority)];
     }
 
     public async Task<NetworkProcessingResponse[]> ProcessNetworkRequest(NetworkRequest networkRequest) => await ProcessNetworkRequests([networkRequest]);
