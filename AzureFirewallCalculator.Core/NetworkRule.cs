@@ -9,7 +9,7 @@ public record class NetworkRule
 
     public RuleIpRange[] SourceIps { get; }
 
-    public RuleIpRange[] DestinationIps { get; }
+    public RuleIpRange[] DestinationIps { get; init; }
 
     public string[] DestinationFqdns { get; }
 
@@ -30,55 +30,49 @@ public record class NetworkRule
         DnsResolver = dnsResolver;
     }
 
-    /// <summary>
-    /// Clone this rule with the <see cref="this.DestinationFqdns" /> removed and the resolved IPs
-    /// from the FQDNs added to the list of <see cref="this.DestinationIps"/>.  Allows the rule
-    /// to be used as if the FQDNs had been resolved at rule creation, the way they were in earlier
-    /// iterations of the program
-    /// </summary>
-    /// <param name="resolvedIps">The IPs that were resolved from <see cref="DestinationFqdns"/> using <see cref="DnsResolver"/></param>
-    /// <returns>A clone of this <see cref="NetworkRule"/></returns>
-    private NetworkRule CloneWithResolvedIps(RuleIpRange[] resolvedIps) => new (
-            name: Name,
-            sourceIps: SourceIps,
-            destinationIps: [.. DestinationIps, .. resolvedIps],
-            destinationFqdns: [],
-            destinationPorts: DestinationPorts,
-            networkProtocols: NetworkProtocols,
-            dnsResolver: DnsResolver
-        );
-
-    public async Task<NetworkRuleMatch> Matches(NetworkRequest request)
+    public async Task<NetworkRuleMatch> Matches(NetworkRequest[] requests)
     {
-        var (source, destination, destinationPort, protocol) = request;
-        var sourcesInRange = source == null
-            ? SourceIps 
-            : SourceIps.Where(item => source >= item.Start && source <= item.End).ToArray();
+        List<RuleIpRange> allSourcesInRange = [];
+        List<RuleIpRange> allDestinationsInRange = [];
+        List<RulePortRange> allDestinationPorts = [];
+        NetworkProtocols matchedProtocols = NetworkProtocols.None;
 
-        var resolvedFqdns = (await Task.WhenAll(DestinationFqdns.Select(item => DnsResolver.ResolveAddress(item))))
-            .SelectMany(item => item.Select(ip => new RuleIpRange(ip, ip)))
-            .ToArray();
-        var destinationIps = DestinationIps
-            .Concat(resolvedFqdns)
-            .ToArray();
-        
-        var destinationsInRange = destination == null
-            ? destinationIps
-            : destinationIps.Where(item => destination >= item.Start && destination <= item.End).ToArray();
-        // No ports in ICMP
-        var destinationPortInRange = request.DestinationPort == null
-            ? DestinationPorts
-            : DestinationPorts.Where(item => (destinationPort >= item.Start && destinationPort <= item.End) || protocol.HasFlag(NetworkProtocols.ICMP));
+        foreach (var request in requests)
+        {
+            var (source, destination, destinationPort, protocol) = request;
+            var sourcesInRange = source == null
+                ? SourceIps 
+                : SourceIps.Where(item => source >= item.Start && source <= item.End).ToArray();
+            allSourcesInRange.AddRange(sourcesInRange);
 
-        var matchedProtocols = request.Protocol & NetworkProtocols;
+            var resolvedFqdns = (await Task.WhenAll(DestinationFqdns.Select(item => DnsResolver.ResolveAddress(item))))
+                .SelectMany(item => item.Select(ip => new RuleIpRange(ip, ip)))
+                .ToArray();
+            var destinationIps = DestinationIps
+                .Concat(resolvedFqdns)
+                .ToArray();
+            
+            var destinationsInRange = destination == null
+                ? destinationIps
+                : destinationIps.Where(item => destination >= item.Start && destination <= item.End).ToArray();
+            allDestinationsInRange.AddRange(destinationsInRange);
+
+            // No ports in ICMP
+            var destinationPortsInRange = request.DestinationPort == null
+                ? DestinationPorts
+                : DestinationPorts.Where(item => (destinationPort >= item.Start && destinationPort <= item.End) || protocol.HasFlag(NetworkProtocols.ICMP));
+            allDestinationPorts.AddRange(destinationPortsInRange);
+
+            matchedProtocols |= request.Protocol & NetworkProtocols;
+        }
 
         return new NetworkRuleMatch(
-            Matched: protocol != NetworkProtocols.None && sourcesInRange.Length != 0 && destinationsInRange.Length != 0 && destinationPortInRange.Any() && NetworkProtocols.HasFlag(protocol),
-            MatchedSourceIps: sourcesInRange,
-            MatchedDestinationIps: destinationsInRange,
+            Matched: matchedProtocols != NetworkProtocols.None && allSourcesInRange.Count != 0 && allDestinationsInRange.Count != 0 && allDestinationPorts.Count != 0 && NetworkProtocols.HasFlag(matchedProtocols),
+            MatchedSourceIps: allSourcesInRange.Distinct().ToArray(),
+            MatchedDestinationIps: allDestinationsInRange.Distinct().ToArray(),
             MatchedProtocols: matchedProtocols,
-            MatchedPorts: destinationPortInRange.ToArray(),
-            Rule: CloneWithResolvedIps(resolvedFqdns) // Clone this rule so that it will show the resolved IPs on the UI
+            MatchedPorts: allDestinationPorts.Distinct().ToArray(),
+            Rule: this
         );
     }
 }

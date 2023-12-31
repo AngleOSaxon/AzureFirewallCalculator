@@ -36,13 +36,13 @@ public readonly record struct RuleIpRange
         var result = Parse(source, logger);
         if (result != null)
         {
-            return new RuleIpRange[] { result.Value };
+            return [result.Value];
         }
 
         var serviceTag = serviceTags.FirstOrDefault(item => item.Name.Equals(source, StringComparison.CurrentCultureIgnoreCase));
         if (serviceTag == null)
         {
-            return Array.Empty<RuleIpRange>();
+            return [];
         }
 
         return serviceTag.AddressPrefixes.Select((item) => Parse(item, logger))
