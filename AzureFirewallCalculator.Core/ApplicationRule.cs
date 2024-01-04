@@ -54,36 +54,54 @@ public record class ApplicationRule
         Protocols = protocols;
     }
 
-    public ApplicationRuleMatch Matches(ApplicationRequest request)
+    public ApplicationRuleMatch Matches(IEnumerable<ApplicationRequest> requests)
     {
-        var (sourceIp, destinationFqdn, protocol) = request;
+        var allSourcesInRange = new List<RuleIpRange>();
+        var allDestinationMatches = new List<string>();
+        var allProtocolMatches = new List<ApplicationProtocolPort>();
 
-        var sourceInRange = sourceIp == null
-            ? SourceIps
-            : SourceIps.Where(item => sourceIp >= item.Start && sourceIp <= item.End);
-        // TODO: Handle TargetURL postfix wildcards.  Only work in path; not in domain
-        // https://learn.microsoft.com/en-us/azure/firewall/firewall-faq#how-do-wildcards-work-in-target-urls-and-target-fqdns-in-application-rules
-
-        var destinationMatches = destinationFqdn == "*"
-            ? DestinationFqdns.Concat(PrefixWildcards)
-            : DestinationFqdns
-                .Where(item => item.Equals(destinationFqdn))
-                .Concat(PrefixWildcards
-                    .Where(item => item.Length - 1 <= destinationFqdn.Length && item.AsSpan(1).SequenceEqual(destinationFqdn.AsSpan(destinationFqdn.Length - item.Length + 1, item.Length - 1))));
-
-        if (AllowAllDestinations)
+        foreach (var request in requests)
         {
-            destinationMatches = destinationMatches.Concat(new string[] { "*" });
+            var (sourceIp, destinationFqdn, protocol) = request;
+
+            var sourceInRange = sourceIp == null
+                ? SourceIps
+                : SourceIps.Where(item => sourceIp >= item.Start && sourceIp <= item.End);
+
+            allSourcesInRange.AddRange(sourceInRange);
+
+            // TODO: Handle TargetURL postfix wildcards.  Only work in path; not in domain
+            // https://learn.microsoft.com/en-us/azure/firewall/firewall-faq#how-do-wildcards-work-in-target-urls-and-target-fqdns-in-application-rules
+
+            var destinationMatches = destinationFqdn == "*"
+                ? DestinationFqdns.Concat(PrefixWildcards)
+                : DestinationFqdns
+                    .Where(item => item.Equals(destinationFqdn))
+                    .Concat(PrefixWildcards
+                        .Where(item => item.Length - 1 <= destinationFqdn.Length && item.AsSpan(1).SequenceEqual(destinationFqdn.AsSpan(destinationFqdn.Length - item.Length + 1, item.Length - 1))));
+
+            if (AllowAllDestinations)
+            {
+                destinationMatches = destinationMatches.Concat(["*"]);
+            }
+
+            allDestinationMatches.AddRange(destinationMatches);
+
+            var protocolMatches = Protocols.Where(item => item.Protocol == protocol.Protocol && (item.Port == protocol.Port || protocol.Port == null));
+            if (protocolMatches.Any())
+            {
+                allProtocolMatches.AddRange(protocolMatches);
+            }
         }
 
-        var protocolMatches = Protocols.FirstOrDefault(item => item.Protocol == protocol.Protocol && (item.Port == protocol.Port || protocol.Port == null));
-
         return new ApplicationRuleMatch(
-            Matched: sourceInRange.Any() && destinationMatches.Any() && protocolMatches != default,
-            MatchedSourceIps: sourceInRange.ToArray(),
-            MatchedTargetFqdns: destinationMatches.ToArray(),
-            MatchedProtocolPorts: [protocolMatches],
+            Matched: allSourcesInRange.Count != 0 && allDestinationMatches.Count != 0 && allProtocolMatches.Count != 0,
+            MatchedSourceIps: [..allSourcesInRange],
+            MatchedTargetFqdns: [..allDestinationMatches],
+            MatchedProtocolPorts: [..allProtocolMatches],
             Rule: this
         );
     }
+
+    public ApplicationRuleMatch Matches(ApplicationRequest request) => Matches([request]);
 }

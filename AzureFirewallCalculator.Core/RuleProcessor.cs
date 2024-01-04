@@ -8,7 +8,7 @@ public class RuleProcessor(IDnsResolver dnsResolver, Firewall firewall)
     public IDnsResolver DnsResolver { get; } = dnsResolver;
     public Firewall Firewall { get; } = firewall;
 
-    public async Task<ProcessingResponseBase[]> ProcessNetworkRequests(NetworkRequest[] networkRequests)
+    public async Task<ProcessingResponseBase[]> ProcessNetworkRequests(IEnumerable<NetworkRequest> networkRequests)
     {
         var responseTasks = Firewall.NetworkRuleCollections.Select(async collection => new NetworkProcessingResponse(
             Priority: collection.Priority,
@@ -22,6 +22,37 @@ public class RuleProcessor(IDnsResolver dnsResolver, Firewall firewall)
     }
 
     public async Task<ProcessingResponseBase[]> ProcessNetworkRequest(NetworkRequest networkRequest) => await ProcessNetworkRequests([networkRequest]);
+
+    public async Task<ProcessingResponseBase[]> ProcessApplicationRequests(ApplicationRequest[] applicationRequests)
+    {
+        var networkRequestTasks = applicationRequests.Select(async applicationRequest =>
+        {
+            var responseSeed = new List<ProcessingResponseBase>();
+            uint?[] destinationIps = applicationRequest.DestinationFqdn != "*"
+                ? [.. (await DnsResolver.ResolveAddress(applicationRequest.DestinationFqdn)).Cast<uint?>()]
+                : [null];
+            var networkRequests = destinationIps.Select(ip => new NetworkRequest(
+                sourceIp: applicationRequest.SourceIp,
+                destinationIp: ip,
+                destinationPort: applicationRequest.Protocol.Port,
+                protocol: NetworkProtocols.TCP // I don't think there's any UDP protocols?  Maybe also have UDP for everything?  Maybe just Any?
+            ));
+            return networkRequests;
+        });
+        var networkRequests = (await Task.WhenAll(networkRequestTasks)).SelectMany(item => item);
+
+        var networkRequestProcessing = Task.Run(() => ProcessNetworkRequests(networkRequests));
+        
+        var applicationResults = Firewall.ApplicationRuleCollections.Select(collection => new ApplicationProcessingResponse(
+            Priority: collection.Priority,
+            CollectionName: collection.Name,
+            RuleAction: collection.RuleAction,
+            MatchedRules: collection.GetMatches(applicationRequests)
+        ));
+        var networkResults = await networkRequestProcessing;
+
+        return [..networkResults, .. applicationResults.Where(item => item.MatchedRules.Length > 0).OrderBy(item => item.Priority)];
+    }
 
     public async Task<ProcessingResponseBase[]> ProcessApplicationRequest(ApplicationRequest applicationRequest)
     {

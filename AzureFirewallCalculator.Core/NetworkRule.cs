@@ -30,7 +30,7 @@ public record class NetworkRule
         DnsResolver = dnsResolver;
     }
 
-    public async Task<NetworkRuleMatch> Matches(NetworkRequest[] requests)
+    public async Task<NetworkRuleMatch> Matches(IEnumerable<NetworkRequest> requests)
     {
         List<RuleIpRange> allSourcesInRange = [];
         List<RuleIpRange> allDestinationsInRange = [];
