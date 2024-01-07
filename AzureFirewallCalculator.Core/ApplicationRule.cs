@@ -96,9 +96,9 @@ public record class ApplicationRule
 
         return new ApplicationRuleMatch(
             Matched: allSourcesInRange.Count != 0 && allDestinationMatches.Count != 0 && allProtocolMatches.Count != 0,
-            MatchedSourceIps: [..allSourcesInRange],
-            MatchedTargetFqdns: [..allDestinationMatches],
-            MatchedProtocolPorts: [..allProtocolMatches],
+            MatchedSourceIps: [..allSourcesInRange.Distinct().OrderBy(item => item.Start)],
+            MatchedTargetFqdns: [..allDestinationMatches.Distinct().Order()],
+            MatchedProtocolPorts: [..allProtocolMatches.Distinct().OrderBy(item => item.Protocol)],
             Rule: this
         );
     }

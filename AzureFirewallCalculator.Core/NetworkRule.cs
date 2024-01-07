@@ -68,10 +68,10 @@ public record class NetworkRule
 
         return new NetworkRuleMatch(
             Matched: matchedProtocols != NetworkProtocols.None && allSourcesInRange.Count != 0 && allDestinationsInRange.Count != 0 && allDestinationPorts.Count != 0 && NetworkProtocols.HasFlag(matchedProtocols),
-            MatchedSourceIps: allSourcesInRange.Distinct().ToArray(),
-            MatchedDestinationIps: allDestinationsInRange.Distinct().ToArray(),
+            MatchedSourceIps: [.. allSourcesInRange.Distinct().OrderBy(item => item.Start)],
+            MatchedDestinationIps: [.. allDestinationsInRange.Distinct().OrderBy(item => item.Start)],
             MatchedProtocols: matchedProtocols,
-            MatchedPorts: allDestinationPorts.Distinct().ToArray(),
+            MatchedPorts: [.. allDestinationPorts.Distinct().OrderBy(item => item.Start)],
             Rule: this
         );
     }
