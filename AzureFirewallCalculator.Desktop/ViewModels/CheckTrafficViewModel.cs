@@ -131,6 +131,7 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel, INotify
     public async Task CheckApplicationRule()
     {
         errorMessages.Clear();
+        ResolvedIps.Clear();
 
         var sourceIpValidationResult = await ValidateIpAddress(ApplicationSourceIp);
         (IEnumerable<uint?>? numericSourceIps, bool sourceIpDnsResolved) = sourceIpValidationResult.Match(
