@@ -14,6 +14,8 @@ using System.Net;
 using System.ComponentModel;
 using System.Collections;
 using OneOf;
+using Avalonia.Input;
+using System.Windows.Input;
 
 namespace AzureFirewallCalculator.Desktop.ViewModels;
 
@@ -51,7 +53,6 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel, INotify
     public IScreen HostScreen { get; }
     public event EventHandler<DataErrorsChangedEventArgs>? ErrorsChanged;
     public AvaloniaList<ResolvedDns> ResolvedIps { get; } = [];
-
     public bool HasErrors => throw new NotImplementedException();
 
     public async void CheckNetworkRule()

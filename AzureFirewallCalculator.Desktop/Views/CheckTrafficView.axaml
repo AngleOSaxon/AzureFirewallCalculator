@@ -49,7 +49,7 @@
         </Style>
     </UserControl.Styles>
     <DockPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch" LastChildFill="True">
-        <Grid Classes="SearchOptions" DockPanel.Dock="Top" ColumnDefinitions="4*,4*,2*,2*,4*" RowDefinitions="Auto,Auto,*,Auto">
+        <Grid Classes="SearchOptions" DockPanel.Dock="Top" ColumnDefinitions="4*,4*,2*,2*,4*" RowDefinitions="Auto,Auto,*,Auto" KeyUp="NetworkRuleSearch">
             <TextBox Grid.Row="0" Grid.Column="0" Text="{Binding NetworkSourceIp, Mode=TwoWay}" Watermark="10.0.0.0"/>
             <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding NetworkDestinationIp, Mode=TwoWay}" Watermark="10.0.0.10"/>
             <TextBox Grid.Row="0" Grid.Column="2" Text="{Binding NetworkDestinationPort, Mode=TwoWay}" Watermark="443"/>
@@ -62,7 +62,7 @@
             </ComboBox>
             <Button Grid.Row="0" Grid.Column="4" Command="{Binding CheckNetworkRuleCommand}" Content="Check Network Traffic" IsEnabled="true" />
         </Grid>
-        <Grid Classes="SearchOptions" DockPanel.Dock="Top" ColumnDefinitions="4*,4*,2*,2*,4*" RowDefinitions="Auto,Auto,*,Auto">
+        <Grid Classes="SearchOptions" DockPanel.Dock="Top" ColumnDefinitions="4*,4*,2*,2*,4*" RowDefinitions="Auto,Auto,*,Auto" KeyUp="ApplicationRuleSearch">
             <TextBox Grid.Row="0" Grid.Column="0" Text="{Binding ApplicationSourceIp, Mode=TwoWay}" Watermark="10.0.0.0"/>
             <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding DestinationFqdn, Mode=TwoWay}" Watermark="www.google.com"/>
             <TextBox Grid.Row="0" Grid.Column="2" Text="{Binding ApplicationDestinationPort, Mode=TwoWay}" Watermark="443"/>
