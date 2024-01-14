@@ -15,21 +15,12 @@ public partial class CheckTrafficView : ReactiveUserControl<CheckTrafficViewMode
         AvaloniaXamlLoader.Load(this);
     }
 
-    public void NetworkRuleSearch(object sender, KeyEventArgs args)
+    public async void FirewallRuleSearch(object sender, KeyEventArgs args)
     {
         if (args.Key != Key.Enter || args.Source is ComboBox)
         {
             return;
         }
-        this.ViewModel!.CheckNetworkRule();
-    }
-
-    public async void ApplicationRuleSearch(object sender, KeyEventArgs args)
-    {
-        if (args.Key != Key.Enter || args.Source is ComboBox)
-        {
-            return;
-        }
-        await this.ViewModel!.CheckApplicationRule();
+        await this.ViewModel!.CheckFirewallRules();
     }
 }

@@ -14,8 +14,6 @@ using System.Net;
 using System.ComponentModel;
 using System.Collections;
 using OneOf;
-using Avalonia.Input;
-using System.Windows.Input;
 
 namespace AzureFirewallCalculator.Desktop.ViewModels;
 
@@ -28,8 +26,7 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel, INotify
         Firewall = firewall;
         DnsResolver = dnsResolver;
         HostScreen = hostScreen;
-        CheckNetworkRuleCommand = ReactiveCommand.Create(() => CheckNetworkRule());
-        CheckApplicationRuleCommand = ReactiveCommand.CreateFromObservable(() => Observable.Start(() => CheckApplicationRule()));
+        CheckFirewallRulesCommand = ReactiveCommand.CreateFromObservable(() => Observable.Start(() => CheckFirewallRules()));
     }
 
     private readonly Dictionary<string, IEnumerable<string>> errorMessages = new(StringComparer.CurrentCultureIgnoreCase);
@@ -42,20 +39,29 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel, INotify
     public string NetworkDestinationPort { get; set; } = string.Empty;
     public string ApplicationSourceIp { get; set; } = string.Empty;
     public string DestinationFqdn { get; set; } = string.Empty;
+    public string[] SelectableProtocols { get; } = new object[] 
+    { 
+        NetworkProtocols.ICMP,
+        NetworkProtocols.TCP,
+        NetworkProtocols.UDP,
+        Core.ApplicationProtocol.Mssql,
+        Core.ApplicationProtocol.Https,
+        Core.ApplicationProtocol.Http
+    }.Select(item => item.ToString()!).ToArray();
+    public string? SelectedProtocol { get; set; } = null;
     public ApplicationProtocol[] SelectableApplicationProtocols { get; } = [Core.ApplicationProtocol.Mssql, Core.ApplicationProtocol.Https, Core.ApplicationProtocol.Http];
     public ApplicationProtocol? ApplicationProtocol { get; set; } 
     public string ApplicationDestinationPort { get; set; } = string.Empty;
     // Use Object list to stop cast exceptions when the Selected event fires.  Jesus.
     public AvaloniaList<object> RuleProcessingResponses { get; set; } = [];
-    public ReactiveCommand<Unit, Unit> CheckNetworkRuleCommand { get; }
-    public ReactiveCommand<Unit, Task> CheckApplicationRuleCommand { get; }
+    public ReactiveCommand<Unit, Task> CheckFirewallRulesCommand { get; }
     public string? UrlPathSegment => "check-traffic";
     public IScreen HostScreen { get; }
     public event EventHandler<DataErrorsChangedEventArgs>? ErrorsChanged;
     public AvaloniaList<ResolvedDns> ResolvedIps { get; } = [];
     public bool HasErrors => throw new NotImplementedException();
 
-    public async void CheckNetworkRule()
+    public async Task CheckFirewallRules()
     {
         errorMessages.Clear();
         ResolvedIps.Clear();
@@ -65,16 +71,6 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel, INotify
             errors => 
             {
                 errorMessages[nameof(NetworkSourceIp)] = errors;
-                return (null!, false);
-            },
-            bytes => bytes
-        );
-
-        var destinationIpValidationResult = await ValidateIpAddress(NetworkDestinationIp);
-        (IEnumerable<uint?>? numericDestinationIps, bool destinationDnsResolved) = destinationIpValidationResult.Match(
-            errors => 
-            {
-                errorMessages[nameof(NetworkDestinationIp)] = errors;
                 return (null!, false);
             },
             bytes => bytes
@@ -90,20 +86,35 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel, INotify
             port => port
         );
 
-        if (NetworkProtocol == NetworkProtocols.None)
+        var validNetworkProtocol = Enum.TryParse<NetworkProtocols>(SelectedProtocol, out var networkProtocol);
+        var validApplicationProtocol = Enum.TryParse<ApplicationProtocol>(SelectedProtocol, out var applicationProtocol);
+        if (!validNetworkProtocol && !validApplicationProtocol)
         {
-            errorMessages[nameof(NetworkProtocol)] = new List<string> { "Value is required" };
+            errorMessages[nameof(SelectedProtocol)] = new List<string> { "Value is required" };
         }
 
-        SetErrors(nameof(NetworkSourceIp), nameof(NetworkDestinationPort), nameof(NetworkDestinationIp), nameof(NetworkProtocol));
+        IEnumerable<uint?>? numericDestinationIps = [];
+        bool destinationDnsResolved = false;
 
-        if (Firewall == null || errorMessages.Count != 0 || numericSourceIps == null || numericDestinationIps == null)
+        var destinationIpValidationResult = await ValidateIpAddress(NetworkDestinationIp, allowUnresolvable: validApplicationProtocol);
+        (numericDestinationIps, destinationDnsResolved) = destinationIpValidationResult.Match(
+            errors => 
+            {
+                errorMessages[nameof(NetworkDestinationIp)] = errors;
+                return (null!, false);
+            },
+            bytes => bytes
+        );
+
+        SetErrors(nameof(NetworkSourceIp), nameof(NetworkDestinationPort), nameof(NetworkDestinationIp), nameof(SelectedProtocol));
+
+        if (Firewall == null || errorMessages.Count != 0 || numericSourceIps == null || numericDestinationIps == null 
+            || (!validNetworkProtocol && !validApplicationProtocol))
         {
             return;
         }
 
         Dispatcher.UIThread.Invoke(() =>
-
         {
             if (sourceIpDnsResolved && numericSourceIps != null)
             {
@@ -118,77 +129,53 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel, INotify
             RuleProcessingResponses.Clear();
         });
 
-        var requests = numericSourceIps.SelectMany(numericSourceIp => numericDestinationIps.Select(numericDestinationIp => new NetworkRequest(numericSourceIp, numericDestinationIp, destinationPort, NetworkProtocol)));
-
         var ruleProcessor = new RuleProcessor(DnsResolver, Firewall);
-        var results = await ruleProcessor.ProcessNetworkRequests(requests.ToArray());
+
+        var responsesTask = networkProtocol == NetworkProtocols.None
+            ? SearchApplicationRules(
+                numericSourceIps: numericSourceIps,
+                destinationFqdn: NetworkDestinationIp,
+                portProtocol: new ApplicationProtocolPort(applicationProtocol, destinationPort),
+                ruleProcessor: ruleProcessor
+            )
+            : SearchNetworkRules(
+                numericSourceIps: numericSourceIps,
+                numericDestinationIps: numericDestinationIps,
+                destinationPort: destinationPort,
+                protocol: networkProtocol,
+                ruleProcessor: ruleProcessor
+            );
+
+        var results = await responsesTask;
         Dispatcher.UIThread.Invoke(() =>
         {
             RuleProcessingResponses.AddRange(results);
         });
     }
 
-    public async Task CheckApplicationRule()
+    public static async Task<IEnumerable<ProcessingResponseBase>> SearchApplicationRules(
+        IEnumerable<uint?> numericSourceIps,
+        string destinationFqdn, 
+        ApplicationProtocolPort portProtocol, 
+        RuleProcessor ruleProcessor)
     {
-        errorMessages.Clear();
-        ResolvedIps.Clear();
-
-        var sourceIpValidationResult = await ValidateIpAddress(ApplicationSourceIp);
-        (IEnumerable<uint?>? numericSourceIps, bool sourceIpDnsResolved) = sourceIpValidationResult.Match(
-            errors => 
-            {
-                errorMessages[nameof(ApplicationSourceIp)] = errors;
-                return (null!, false);
-            },
-            bytes => bytes
-        );
-
-        var destinationPortValidationResult = ValidatePort(ApplicationDestinationPort);
-        var destinationPort = destinationPortValidationResult.Match(
-            errors =>
-            {
-                errorMessages[nameof(ApplicationDestinationPort)] = errors;
-                return null;
-            },
-            port => port
-        );
-
-        if (string.IsNullOrWhiteSpace(DestinationFqdn))
-        {
-            errorMessages[nameof(DestinationFqdn)] = new List<string> { "Value is required" };
-        }
-
-        if (ApplicationProtocol == null)
-        {
-            errorMessages[nameof(ApplicationProtocol)] = new List<string> { "Value is required" };
-        }
-
-        SetErrors(nameof(ApplicationSourceIp), nameof(ApplicationDestinationPort), nameof(DestinationFqdn), nameof(ApplicationProtocol));
-
-        if (Firewall == null || errorMessages.Count != 0 || numericSourceIps == null)
-        {
-            return;
-        }
-
-        Dispatcher.UIThread.Invoke(() =>
-        {
-            if (sourceIpDnsResolved && numericSourceIps != null)
-            {
-                IPAddress[] convertedIps = numericSourceIps.Select(item => item?.ConvertToIpAddress()).Where(item => item != null).ToArray()!;
-                ResolvedIps.Add(new ResolvedDns(ApplicationSourceIp, convertedIps));
-            }
-            RuleProcessingResponses.Clear();
-        });
-
-        var portProtocol = new ApplicationProtocolPort(ApplicationProtocol!.Value, destinationPort);
-        var requests = numericSourceIps.Select(item => new ApplicationRequest(item, DestinationFqdn, portProtocol));
-        var ruleProcessor = new RuleProcessor(DnsResolver, Firewall);
+        var requests = numericSourceIps.Select(item => new ApplicationRequest(item, destinationFqdn, portProtocol));
         var responses = (await Task.WhenAll(requests.Select(ruleProcessor.ProcessApplicationRequest))).SelectMany(item => item);
+        return responses;
+    }
 
-        Dispatcher.UIThread.Invoke(() =>
-        {
-            RuleProcessingResponses.AddRange(responses);
-        });
+    public static async Task<IEnumerable<ProcessingResponseBase>> SearchNetworkRules(
+        IEnumerable<uint?> numericSourceIps,
+        IEnumerable<uint?> numericDestinationIps,
+        ushort? destinationPort,
+        NetworkProtocols protocol,
+        RuleProcessor ruleProcessor)
+    {
+        var requests = numericSourceIps
+            .SelectMany(numericSourceIp => numericDestinationIps
+                .Select(numericDestinationIp => new NetworkRequest(numericSourceIp, numericDestinationIp, destinationPort, protocol)));
+        var results = await ruleProcessor.ProcessNetworkRequests(requests.ToArray());
+        return results;
     }
 
     private static OneOf<List<string>, ushort?> ValidatePort(string port)
@@ -205,7 +192,7 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel, INotify
         return new List<string>() { $"Must be a number between 1 and {ushort.MaxValue}, or a *" };
     }
 
-    private async Task<OneOf<List<string>, (IEnumerable<uint?> ipBytes, bool dnsResolved)>> ValidateIpAddress(string ipAddressValue)
+    private async Task<OneOf<List<string>, (IEnumerable<uint?> ipBytes, bool dnsResolved)>> ValidateIpAddress(string ipAddressValue, bool allowUnresolvable = false)
     {
         var errors = new List<string>();
 
@@ -222,7 +209,7 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel, INotify
         IEnumerable<uint?> resolvedIps = ipAddressValue == "*" 
             ? []
             : (await DnsResolver.ResolveAddress(ipAddressValue)).Cast<uint?>() ?? new List<uint?>();
-        if (resolvedIps.Any())
+        if (resolvedIps.Any() || allowUnresolvable)
         {
             return OneOf<List<string>, (IEnumerable<uint?>, bool)>.FromT1((resolvedIps, true));
         }
