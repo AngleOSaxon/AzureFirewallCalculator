@@ -32,26 +32,19 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel, INotify
     private readonly Dictionary<string, IEnumerable<string>> errorMessages = new(StringComparer.CurrentCultureIgnoreCase);
     public Firewall? Firewall { get; set; }
     public IDnsResolver DnsResolver { get; }
-    public string NetworkSourceIp { get; set; } = string.Empty;
-    public string NetworkDestinationIp { get; set; } = string.Empty;
-    public NetworkProtocols[] SelectableNetworkProtocols { get; } = [NetworkProtocols.TCP, NetworkProtocols.UDP, NetworkProtocols.ICMP];
-    public NetworkProtocols NetworkProtocol { get; set; } 
-    public string NetworkDestinationPort { get; set; } = string.Empty;
-    public string ApplicationSourceIp { get; set; } = string.Empty;
-    public string DestinationFqdn { get; set; } = string.Empty;
+    public string Source { get; set; } = string.Empty;
+    public string Destination { get; set; } = string.Empty;
+    public string DestinationPort { get; set; } = string.Empty;
     public string[] SelectableProtocols { get; } = new object[] 
     { 
         NetworkProtocols.ICMP,
         NetworkProtocols.TCP,
         NetworkProtocols.UDP,
-        Core.ApplicationProtocol.Mssql,
-        Core.ApplicationProtocol.Https,
-        Core.ApplicationProtocol.Http
+        ApplicationProtocol.Mssql,
+        ApplicationProtocol.Https,
+        ApplicationProtocol.Http
     }.Select(item => item.ToString()!).ToArray();
     public string? SelectedProtocol { get; set; } = null;
-    public ApplicationProtocol[] SelectableApplicationProtocols { get; } = [Core.ApplicationProtocol.Mssql, Core.ApplicationProtocol.Https, Core.ApplicationProtocol.Http];
-    public ApplicationProtocol? ApplicationProtocol { get; set; } 
-    public string ApplicationDestinationPort { get; set; } = string.Empty;
     // Use Object list to stop cast exceptions when the Selected event fires.  Jesus.
     public AvaloniaList<object> RuleProcessingResponses { get; set; } = [];
     public ReactiveCommand<Unit, Task> CheckFirewallRulesCommand { get; }
@@ -66,21 +59,21 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel, INotify
         errorMessages.Clear();
         ResolvedIps.Clear();
 
-        var sourceIpValidationResult = await ValidateIpAddress(NetworkSourceIp);
+        var sourceIpValidationResult = await ValidateIpAddress(Source);
         (IEnumerable<uint?>? numericSourceIps, bool sourceIpDnsResolved) = sourceIpValidationResult.Match(
             errors => 
             {
-                errorMessages[nameof(NetworkSourceIp)] = errors;
+                errorMessages[nameof(Source)] = errors;
                 return (null!, false);
             },
             bytes => bytes
         );
 
-        var destinationPortValidationResult = ValidatePort(NetworkDestinationPort);
+        var destinationPortValidationResult = ValidatePort(DestinationPort);
         var destinationPort = destinationPortValidationResult.Match(
             errors =>
             {
-                errorMessages[nameof(NetworkDestinationPort)] = errors;
+                errorMessages[nameof(DestinationPort)] = errors;
                 return null;
             },
             port => port
@@ -96,17 +89,17 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel, INotify
         IEnumerable<uint?>? numericDestinationIps = [];
         bool destinationDnsResolved = false;
 
-        var destinationIpValidationResult = await ValidateIpAddress(NetworkDestinationIp, allowUnresolvable: validApplicationProtocol);
+        var destinationIpValidationResult = await ValidateIpAddress(Destination, allowUnresolvable: validApplicationProtocol);
         (numericDestinationIps, destinationDnsResolved) = destinationIpValidationResult.Match(
             errors => 
             {
-                errorMessages[nameof(NetworkDestinationIp)] = errors;
+                errorMessages[nameof(Destination)] = errors;
                 return (null!, false);
             },
             bytes => bytes
         );
 
-        SetErrors(nameof(NetworkSourceIp), nameof(NetworkDestinationPort), nameof(NetworkDestinationIp), nameof(SelectedProtocol));
+        SetErrors(nameof(Source), nameof(DestinationPort), nameof(Destination), nameof(SelectedProtocol));
 
         if (Firewall == null || errorMessages.Count != 0 || numericSourceIps == null || numericDestinationIps == null 
             || (!validNetworkProtocol && !validApplicationProtocol))
@@ -116,15 +109,15 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel, INotify
 
         Dispatcher.UIThread.Invoke(() =>
         {
-            if (sourceIpDnsResolved && numericSourceIps != null)
+            if (sourceIpDnsResolved && (numericSourceIps?.Any() ?? false))
             {
                 IPAddress[] convertedIps = numericSourceIps.Select(item => item?.ConvertToIpAddress()).Where(item => item != null).ToArray()!;
-                ResolvedIps.Add(new ResolvedDns(NetworkSourceIp, convertedIps));
+                ResolvedIps.Add(new ResolvedDns(Source, convertedIps));
             }
-            if (destinationDnsResolved && numericDestinationIps != null)
+            if (destinationDnsResolved && (numericDestinationIps?.Any() ?? false))
             {
                 IPAddress[] convertedIps = numericDestinationIps.Select(item => item?.ConvertToIpAddress()).Where(item => item != null).ToArray()!;
-                ResolvedIps.Add(new ResolvedDns(NetworkDestinationIp, convertedIps));
+                ResolvedIps.Add(new ResolvedDns(Destination, convertedIps));
             }
             RuleProcessingResponses.Clear();
         });
@@ -134,7 +127,7 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel, INotify
         var responsesTask = networkProtocol == NetworkProtocols.None
             ? SearchApplicationRules(
                 numericSourceIps: numericSourceIps,
-                destinationFqdn: NetworkDestinationIp,
+                destinationFqdn: Destination,
                 portProtocol: new ApplicationProtocolPort(applicationProtocol, destinationPort),
                 ruleProcessor: ruleProcessor
             )

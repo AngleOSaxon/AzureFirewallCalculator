@@ -50,9 +50,9 @@
     </UserControl.Styles>
     <DockPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch" LastChildFill="True">
         <Grid Classes="SearchOptions" DockPanel.Dock="Top" ColumnDefinitions="4*,4*,2*,2*,4*" RowDefinitions="Auto,Auto,*,Auto" KeyUp="FirewallRuleSearch">
-            <TextBox Grid.Row="0" Grid.Column="0" Text="{Binding NetworkSourceIp, Mode=TwoWay}" Watermark="10.0.0.0"/>
-            <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding NetworkDestinationIp, Mode=TwoWay}" Watermark="10.0.0.10"/>
-            <TextBox Grid.Row="0" Grid.Column="2" Text="{Binding NetworkDestinationPort, Mode=TwoWay}" Watermark="443"/>
+            <TextBox Grid.Row="0" Grid.Column="0" Text="{Binding Source, Mode=TwoWay}" Watermark="10.0.0.0"/>
+            <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Destination, Mode=TwoWay}" Watermark="10.0.0.10"/>
+            <TextBox Grid.Row="0" Grid.Column="2" Text="{Binding DestinationPort, Mode=TwoWay}" Watermark="443"/>
             <ComboBox Grid.Row="0" Grid.Column="3" x:Name="SelectedProtocol" PlaceholderText="Protocol" ItemsSource="{Binding SelectableProtocols}" SelectedItem="{Binding SelectedProtocol}">
                 <ComboBox.ItemTemplate>
                     <DataTemplate>
