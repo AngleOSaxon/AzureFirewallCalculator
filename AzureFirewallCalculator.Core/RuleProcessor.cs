@@ -1,4 +1,6 @@
 using System.Collections.ObjectModel;
+using System.Linq;
+using System.Net;
 using AzureFirewallCalculator.Core.Dns;
 
 namespace AzureFirewallCalculator.Core;
@@ -8,6 +10,8 @@ public class RuleProcessor(IDnsResolver dnsResolver, Firewall firewall)
     public IDnsResolver DnsResolver { get; } = dnsResolver;
     public Firewall Firewall { get; } = firewall;
 
+    private readonly ushort[] ApplicationPorts = [80, 443, 1433];
+
     public async Task<ProcessingResponseBase[]> ProcessNetworkRequests(IEnumerable<NetworkRequest> networkRequests)
     {
         var responseTasks = Firewall.NetworkRuleCollections.Select(async collection => new NetworkProcessingResponse(
@@ -16,9 +20,40 @@ public class RuleProcessor(IDnsResolver dnsResolver, Firewall firewall)
             RuleAction: collection.RuleAction,
             MatchedRules: await collection.GetMatches(networkRequests)
         ));
+
+        var nonstandardApplicationSearches = networkRequests.Where(item => item.DestinationPort == null || !ApplicationPorts.Contains(item.DestinationPort.Value))
+        .SelectMany<NetworkRequest, ApplicationRequest>(item => 
+        [
+            new ApplicationRequest(
+                numericSourceIp: item.SourceIp,
+                destinationFqdn: "*",
+                protocol: new ApplicationProtocolPort(ApplicationProtocol.Http, item.DestinationPort)
+            ),
+            new ApplicationRequest(
+                numericSourceIp: item.SourceIp,
+                destinationFqdn: "*",
+                protocol: new ApplicationProtocolPort(ApplicationProtocol.Https, item.DestinationPort)
+            ),
+            new ApplicationRequest(
+                numericSourceIp: item.SourceIp,
+                destinationFqdn: "*",
+                protocol: new ApplicationProtocolPort(ApplicationProtocol.Mssql, item.DestinationPort)
+            ),
+        ]);
+
+        var applicationResults = Firewall.ApplicationRuleCollections.Select(collection => new ApplicationProcessingResponse(
+            Priority: collection.Priority,
+            CollectionName: collection.Name,
+            RuleAction: collection.RuleAction,
+            MatchedRules: collection.GetMatches(nonstandardApplicationSearches)
+        ));
+
         var responses = await Task.WhenAll(responseTasks);
 
-        return [.. responses.Where(item => item.MatchedRules.Length > 0).OrderBy(item => item.Priority)];
+        List<ProcessingResponseBase> results = [..responses.Where(item => item.MatchedRules.Length > 0).OrderBy(item => item.Priority)];
+        results.AddRange(applicationResults.Where(item => item.MatchedRules.Length > 0).OrderBy(item => item.Priority));
+
+        return [..results];
     }
 
     public async Task<ProcessingResponseBase[]> ProcessNetworkRequest(NetworkRequest networkRequest) => await ProcessNetworkRequests([networkRequest]);
@@ -27,7 +62,6 @@ public class RuleProcessor(IDnsResolver dnsResolver, Firewall firewall)
     {
         var networkRequestTasks = applicationRequests.Select(async applicationRequest =>
         {
-            var responseSeed = new List<ProcessingResponseBase>();
             uint?[] destinationIps = applicationRequest.DestinationFqdn != "*"
                 ? [.. (await DnsResolver.ResolveAddress(applicationRequest.DestinationFqdn)).Cast<uint?>()]
                 : [null];
