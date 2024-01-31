@@ -47,6 +47,11 @@
         <Style Selector="ItemsRepeater.ResolvedDns > Grid:nth-last-child(1) > Border.ShowLast">
             <Setter Property="IsVisible" Value="True" />
         </Style>
+        <Style Selector="ItemsRepeater.Warnings TextBlock, ItemsRepeater.Warnings SelectableTextBlock">
+            <Setter Property="Foreground" Value="Orange" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
     </UserControl.Styles>
     <DockPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch" LastChildFill="True">
         <Grid Classes="SearchOptions" DockPanel.Dock="Top" ColumnDefinitions="4*,4*,2*,2*,4*" RowDefinitions="Auto,Auto,*,Auto" KeyUp="FirewallRuleSearch">
@@ -64,7 +69,15 @@
         </Grid>
         <DockPanel>
             <DockPanel LastChildFill="False" DockPanel.Dock="Top">
-                <SelectableTextBlock DockPanel.Dock="Left" Classes="Pad" Text="No rules hit" IsVisible="{Binding !RuleProcessingResponses.Count}" />
+                <StackPanel Orientation="Vertical">
+                    <ItemsRepeater Classes="Warnings" ItemsSource="{Binding Warnings}">
+                        <ItemsRepeater.ItemTemplate>
+                            <DataTemplate>
+                                <SelectableTextBlock Classes="Pad" Text="{Binding .}" />
+                            </DataTemplate>
+                        </ItemsRepeater.ItemTemplate>
+                    </ItemsRepeater>
+                </StackPanel>
             </DockPanel>
             <TextBlock DockPanel.Dock="Top" Text="Resolved DNS:" Classes="Pad" FontWeight="Bold" IsVisible="{Binding ResolvedIps.Count}" />
             <ItemsRepeater Classes="ResolvedDns" ItemsSource="{Binding ResolvedIps}" Margin="50 0 0 0" DockPanel.Dock="Top">

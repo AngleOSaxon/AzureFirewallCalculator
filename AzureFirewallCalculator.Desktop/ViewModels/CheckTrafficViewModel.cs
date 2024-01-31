@@ -53,11 +53,13 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel, INotify
     public event EventHandler<DataErrorsChangedEventArgs>? ErrorsChanged;
     public AvaloniaList<ResolvedDns> ResolvedIps { get; } = [];
     public bool HasErrors => throw new NotImplementedException();
+    public AvaloniaList<string> Warnings { get; set; } = [];
 
     public async Task CheckFirewallRules()
     {
         errorMessages.Clear();
         ResolvedIps.Clear();
+        Warnings.Clear();
 
         var sourceIpValidationResult = await ValidateIpAddress(Source);
         (IEnumerable<uint?>? numericSourceIps, bool sourceIpDnsResolved) = sourceIpValidationResult.Match(
@@ -142,6 +144,11 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel, INotify
         var results = await responsesTask;
         Dispatcher.UIThread.Invoke(() =>
         {
+            if (validNetworkProtocol && results.Any(item => item is ApplicationProcessingResponse))
+            {
+                Warnings.Add(@"Warning: This request matched an application rule on a non-standard port.  If this request is not handled by a network rule first, it will be processed using the application protocol of that application rule, regardless of destination IP or FQDN.
+If that is not the correct protocol, application errors are likely and the traffic may not appear correctly in the logs.");
+            }
             RuleProcessingResponses.AddRange(results);
         });
     }
