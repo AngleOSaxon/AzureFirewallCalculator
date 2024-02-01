@@ -149,6 +149,16 @@ public class ArmService(ArmClient client, CachingResolver dnsResolver, ILogger<A
             var dnsTasks = destinationFqdns.Select(item => DnsResolver.ResolveAddress(item));
             await Task.WhenAll(dnsTasks);
 
+            IList<string> SafeGetIpGroupAddresses(string ipGroupId)
+            {
+                if (ipGroups.TryGetValue(ipGroupId, out var ipGroup))
+                {
+                    return ipGroup.IPAddresses;
+                }
+                Logger.LogWarning("Did not load IP Group '{ipGroupId}'; some IPs may be missing from rules", ipGroupId);
+                return [];
+            }
+
             var networkRuleCollections = firewallData.NetworkRuleCollections
                     .Select(collection => new NetworkRuleCollection
                     (
@@ -161,14 +171,14 @@ public class ArmService(ArmClient client, CachingResolver dnsResolver, ILogger<A
                                 return new NetworkRule(
                                     name: item.Name, 
                                     sourceIps: item.SourceIPGroups
-                                        .SelectMany(item => ipGroups[item].IPAddresses)
+                                        .SelectMany(SafeGetIpGroupAddresses)
                                         .Concat(item.SourceAddresses)
                                         .Select(item => RuleIpRange.Parse(item, Logger))
                                         .Where(item => item is not null)
                                         .Cast<RuleIpRange>()
                                         .ToArray(), 
                                     destinationIps: item.DestinationIPGroups
-                                        .SelectMany(item => ipGroups[item].IPAddresses)
+                                        .SelectMany(SafeGetIpGroupAddresses)
                                         .Concat(item.DestinationAddresses)
                                         .SelectMany(item => ParseWithServiceTags(item, serviceTags, Logger))
                                         .ToArray(),
@@ -195,7 +205,7 @@ public class ArmService(ArmClient client, CachingResolver dnsResolver, ILogger<A
                         (
                             name: item.Name,
                             sourceIps: item.SourceIPGroups
-                                .SelectMany(item => ipGroups[item].IPAddresses)
+                                .SelectMany(SafeGetIpGroupAddresses)
                                 .Concat(item.SourceAddresses)
                                 .Select(item => RuleIpRange.Parse(item, Logger))
                                 .Where(item => item is not null)
