@@ -149,6 +149,12 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel, INotify
                 Warnings.Add(@"Warning: This request matched an application rule on a non-standard port.  If this request is not handled by a network rule first, it will be processed using the application protocol of that application rule, regardless of destination IP or FQDN.
 If that is not the correct protocol, application errors are likely and the traffic may not appear correctly in the logs.");
             }
+
+            if (!results.Any())
+            {
+                Warnings.Add($"No rules matched {SelectedProtocol} from {Source} to {Destination}:{DestinationPort}");
+            }
+
             RuleProcessingResponses.AddRange(results);
         });
     }
