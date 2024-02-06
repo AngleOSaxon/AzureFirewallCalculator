@@ -10,14 +10,14 @@
              x:Class="AzureFirewallCalculator.Desktop.Views.LoadFromArmView">
     <DockPanel LastChildFill="True">
         <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
-            <ComboBox x:Name="Subscriptions" PlaceholderText="Select Subscription" ItemsSource="{Binding Subscriptions}" SelectedItem="{Binding Subscription}">
+            <ComboBox x:Name="Subscriptions" PlaceholderText="Select Subscription" ItemsSource="{Binding Subscriptions}" SelectedItem="{Binding Subscription}" IsEnabled="{Binding !DropdownsDisabled}">
                 <ComboBox.ItemTemplate>
                     <DataTemplate>
                         <TextBlock Text="{Binding Data.DisplayName}"/>
                     </DataTemplate>
                 </ComboBox.ItemTemplate>
             </ComboBox>
-            <ComboBox x:Name="Firewalls" PlaceholderText="Select Firewall" ItemsSource="{Binding Firewalls}" SelectedItem="{Binding Firewall}">
+            <ComboBox x:Name="Firewalls" PlaceholderText="Select Firewall" ItemsSource="{Binding Firewalls}" SelectedItem="{Binding Firewall}" IsEnabled="{Binding !DropdownsDisabled}">
                 <ComboBox.ItemTemplate>
                     <DataTemplate>
                         <TextBlock Text="{Binding Name}"/>

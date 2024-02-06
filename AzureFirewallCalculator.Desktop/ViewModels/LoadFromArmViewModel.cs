@@ -83,6 +83,13 @@ public class LoadFromArmViewModel : ReactiveObject, IRoutableViewModel, IScreen
         get { return userLoggedIn; }
         set { this.RaiseAndSetIfChanged(ref userLoggedIn, value); }
     }
+    private bool dropdownsDisabled;
+    public bool DropdownsDisabled
+    {
+        get { return dropdownsDisabled; }
+        set { this.RaiseAndSetIfChanged(ref dropdownsDisabled, value); }
+    }
+    
     public ReactiveCommand<Unit, Task> LoginCommand { get; }    
     
 
@@ -218,6 +225,7 @@ public class LoadFromArmViewModel : ReactiveObject, IRoutableViewModel, IScreen
         LoadIndicatorText = text;
         ShowLoadIndicator = true;
         _ = ChangeLoadIndicator(cancellationTokenSource.Token);
+        DropdownsDisabled = true;
         try
         {
             await action();
@@ -231,6 +239,7 @@ public class LoadFromArmViewModel : ReactiveObject, IRoutableViewModel, IScreen
             ShowLoadIndicator = false;
             cancellationTokenSource.Cancel();
             LoadIndicatorText = "Loading...";
+            DropdownsDisabled = false;
         }
     }
 }
