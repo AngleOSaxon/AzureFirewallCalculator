@@ -37,6 +37,10 @@ public record class NetworkRule
         List<RulePortRange> allDestinationPorts = [];
         NetworkProtocols matchedProtocols = NetworkProtocols.None;
 
+        var resolvedFqdns = (await Task.WhenAll(DestinationFqdns.Select(DnsResolver.ResolveAddress)))
+            .SelectMany(item => item.Select(ip => new RuleIpRange(ip, ip)))
+            .ToArray();
+
         foreach (var request in requests)
         {
             var (source, destination, destinationPort, protocol) = request;
@@ -45,9 +49,6 @@ public record class NetworkRule
                 : SourceIps.Where(item => source >= item.Start && source <= item.End).ToArray();
             allSourcesInRange.AddRange(sourcesInRange);
 
-            var resolvedFqdns = (await Task.WhenAll(DestinationFqdns.Select(item => DnsResolver.ResolveAddress(item))))
-                .SelectMany(item => item.Select(ip => new RuleIpRange(ip, ip)))
-                .ToArray();
             var destinationIps = DestinationIps
                 .Concat(resolvedFqdns)
                 .ToArray();
@@ -72,7 +73,10 @@ public record class NetworkRule
             MatchedDestinationIps: [.. allDestinationsInRange.Distinct().OrderBy(item => item.Start)],
             MatchedProtocols: matchedProtocols,
             MatchedPorts: [.. allDestinationPorts.Distinct().OrderBy(item => item.Start)],
-            Rule: this
+            Rule: this with 
+            {
+                DestinationIps = [..DestinationIps.Concat(resolvedFqdns)]
+            }
         );
     }
 }
