@@ -9,7 +9,7 @@
              x:DataType="vm:LoadFromArmViewModel"
              x:Class="AzureFirewallCalculator.Desktop.Views.LoadFromArmView">
     <DockPanel LastChildFill="True">
-        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+        <StackPanel Classes="FirewallSelection" DockPanel.Dock="Top" Orientation="Horizontal">
             <ComboBox x:Name="Subscriptions" PlaceholderText="Select Subscription" ItemsSource="{Binding Subscriptions}" SelectedItem="{Binding Subscription}" IsEnabled="{Binding !DropdownsDisabled}">
                 <ComboBox.ItemTemplate>
                     <DataTemplate>
@@ -24,7 +24,7 @@
                     </DataTemplate>
                 </ComboBox.ItemTemplate>
             </ComboBox>
-            <Button x:Name="ResetCache" Content="Refresh" Command="{Binding ReloadData}" />
+            <Button x:Name="ResetCache" Content="Refresh" Command="{Binding ReloadData}" Classes="MatchTextboxHeight" />
             <ProgressBar Margin="20,0,20,0" IsVisible="{Binding ShowLoadIndicator}"
                 Minimum="0" Maximum="100" Value="{Binding LoadIndicator}"
                 ShowProgressText="False" />

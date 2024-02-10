@@ -13,5 +13,15 @@
     <Application.Styles>
         <FluentTheme DensityStyle="Compact"/>
         <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"/>
+        <Style Selector=".FirewallSelection > TextBox,.FirewallSelection > ComboBox">
+            <Setter Property="Margin" Value="0,2,0,0" />
+        </Style>
+        <Style Selector=".FirewallSelection > Button">
+            <Setter Property="Margin" Value="0,1,0,0" />
+        </Style>
+        <Style Selector="Button.MatchTextboxHeight">
+            <Setter Property="Padding" Value="6,3,6,2" />
+            <Setter Property="Height" Value="25" />
+        </Style>
     </Application.Styles>
 </Application>

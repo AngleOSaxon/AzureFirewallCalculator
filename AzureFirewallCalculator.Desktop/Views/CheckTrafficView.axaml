@@ -65,7 +65,7 @@
                     </DataTemplate>
                 </ComboBox.ItemTemplate>
             </ComboBox>
-            <Button Grid.Row="0" Grid.Column="4" Command="{Binding CheckFirewallRulesCommand}" Content="Check Rules" IsEnabled="true" />
+            <Button Grid.Row="0" Grid.Column="4" Classes="MatchTextboxHeight" Command="{Binding CheckFirewallRulesCommand}" Content="Check Rules" IsEnabled="true" />
         </Grid>
         <DockPanel>
             <DockPanel LastChildFill="False" DockPanel.Dock="Top">
