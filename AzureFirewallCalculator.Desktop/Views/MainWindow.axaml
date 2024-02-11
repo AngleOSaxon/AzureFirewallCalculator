@@ -23,6 +23,7 @@
     <Window.Resources>
         <Converters:LogLevelConverter x:Key="LogLevelConverter"/>
         <Converters:BoolBrushConverter x:Key="BoolBrushConverter"/>
+        <Converters:AdditionConverter x:Key="AdditionConverter"/>
     </Window.Resources>
     <DockPanel>
         <Border Width="125" BorderBrush="Gray" BorderThickness="0,0,1,0" DockPanel.Dock="Left">
@@ -42,7 +43,7 @@
             <GridSplitter Grid.Column="1" ResizeDirection="Columns" Background="LightGray" MaxWidth="6" />
             <Border Grid.Column="2" IsVisible="True" Name="LogDisplay" BorderThickness="1,0,0,0" DockPanel.Dock="Right">
                 <DockPanel>
-                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Top">
+                    <WrapPanel Orientation="Horizontal" DockPanel.Dock="Top">
                         <Button 
                             Command="{Binding FilterLogsCommand}" 
                             Background="{Binding ErrorFilterActive, Converter={StaticResource BoolBrushConverter}, ConverterParameter=LightGray;Transparent;1.0, Mode=OneWay}}"
@@ -71,13 +72,22 @@
                             BorderBrush="{Binding DebugFilterActive, Converter={StaticResource BoolBrushConverter}, ConverterParameter=Transparent;Black;1.0, Mode=OneWay}}">
                             DBG
                         </Button>
-                    </StackPanel>
+                    </WrapPanel>
                     <ListBox ItemsSource="{Binding Logs}" Name="LogView">
+                        <ListBox.Styles>
+                            <Style Selector="ListBoxItem:selected">
+                                <Setter Property="IsSelected" Value="False"/>
+                            </Style>
+                        </ListBox.Styles>
                         <ListBox.ItemTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBox Text="{Binding LogLevel, Converter={StaticResource LogLevelConverter}}" BorderBrush="{Binding LogLevel, Converter={StaticResource LogLevelConverter}}" />
-                                    <TextBox Text="{Binding FormattedLog}" />
+                                    <Border VerticalAlignment="Stretch" CornerRadius="5,5,5,5" BorderThickness="1,1,1,1" BorderBrush="{Binding LogLevel, Converter={StaticResource LogLevelConverter}}">
+                                        <SelectableTextBlock VerticalAlignment="Center" TextAlignment="Center" Width="45" Text="{Binding LogLevel, Converter={StaticResource LogLevelConverter}}" />
+                                    </Border>
+                                    <Border CornerRadius="5,5,5,5" BorderThickness="1,1,1,1" BorderBrush="Black">
+                                        <SelectableTextBlock Padding="3,2,3,2" Width="{Binding $self.Bounds.Width, ElementName=LogView, Converter={StaticResource AdditionConverter}, ConverterParameter=-55}" TextWrapping="Wrap" Text="{Binding FormattedLog}" />
+                                    </Border>
                                 </StackPanel>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
