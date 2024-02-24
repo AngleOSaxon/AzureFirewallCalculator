@@ -31,6 +31,7 @@ public class MainWindowViewModel : ViewModelBase, IScreen
     public bool InformationFilterActive => (FilteredLogLevels & (1<<((int)LogLevel.Information))) == 0;    
     public bool WarningFilterActive => (FilteredLogLevels & (1<<((int)LogLevel.Warning))) == 0;    
     public bool DebugFilterActive => (FilteredLogLevels & (1<<((int)LogLevel.Debug))) == 0;    
+    public bool TraceFilterActive => (FilteredLogLevels & (1<<((int)LogLevel.Trace))) == 0;    
 
     private const string DEFAULT_USERNAME_TEXT = "Not logged in";
     private string userName = DEFAULT_USERNAME_TEXT;
@@ -55,7 +56,7 @@ public class MainWindowViewModel : ViewModelBase, IScreen
         return result > 0;
     }
 
-    private ushort FilteredLogLevels = ushort.MaxValue ^ (1<<((int)LogLevel.Information));
+    private ushort FilteredLogLevels = ushort.MaxValue ^ ((1<<(ushort)LogLevel.Information) | (1<<(ushort)LogLevel.Trace) | (1<<(ushort)LogLevel.Debug));
 
     public MainWindowViewModel(AuthenticationService authenticationService, FileService fileService, CachingResolver dnsResolver, InMemoryLogReader inMemoryLogReader, ArmService armService, ILoggerFactory loggerFactory)
     {
@@ -74,6 +75,7 @@ public class MainWindowViewModel : ViewModelBase, IScreen
             this.RaisePropertyChanged(nameof(InformationFilterActive));
             this.RaisePropertyChanged(nameof(WarningFilterActive));
             this.RaisePropertyChanged(nameof(DebugFilterActive));
+            this.RaisePropertyChanged(nameof(TraceFilterActive));
         });
 
         authenticationService.UserLogin += (source, account) =>

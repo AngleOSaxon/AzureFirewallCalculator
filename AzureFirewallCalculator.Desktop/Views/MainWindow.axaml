@@ -52,13 +52,6 @@
                             ERR
                         </Button>
                         <Button 
-                            Command="{Binding FilterLogsCommand}" 
-                            CommandParameter="Information"
-                            Background="{Binding InformationFilterActive, Converter={StaticResource BoolBrushConverter}, ConverterParameter=LightGray;Transparent;1.0, Mode=OneWay}}"
-                            BorderBrush="{Binding InformationFilterActive, Converter={StaticResource BoolBrushConverter}, ConverterParameter=Transparent;Black;1.0, Mode=OneWay}}">
-                            INF
-                        </Button>
-                        <Button 
                             Command="{Binding FilterLogsCommand}"
                             CommandParameter="Warning"
                             Background="{Binding WarningFilterActive, Converter={StaticResource BoolBrushConverter}, ConverterParameter=LightGray;Transparent;1.0, Mode=OneWay}}"
@@ -71,6 +64,20 @@
                             Background="{Binding DebugFilterActive, Converter={StaticResource BoolBrushConverter}, ConverterParameter=LightGray;Transparent;1.0, Mode=OneWay}}"
                             BorderBrush="{Binding DebugFilterActive, Converter={StaticResource BoolBrushConverter}, ConverterParameter=Transparent;Black;1.0, Mode=OneWay}}">
                             DBG
+                        </Button>
+                        <Button 
+                            Command="{Binding FilterLogsCommand}" 
+                            CommandParameter="Information"
+                            Background="{Binding InformationFilterActive, Converter={StaticResource BoolBrushConverter}, ConverterParameter=LightGray;Transparent;1.0, Mode=OneWay}}"
+                            BorderBrush="{Binding InformationFilterActive, Converter={StaticResource BoolBrushConverter}, ConverterParameter=Transparent;Black;1.0, Mode=OneWay}}">
+                            INF
+                        </Button>
+                        <Button 
+                            Command="{Binding FilterLogsCommand}" 
+                            CommandParameter="Trace"
+                            Background="{Binding TraceFilterActive, Converter={StaticResource BoolBrushConverter}, ConverterParameter=LightGray;Transparent;1.0, Mode=OneWay}}"
+                            BorderBrush="{Binding TraceFilterActive, Converter={StaticResource BoolBrushConverter}, ConverterParameter=Transparent;Black;1.0, Mode=OneWay}}">
+                            TRC
                         </Button>
                     </WrapPanel>
                     <ListBox ItemsSource="{Binding Logs}" Name="LogView">
