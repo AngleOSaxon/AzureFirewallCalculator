@@ -7,22 +7,26 @@ using System.Threading.Tasks;
 using Azure.Core;
 using Microsoft.Extensions.Logging;
 using Microsoft.Identity.Client;
+using Microsoft.Identity.Client.Extensions.Msal;
 
 namespace AzureFirewallCalculator.Desktop.Authentication;
 
 public class AuthenticationService
 {
-    public AuthenticationService(ILogger<AuthenticationService> logger)
+    public AuthenticationService(ILogger<AuthenticationService> logger, Config config)
     {
         IdentityClient = PublicClientApplicationBuilder.Create("5fb5bdf1-9e6f-4a5a-a0cd-390f7fe43ec9") // TODO: Move this to config file
             .WithAuthority(AzureCloudInstance.AzurePublic, "common")
             .WithRedirectUri("http://localhost")
             .Build();
         Logger = logger;
+        Config = config;
     }
 
+    private bool initialized = false;
     private IPublicClientApplication IdentityClient { get; }
     public ILogger<AuthenticationService> Logger { get; }
+    public Config Config { get; }
 
     public AuthenticationToken GetAuthenticationToken() => new(this);
     public EventHandler<IAccount>? UserLogin;
@@ -30,6 +34,15 @@ public class AuthenticationService
     protected virtual void OnUserLogin(IAccount e)
     {
         UserLogin?.Invoke(this, e);
+    }
+
+    public async Task Init()
+    {
+        if (!initialized)
+        {
+            await AttachTokenCache();
+            initialized = true;
+        }
     }
 
     public async Task<AccessToken> GetAccessToken(CancellationToken cancellationToken)
@@ -70,5 +83,25 @@ public class AuthenticationService
     public async Task<bool> IsUserLoggedIn()
     {
         return (await GetCurrentIdentity()) != null;
+    }
+
+    private async Task AttachTokenCache()
+    {
+        // Cache configuration and hook-up to public application. Refer to https://github.com/AzureAD/microsoft-authentication-extensions-for-dotnet/wiki/Cross-platform-Token-Cache#configuring-the-token-cache
+        var storageProperties = new StorageCreationPropertiesBuilder(Config.CacheFileName, Config.CacheFileDirectory)
+            .WithLinuxKeyring(
+                Config.LinuxKeyRingSchema,
+                Config.LinuxKeyRingCollection,
+                Config.LinuxKeyRingLabel,
+                Config.LinuxKeyRingAttr1,
+                Config.LinuxKeyRingAttr2
+            )
+            .WithMacKeyChain(
+                Config.KeychainServiceName,
+                Config.KeychainAccountName
+            )
+            .Build();
+        var msalcachehelper = await MsalCacheHelper.CreateAsync(storageProperties);
+        msalcachehelper.RegisterCache(IdentityClient.UserTokenCache);
     }
 }

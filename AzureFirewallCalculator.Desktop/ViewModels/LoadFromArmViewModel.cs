@@ -108,6 +108,8 @@ public class LoadFromArmViewModel : ReactiveObject, IRoutableViewModel, IScreen
 
     public async Task Init()
     {
+        await AuthenticationService.Init();
+
         if (!await AuthenticationService.IsUserLoggedIn())
         {
             return;

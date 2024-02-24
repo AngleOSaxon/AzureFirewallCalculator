@@ -29,9 +29,10 @@
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
-    <PackageReference Include="Microsoft.Identity.Client" Version="4.56.0" />
+    <PackageReference Include="Microsoft.Identity.Client" Version="4.59.0" />
     <PackageReference Include="Azure.ResourceManager.Network" Version="1.4.0" />
     <PackageReference Include="Azure.ResourceManager.Resources" Version="1.6.0" />
+    <PackageReference Include="Microsoft.Identity.Client.Extensions.Msal" Version="4.59.0" />
     <PackageReference Include="OneOf" Version="3.0.263" />
   </ItemGroup>
 
