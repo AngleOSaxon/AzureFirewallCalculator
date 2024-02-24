@@ -7,7 +7,9 @@ using System.Threading.Tasks;
 using Azure.Core;
 using Microsoft.Extensions.Logging;
 using Microsoft.Identity.Client;
+using Microsoft.Identity.Client.Extensibility;
 using Microsoft.Identity.Client.Extensions.Msal;
+using Microsoft.IdentityModel.LoggingExtensions;
 
 namespace AzureFirewallCalculator.Desktop.Authentication;
 
@@ -18,6 +20,7 @@ public class AuthenticationService
         IdentityClient = PublicClientApplicationBuilder.Create("5fb5bdf1-9e6f-4a5a-a0cd-390f7fe43ec9") // TODO: Move this to config file
             .WithAuthority(AzureCloudInstance.AzurePublic, "common")
             .WithRedirectUri("http://localhost")
+            .WithLogging(new IdentityLoggerAdapter(logger))
             .Build();
         Logger = logger;
         Config = config;
@@ -52,13 +55,14 @@ public class AuthenticationService
         try
         {
             result = await IdentityClient
-                .AcquireTokenSilent(new [] { "https://management.azure.com/.default" }, accounts.FirstOrDefault())
+                .AcquireTokenSilent(["https://management.azure.com/.default"], accounts.FirstOrDefault())
                 .ExecuteAsync(cancellationToken);
         }
         catch (MsalUiRequiredException)
         {
             result = await IdentityClient
-                .AcquireTokenInteractive(new [] { "https://management.azure.com/.default" })
+                .AcquireTokenInteractive(["https://management.azure.com/.default"])
+                .WithSystemWebViewOptions(AuthenticationWebViewOptions.Options)
                 .ExecuteAsync(cancellationToken);
         }
         catch (Exception ex)
@@ -87,7 +91,6 @@ public class AuthenticationService
 
     private async Task AttachTokenCache()
     {
-        // Cache configuration and hook-up to public application. Refer to https://github.com/AzureAD/microsoft-authentication-extensions-for-dotnet/wiki/Cross-platform-Token-Cache#configuring-the-token-cache
         var storageProperties = new StorageCreationPropertiesBuilder(Config.CacheFileName, Config.CacheFileDirectory)
             .WithLinuxKeyring(
                 Config.LinuxKeyRingSchema,
