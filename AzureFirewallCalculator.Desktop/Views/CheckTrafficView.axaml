@@ -117,46 +117,21 @@
                             <TextBlock Grid.Column="4" Grid.Row="0" Text="Ports" />
 
                             <SelectableTextBlock Grid.Column="0" Grid.Row="1" Text="{Binding Rule.Name}" />
-                            <ItemsRepeater Grid.Column="1" Grid.Row="1" x:Name="RuleSourceIps" ItemsSource="{Binding Rule.SourceIps}" x:CompileBindings="False">
-                                <ItemsRepeater.ItemTemplate>
-                                    <DataTemplate x:CompileBindings="False">
-                                        <SelectableTextBlock Text="{Binding}" x:CompileBindings="False">
-                                            <SelectableTextBlock.FontWeight>
-                                                <MultiBinding Converter="{StaticResource MatchFontWeightConverter}">
-                                                    <Binding Path="." />
-                                                    <Binding RelativeSource="{RelativeSource AncestorType=ItemsRepeater}" Path="DataContext.MatchedSourceIps"/>
-                                                </MultiBinding>
-                                            </SelectableTextBlock.FontWeight>
-                                        </SelectableTextBlock>
-                                    </DataTemplate>
-                                </ItemsRepeater.ItemTemplate>
-                                <ItemsRepeater.Layout>
-                                    <StackLayout Orientation="Vertical" />
-                                </ItemsRepeater.Layout>
-                            </ItemsRepeater>
-                            <ItemsRepeater Grid.Column="2" Grid.Row="1" x:Name="RuleDestinationIps" ItemsSource="{Binding Rule.DestinationIps}" x:CompileBindings="False">
-                                <ItemsRepeater.ItemTemplate>
-                                    <DataTemplate x:CompileBindings="False">
-                                        <SelectableTextBlock Text="{Binding}" x:CompileBindings="False">
-                                            <SelectableTextBlock.FontWeight>
-                                                <MultiBinding Converter="{StaticResource MatchFontWeightConverter}">
-                                                    <Binding Path="." />
-                                                    <Binding RelativeSource="{RelativeSource AncestorType=ItemsRepeater}" Path="DataContext.MatchedDestinationIps"/>
-                                                </MultiBinding>
-                                            </SelectableTextBlock.FontWeight>
-                                        </SelectableTextBlock>
-                                    </DataTemplate>
-                                </ItemsRepeater.ItemTemplate>
-                                <ItemsRepeater.Layout>
-                                    <StackLayout Orientation="Vertical" />
-                                </ItemsRepeater.Layout>
-                            </ItemsRepeater>
+                            <ContentControl Grid.Column="1" Grid.Row="1" Content="{Binding .}">
+                                <ContentControl.ContentTemplate>
+                                    <dataTemplates:MatchedSourceIpsTemplate />
+                                </ContentControl.ContentTemplate>
+                            </ContentControl>
+                            <ContentControl Grid.Column="2" Grid.Row="1" Content="{Binding .}">
+                                <ContentControl.ContentTemplate>
+                                    <dataTemplates:MatchedDestinationIpsTemplate />
+                                </ContentControl.ContentTemplate>
+                            </ContentControl>
                             <ContentControl Grid.Column="3" Grid.Row="1" Content="{Binding .}">
                                 <ContentControl.ContentTemplate>
                                     <dataTemplates:MatchedNetworkProtocolTemplate />
                                 </ContentControl.ContentTemplate>
                             </ContentControl>
-                            <!-- <SelectableTextBlock Grid.Column="3" Grid.Row="1" Text="{Binding Rule.NetworkProtocols}" /> -->
                             <ItemsRepeater Grid.Column="4" Grid.Row="1" x:Name="RuleDestinationPorts" ItemsSource="{Binding Rule.DestinationPorts}" x:CompileBindings="False">
                                 <ItemsRepeater.ItemTemplate>
                                     <DataTemplate x:CompileBindings="False">
@@ -184,46 +159,16 @@
                             <TextBlock Grid.Column="3" Grid.Row="0" Text="Protocols" />
 
                             <SelectableTextBlock Grid.Column="0" Grid.Row="1" Text="{Binding Rule.Name}" />
-                            <ItemsRepeater Grid.Column="1" Grid.Row="1" x:Name="RuleSourceIps" ItemsSource="{Binding Rule.SourceIps}" x:CompileBindings="False">
-                                <ItemsRepeater.ItemTemplate>
-                                    <DataTemplate x:CompileBindings="False">
-                                        <SelectableTextBlock Text="{Binding}" x:CompileBindings="False">
-                                            <SelectableTextBlock.FontWeight>
-                                                <MultiBinding Converter="{StaticResource MatchFontWeightConverter}">
-                                                    <Binding Path="." />
-                                                    <Binding RelativeSource="{RelativeSource AncestorType=ItemsRepeater}" Path="DataContext.MatchedSourceIps"/>
-                                                </MultiBinding>
-                                            </SelectableTextBlock.FontWeight>
-                                        </SelectableTextBlock>
-                                    </DataTemplate>
-                                </ItemsRepeater.ItemTemplate>
-                                <ItemsRepeater.Layout>
-                                    <StackLayout Orientation="Vertical" />
-                                </ItemsRepeater.Layout>
-                            </ItemsRepeater>
-                            <ItemsRepeater Grid.Column="2" Grid.Row="1" x:Name="RuleDestinationIps" x:CompileBindings="False">
-                                <ItemsRepeater.ItemsSource>
-                                    <MultiBinding Converter="{StaticResource ListConcatConverter}">
-                                        <Binding Path="Rule.DestinationFqdns" />
-                                        <Binding Path="Rule.PrefixWildcards"/>
-                                    </MultiBinding>
-                                </ItemsRepeater.ItemsSource>
-                                <ItemsRepeater.ItemTemplate>
-                                    <DataTemplate x:CompileBindings="False">
-                                        <SelectableTextBlock Text="{Binding}" x:CompileBindings="False">
-                                            <SelectableTextBlock.FontWeight>
-                                                <MultiBinding Converter="{StaticResource MatchFontWeightConverter}">
-                                                    <Binding Path="." />
-                                                    <Binding RelativeSource="{RelativeSource AncestorType=ItemsRepeater}" Path="DataContext.MatchedTargetFqdns"/>
-                                                </MultiBinding>
-                                            </SelectableTextBlock.FontWeight>
-                                        </SelectableTextBlock>
-                                    </DataTemplate>
-                                </ItemsRepeater.ItemTemplate>
-                                <ItemsRepeater.Layout>
-                                    <StackLayout Orientation="Vertical" />
-                                </ItemsRepeater.Layout>
-                            </ItemsRepeater>
+                            <ContentControl Grid.Column="1" Grid.Row="1" Content="{Binding .}">
+                                <ContentControl.ContentTemplate>
+                                    <dataTemplates:MatchedSourceIpsTemplate />
+                                </ContentControl.ContentTemplate>
+                            </ContentControl>
+                            <ContentControl Grid.Column="2" Grid.Row="1" Content="{Binding .}">
+                                <ContentControl.ContentTemplate>
+                                    <dataTemplates:MatchedDestinationIpsTemplate />
+                                </ContentControl.ContentTemplate>
+                            </ContentControl>
                             <ItemsRepeater Grid.Column="3" Grid.Row="1" x:Name="RuleDestinationPorts" ItemsSource="{Binding Rule.Protocols}" x:CompileBindings="False">
                                 <ItemsRepeater.ItemTemplate>
                                     <DataTemplate x:CompileBindings="False">
