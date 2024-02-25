@@ -3,6 +3,7 @@
              xmlns:vm="using:AzureFirewallCalculator.Desktop.ViewModels"
              xmlns:core="using:AzureFirewallCalculator.Core"
              xmlns:dataTemplates="using:AzureFirewallCalculator.Desktop.DataTemplates"
+             xmlns:controls="using:AzureFirewallCalculator.Desktop.Controls"
              xmlns:Converters="using:AzureFirewallCalculator.Desktop.Converters" xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:i="clr-namespace:Avalonia.Xaml.Interactivity;assembly=Avalonia.Xaml.Interactivity"
              xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Avalonia.Xaml.Interactions"
@@ -117,16 +118,8 @@
                             <TextBlock Grid.Column="4" Grid.Row="0" Text="Ports" />
 
                             <SelectableTextBlock Grid.Column="0" Grid.Row="1" Text="{Binding Rule.Name}" />
-                            <ContentControl Grid.Column="1" Grid.Row="1" Content="{Binding .}">
-                                <ContentControl.ContentTemplate>
-                                    <dataTemplates:MatchedSourceIpsTemplate />
-                                </ContentControl.ContentTemplate>
-                            </ContentControl>
-                            <ContentControl Grid.Column="2" Grid.Row="1" Content="{Binding .}">
-                                <ContentControl.ContentTemplate>
-                                    <dataTemplates:MatchedDestinationIpsTemplate />
-                                </ContentControl.ContentTemplate>
-                            </ContentControl>
+                            <controls:DisplayMatchedIps Grid.Column="1" Grid.Row="1" Ips="{Binding Rule.SourceIps}" Matches="{Binding MatchedSourceIps}" />
+                            <controls:DisplayMatchedIps Grid.Column="2" Grid.Row="1" Ips="{Binding Rule.DestinationIps}" Matches="{Binding MatchedDestinationIps}" />
                             <ContentControl Grid.Column="3" Grid.Row="1" Content="{Binding .}">
                                 <ContentControl.ContentTemplate>
                                     <dataTemplates:MatchedNetworkProtocolTemplate />
@@ -159,16 +152,30 @@
                             <TextBlock Grid.Column="3" Grid.Row="0" Text="Protocols" />
 
                             <SelectableTextBlock Grid.Column="0" Grid.Row="1" Text="{Binding Rule.Name}" />
-                            <ContentControl Grid.Column="1" Grid.Row="1" Content="{Binding .}">
-                                <ContentControl.ContentTemplate>
-                                    <dataTemplates:MatchedSourceIpsTemplate />
-                                </ContentControl.ContentTemplate>
-                            </ContentControl>
-                            <ContentControl Grid.Column="2" Grid.Row="1" Content="{Binding .}">
-                                <ContentControl.ContentTemplate>
-                                    <dataTemplates:MatchedDestinationIpsTemplate />
-                                </ContentControl.ContentTemplate>
-                            </ContentControl>
+                            <controls:DisplayMatchedIps Grid.Column="1" Grid.Row="1" Ips="{Binding Rule.SourceIps}" Matches="{Binding MatchedSourceIps}" />
+                            <ItemsRepeater Grid.Column="2" Grid.Row="1" x:Name="RuleDestinationIps" x:CompileBindings="False">
+                                <ItemsRepeater.ItemsSource>
+                                    <MultiBinding Converter="{StaticResource ListConcatConverter}">
+                                        <Binding Path="Rule.DestinationFqdns" />
+                                        <Binding Path="Rule.PrefixWildcards"/>
+                                    </MultiBinding>
+                                </ItemsRepeater.ItemsSource>
+                                <ItemsRepeater.ItemTemplate>
+                                    <DataTemplate x:CompileBindings="False">
+                                        <SelectableTextBlock Text="{Binding}" x:CompileBindings="False">
+                                            <SelectableTextBlock.FontWeight>
+                                                <MultiBinding Converter="{StaticResource MatchFontWeightConverter}">
+                                                    <Binding Path="." />
+                                                    <Binding RelativeSource="{RelativeSource AncestorType=ItemsRepeater}" Path="DataContext.MatchedTargetFqdns"/>
+                                                </MultiBinding>
+                                            </SelectableTextBlock.FontWeight>
+                                        </SelectableTextBlock>
+                                    </DataTemplate>
+                                </ItemsRepeater.ItemTemplate>
+                                <ItemsRepeater.Layout>
+                                    <StackLayout Orientation="Vertical" />
+                                </ItemsRepeater.Layout>
+                            </ItemsRepeater>
                             <ItemsRepeater Grid.Column="3" Grid.Row="1" x:Name="RuleDestinationPorts" ItemsSource="{Binding Rule.Protocols}" x:CompileBindings="False">
                                 <ItemsRepeater.ItemTemplate>
                                     <DataTemplate x:CompileBindings="False">
