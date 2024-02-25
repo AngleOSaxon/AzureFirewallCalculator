@@ -20,7 +20,7 @@ public class AuthenticationService
         IdentityClient = PublicClientApplicationBuilder.Create("5fb5bdf1-9e6f-4a5a-a0cd-390f7fe43ec9") // TODO: Move this to config file
             .WithAuthority(AzureCloudInstance.AzurePublic, "common")
             .WithRedirectUri("http://localhost")
-            .WithLogging(new IdentityLoggerAdapter(logger))
+            // .WithLogging(new IdentityLoggerAdapter(logger))
             .Build();
         Logger = logger;
         Config = config;
