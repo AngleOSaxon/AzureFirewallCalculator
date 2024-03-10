@@ -47,6 +47,7 @@ public class LoadFromArmViewModel : ReactiveObject, IRoutableViewModel, IScreen
     }
     public AvaloniaList<AzureFirewallData> Firewalls { get; }
     private AzureFirewallData? firewall;
+    private Task firewallSelecting = Task.CompletedTask;
     public AzureFirewallData? Firewall
     {
         get => firewall;
@@ -58,7 +59,7 @@ public class LoadFromArmViewModel : ReactiveObject, IRoutableViewModel, IScreen
                 return;
             }
 
-            _ = FirewallSelected(value);
+            firewallSelecting = FirewallSelected(value);
         }
     }
     public Firewall? ConvertedFirewall { get; set; }
@@ -83,16 +84,15 @@ public class LoadFromArmViewModel : ReactiveObject, IRoutableViewModel, IScreen
         get { return userLoggedIn; }
         set { this.RaiseAndSetIfChanged(ref userLoggedIn, value); }
     }
-    private bool dropdownsDisabled;
-    public bool DropdownsDisabled
+    private bool controlsDisabled;
+    public bool ControlsDisabled
     {
-        get { return dropdownsDisabled; }
-        set { this.RaiseAndSetIfChanged(ref dropdownsDisabled, value); }
+        get { return controlsDisabled; }
+        set { this.RaiseAndSetIfChanged(ref controlsDisabled, value); }
     }
     
     public ReactiveCommand<Unit, Task> LoginCommand { get; }    
     
-
     public LoadFromArmViewModel(IScreen screen, IDnsResolver dnsResolver, AuthenticationService authenticationService, ArmService armService, ILogger<LoadFromArmViewModel> logger)
     {
         HostScreen = screen;
@@ -210,15 +210,15 @@ public class LoadFromArmViewModel : ReactiveObject, IRoutableViewModel, IScreen
             return;
         }
 
-        await Dispatcher.UIThread.Invoke(async () => await SubscriptionSelected(Subscription));
+        await subscriptionSelecting;
 
-        Firewall = Firewalls.FirstOrDefault(item => item.Id == (firewallId ?? new ResourceIdentifier(string.Empty)));
+        Firewall = Firewalls.FirstOrDefault(item => item.Id == (firewallId ?? ResourceIdentifier.Root));
         if (Firewall == null)
         {
             return;
         }
 
-        await Dispatcher.UIThread.Invoke(async () => await FirewallSelected(Firewall));
+        await firewallSelecting;
     }
 
     private async Task Load(string text, Func<Task> action)
@@ -227,7 +227,7 @@ public class LoadFromArmViewModel : ReactiveObject, IRoutableViewModel, IScreen
         LoadIndicatorText = text;
         ShowLoadIndicator = true;
         _ = ChangeLoadIndicator(cancellationTokenSource.Token);
-        DropdownsDisabled = true;
+        ControlsDisabled = true;
         try
         {
             await action();
@@ -241,7 +241,7 @@ public class LoadFromArmViewModel : ReactiveObject, IRoutableViewModel, IScreen
             ShowLoadIndicator = false;
             cancellationTokenSource.Cancel();
             LoadIndicatorText = "Loading...";
-            DropdownsDisabled = false;
+            ControlsDisabled = false;
         }
     }
 }

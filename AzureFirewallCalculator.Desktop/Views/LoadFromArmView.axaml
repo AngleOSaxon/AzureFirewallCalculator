@@ -10,21 +10,21 @@
              x:Class="AzureFirewallCalculator.Desktop.Views.LoadFromArmView">
     <DockPanel LastChildFill="True">
         <StackPanel Classes="FirewallSelection" DockPanel.Dock="Top" Orientation="Horizontal">
-            <ComboBox x:Name="Subscriptions" PlaceholderText="Select Subscription" ItemsSource="{Binding Subscriptions}" SelectedItem="{Binding Subscription}" IsEnabled="{Binding !DropdownsDisabled}">
+            <ComboBox x:Name="Subscriptions" PlaceholderText="Select Subscription" ItemsSource="{Binding Subscriptions}" SelectedItem="{Binding Subscription}" IsEnabled="{Binding !ControlsDisabled}">
                 <ComboBox.ItemTemplate>
                     <DataTemplate>
                         <TextBlock Text="{Binding Data.DisplayName}"/>
                     </DataTemplate>
                 </ComboBox.ItemTemplate>
             </ComboBox>
-            <ComboBox x:Name="Firewalls" PlaceholderText="Select Firewall" ItemsSource="{Binding Firewalls}" SelectedItem="{Binding Firewall}" IsEnabled="{Binding !DropdownsDisabled}">
+            <ComboBox x:Name="Firewalls" PlaceholderText="Select Firewall" ItemsSource="{Binding Firewalls}" SelectedItem="{Binding Firewall}" IsEnabled="{Binding !ControlsDisabled}">
                 <ComboBox.ItemTemplate>
                     <DataTemplate>
                         <TextBlock Text="{Binding Name}"/>
                     </DataTemplate>
                 </ComboBox.ItemTemplate>
             </ComboBox>
-            <Button x:Name="ResetCache" Content="Refresh" Command="{Binding ReloadData}" Classes="MatchTextboxHeight" />
+            <Button x:Name="ResetCache" Content="Refresh" Command="{Binding ReloadData}" Classes="MatchTextboxHeight" IsEnabled="{Binding !ControlsDisabled}" />
             <ProgressBar Margin="20,0,20,0" IsVisible="{Binding ShowLoadIndicator}"
                 Minimum="0" Maximum="100" Value="{Binding LoadIndicator}"
                 ShowProgressText="False" />
@@ -35,7 +35,7 @@
                 <StackPanel Orientation="Vertical" VerticalAlignment="Center">
                     <TextBlock HorizontalAlignment="Center" Text="To load your firewall information from Azure Resource Manager, this application requires authorization to use your credentials" />
                     <TextBlock HorizontalAlignment="Center" Text="Click the button below to log in, or use one of the other options to load firewall information from files" />
-                    <Button HorizontalAlignment="Center" Command="{Binding LoginCommand}" Content="Login" />
+                    <Button HorizontalAlignment="Center" Command="{Binding LoginCommand}" Content="Login" IsEnabled="{Binding !ControlsDisabled}" />
                 </StackPanel>
             </rxui:RoutedViewHost.DefaultContent>
         </rxui:RoutedViewHost>
