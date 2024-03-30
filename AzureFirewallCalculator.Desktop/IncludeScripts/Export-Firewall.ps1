@@ -31,18 +31,18 @@ function Get-SubscriptionIdFromResourceId($resourceId) {
     return $resourceId.Split("/")[2];
 }
 
-$ipGroupSubscriptions = New-Object System.Collections.Generic.HashSet[String]]::new([StringComparer]::InvariantCultureIgnoreCase);
+$ipGroupSubscriptions = New-Object -TypeName 'System.Collections.Generic.HashSet[System.String]';
 foreach ($ruleCollection in $firewall.NetworkRuleCollections) {
     foreach ($rule in $ruleCollection.Rules) {
         foreach ($ipGroup in ($rule.SourceIpGroups + $rule.DestinationIpGroups)) {
-            $ipGroupSubscriptions.Add((Get-SubscriptionIdFromResourceId -resourceId $ipGroup));
+            $ipGroupSubscriptions.Add((Get-SubscriptionIdFromResourceId -resourceId $ipGroup).ToLower());
         }
     }
 }
 foreach ($ruleCollection in $firewall.ApplicationRuleCollections) {
     foreach ($rule in $ruleCollection.Rules) {
         foreach ($ipGroup in ($rule.SourceIpGroups)) {
-            $ipGroupSubscriptions.Add((Get-SubscriptionIdFromResourceId -resourceId $ipGroup));
+            $ipGroupSubscriptions.Add((Get-SubscriptionIdFromResourceId -resourceId $ipGroup).ToLower());
         }
     }
 }
