@@ -11,12 +11,12 @@ public record class NetworkRuleMatch(bool Matched, RuleIpRange[] MatchedSourceIp
 
 public record class ApplicationRuleMatch(bool Matched, RuleIpRange[] MatchedSourceIps, string[] MatchedTargetFqdns, ApplicationProtocolPort[] MatchedProtocolPorts, ApplicationRule Rule);
 
-public abstract record class ProcessingResponseBase(int Priority, string CollectionName, RuleAction RuleAction);
+public abstract record class ProcessingResponseBase(int GroupPriority, int Priority, string CollectionName, RuleAction RuleAction);
 
-public record class NetworkProcessingResponse(int Priority, string CollectionName, RuleAction RuleAction, NetworkRuleMatch[] MatchedRules) 
-    : ProcessingResponseBase(Priority, CollectionName, RuleAction);
+public record class NetworkProcessingResponse(int GroupPriority, int Priority, string CollectionName, RuleAction RuleAction, NetworkRuleMatch[] MatchedRules) 
+    : ProcessingResponseBase(GroupPriority, Priority, CollectionName, RuleAction);
 
-public record class ApplicationProcessingResponse(int Priority, string CollectionName, RuleAction RuleAction, ApplicationRuleMatch[] MatchedRules) 
-    : ProcessingResponseBase(Priority, CollectionName, RuleAction);
+public record class ApplicationProcessingResponse(int GroupPriority, int Priority, string CollectionName, RuleAction RuleAction, ApplicationRuleMatch[] MatchedRules) 
+    : ProcessingResponseBase(GroupPriority, Priority, CollectionName, RuleAction);
 
 public record class ServiceTag(string Name, string[] AddressPrefixes);

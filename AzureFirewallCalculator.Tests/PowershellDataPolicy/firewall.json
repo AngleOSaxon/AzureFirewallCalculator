@@ -1,0 +1,61 @@
+{
+  "IpConfigurations": [
+    {
+      "PrivateIPAddress": "10.0.1.4",
+      "Subnet": {
+        "Id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/AzureFirewallCalculator/providers/Microsoft.Network/virtualNetworks/FirewallTest/subnets/AzureFirewallSubnet"
+      },
+      "PublicIpAddress": {
+        "Id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/AzureFirewallCalculator/providers/Microsoft.Network/publicIPAddresses/firewalltest-firewall-pip"
+      },
+      "Name": "ipConfig",
+      "Etag": "W/\"71a527b3-d2d4-4286-8200-856a4900ca5a\"",
+      "Id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/AzureFirewallCalculator/providers/Microsoft.Network/azureFirewalls/FirewallTest/azureFirewallIpConfigurations/ipConfig"
+    }
+  ],
+  "ManagementIpConfiguration": null,
+  "ApplicationRuleCollections": [],
+  "NatRuleCollections": [],
+  "NetworkRuleCollections": [],
+  "Sku": {
+    "Name": "AZFW_VNet",
+    "Tier": "Standard"
+  },
+  "VirtualHub": null,
+  "FirewallPolicy": {
+    "Id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/AzureFirewallCalculator/providers/Microsoft.Network/firewallPolicies/FirewallTest-firewall-policy"
+  },
+  "ThreatIntelMode": "Alert",
+  "ThreatIntelWhitelist": {
+    "FQDNs": null,
+    "IpAddresses": null
+  },
+  "HubIPAddresses": null,
+  "LearnedIPPrefixes": null,
+  "PrivateRange": null,
+  "DNSEnableProxy": null,
+  "DNSServer": null,
+  "ProvisioningState": "Succeeded",
+  "Zones": [],
+  "AllowActiveFTP": null,
+  "EnableFatFlowLogging": null,
+  "EnableUDPLogOptimization": null,
+  "RouteServerId": null,
+  "ResourceGroupName": "AzureFirewallCalculator",
+  "Location": "centralus",
+  "ResourceGuid": null,
+  "Type": "Microsoft.Network/azureFirewalls",
+  "Tag": null,
+  "TagsTable": null,
+  "Name": "FirewallTest",
+  "Etag": "W/\"71a527b3-d2d4-4286-8200-856a4900ca5a\"",
+  "Id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/AzureFirewallCalculator/providers/Microsoft.Network/azureFirewalls/FirewallTest",
+  "IpConfigurationsText": "[\n  {\n    \"Name\": \"ipConfig\",\n    \"Etag\": \"W/\\\"71a527b3-d2d4-4286-8200-856a4900ca5a\\\"\",\n    \"Id\": \"/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/AzureFirewallCalculator/providers/Microsoft.Network/azureFirewalls/FirewallTest/azureFirewallIpConfigurations/ipConfig\",\n    \"PrivateIPAddress\": \"10.0.1.4\",\n    \"Subnet\": {\n      \"Id\": \"/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/AzureFirewallCalculator/providers/Microsoft.Network/virtualNetworks/FirewallTest/subnets/AzureFirewallSubnet\"\n    },\n    \"PublicIpAddress\": {\n      \"Id\": \"/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/AzureFirewallCalculator/providers/Microsoft.Network/publicIPAddresses/firewalltest-firewall-pip\"\n    }\n  }\n]",
+  "ManagementIpConfigurationText": "null",
+  "ApplicationRuleCollectionsText": "[]",
+  "NatRuleCollectionsText": "[]",
+  "NetworkRuleCollectionsText": "[]",
+  "ThreatIntelWhitelistText": "{\n  \"FQDNs\": null,\n  \"IpAddresses\": null\n}",
+  "PrivateRangeText": "null",
+  "DNSServersText": "null"
+}

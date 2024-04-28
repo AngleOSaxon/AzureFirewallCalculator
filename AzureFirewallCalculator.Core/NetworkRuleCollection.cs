@@ -4,6 +4,8 @@ public record class NetworkRuleCollection
 {
     public string Name { get; }
 
+    public int GroupPriority { get; set; }
+
     public int Priority { get; }
 
     public RuleAction RuleAction { get; }
@@ -13,6 +15,16 @@ public record class NetworkRuleCollection
     public NetworkRuleCollection(string name, int priority, RuleAction action, NetworkRule[] rules)
     {
         Name = name;
+        GroupPriority = int.MaxValue;
+        Priority = priority;
+        RuleAction = action;
+        Rules = rules;
+    }
+
+    public NetworkRuleCollection(string name, int groupPriority, int priority, RuleAction action, NetworkRule[] rules)
+    {
+        Name = name;
+        GroupPriority = groupPriority;
         Priority = priority;
         RuleAction = action;
         Rules = rules;

@@ -24,6 +24,10 @@
   <ItemGroup Condition="'$(Configuration)' == 'Debug'">
     <None Update="PowershellData/firewall.json" CopyToOutputDirectory="PreserveNewest" />
     <None Update="PowershellData/IpGroups.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="PowershellDataPolicy/firewall.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="PowershellDataPolicy/ipGroups.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="PowershellDataPolicy/policy.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="PowershellDataPolicy/ruleCollectionGroups.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 

@@ -1,0 +1,168 @@
+[
+  {
+    "Name": "SecondaryRuleCollectionGroup",
+    "Properties": {
+      "Priority": 250,
+      "Size": "0.00160408 MB",
+      "RuleCollection": [
+        {
+          "Action": {
+            "Type": "Allow"
+          },
+          "Rules": [
+            {
+              "protocols": [
+                "TCP"
+              ],
+              "SourceAddresses": [
+                "10.0.0.0"
+              ],
+              "DestinationAddresses": [
+                "10.0.1.0"
+              ],
+              "SourceIpGroups": [],
+              "DestinationIpGroups": [],
+              "DestinationPorts": [
+                "22"
+              ],
+              "DestinationFqdns": [],
+              "Description": null,
+              "Name": "Test",
+              "RuleType": "NetworkRule"
+            }
+          ],
+          "Name": "NetworkRules_4",
+          "Priority": 200,
+          "RuleCollectionType": "FirewallPolicyFilterRuleCollection"
+        }
+      ],
+      "Name": null,
+      "Etag": null,
+      "Id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourcegroups/AzureFirewallCalculator/providers/Microsoft.Network/firewallPolicies/FirewallTest-firewall-policy/ruleCollectionGroups/SecondaryRuleCollectionGroup"
+    }
+  },
+  {
+    "Name": "DefaultApplicationRuleCollectionGroup",
+    "Properties": {
+      "Priority": 200,
+      "Size": "0.002058983 MB",
+      "RuleCollection": [
+        {
+          "Action": {
+            "Type": "Allow"
+          },
+          "Rules": [
+            {
+              "protocols": [
+                "TCP"
+              ],
+              "SourceAddresses": [
+                "10.0.2.0/24"
+              ],
+              "DestinationAddresses": [
+                "10.0.2.0/24"
+              ],
+              "SourceIpGroups": [],
+              "DestinationIpGroups": [],
+              "DestinationPorts": [
+                "445"
+              ],
+              "DestinationFqdns": [],
+              "Description": null,
+              "Name": "Test",
+              "RuleType": "NetworkRule"
+            }
+          ],
+          "Name": "NetworkRules_3",
+          "Priority": 125,
+          "RuleCollectionType": "FirewallPolicyFilterRuleCollection"
+        },
+        {
+          "Action": {
+            "Type": "Allow"
+          },
+          "Rules": [
+            {
+              "SourceAddresses": [
+                "10.0.0.7"
+              ],
+              "TargetFqdns": [
+                "foxbat.database.windows.net"
+              ],
+              "FqdnTags": [],
+              "Protocols": [
+                {
+                  "ProtocolType": "Mssql",
+                  "Port": 1433
+                }
+              ],
+              "SourceIpGroups": [],
+              "WebCategories": [],
+              "TargetUrls": [],
+              "TerminateTLS": false,
+              "HttpHeadersToInsert": [],
+              "Description": null,
+              "Name": "SQL",
+              "RuleType": "ApplicationRule"
+            }
+          ],
+          "Name": "ApplicationRules_2",
+          "Priority": 200,
+          "RuleCollectionType": "FirewallPolicyFilterRuleCollection"
+        }
+      ],
+      "Name": null,
+      "Etag": null,
+      "Id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourcegroups/AzureFirewallCalculator/providers/Microsoft.Network/firewallPolicies/FirewallTest-firewall-policy/ruleCollectionGroups/DefaultApplicationRuleCollectionGroup"
+    }
+  },
+  {
+    "Name": "DefaultApplicationRuleGroup",
+    "Properties": {
+      "Priority": 201,
+      "Size": "0.001823425 MB",
+      "RuleCollection": [
+        {
+          "Action": {
+            "Type": "Allow"
+          },
+          "Rules": [
+            {
+              "SourceAddresses": [],
+              "TargetFqdns": [
+                "*.microsoft.com"
+              ],
+              "FqdnTags": [],
+              "Protocols": [
+                {
+                  "ProtocolType": "Http",
+                  "Port": 80
+                },
+                {
+                  "ProtocolType": "Https",
+                  "Port": 443
+                }
+              ],
+              "SourceIpGroups": [
+                "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/AzureFirewallCalculator/providers/Microsoft.Network/ipGroups/test-group-1"
+              ],
+              "WebCategories": [],
+              "TargetUrls": [],
+              "TerminateTLS": false,
+              "HttpHeadersToInsert": [],
+              "Description": null,
+              "Name": "Https",
+              "RuleType": "ApplicationRule"
+            }
+          ],
+          "Name": "ApplicationRules_1",
+          "Priority": 101,
+          "RuleCollectionType": "FirewallPolicyFilterRuleCollection"
+        }
+      ],
+      "Name": null,
+      "Etag": null,
+      "Id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourcegroups/AzureFirewallCalculator/providers/Microsoft.Network/firewallPolicies/FirewallTest-firewall-policy/ruleCollectionGroups/DefaultApplicationRuleGroup"
+    }
+  }
+]

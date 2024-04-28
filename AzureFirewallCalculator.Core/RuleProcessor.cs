@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Net;
+using System.Text.RegularExpressions;
 using AzureFirewallCalculator.Core.Dns;
 
 namespace AzureFirewallCalculator.Core;
@@ -15,6 +16,7 @@ public class RuleProcessor(IDnsResolver dnsResolver, Firewall firewall)
     public async Task<ProcessingResponseBase[]> ProcessNetworkRequests(IEnumerable<NetworkRequest> networkRequests)
     {
         var responseTasks = Firewall.NetworkRuleCollections.Select(async collection => new NetworkProcessingResponse(
+            GroupPriority: collection.GroupPriority,
             Priority: collection.Priority,
             CollectionName: collection.Name,
             RuleAction: collection.RuleAction,
@@ -42,6 +44,7 @@ public class RuleProcessor(IDnsResolver dnsResolver, Firewall firewall)
         ]);
 
         var applicationResults = Firewall.ApplicationRuleCollections.Select(collection => new ApplicationProcessingResponse(
+            GroupPriority: collection.GroupPriority,
             Priority: collection.Priority,
             CollectionName: collection.Name,
             RuleAction: collection.RuleAction,
@@ -78,6 +81,7 @@ public class RuleProcessor(IDnsResolver dnsResolver, Firewall firewall)
         var networkRequestProcessing = Task.Run(() => ProcessNetworkRequests(networkRequests));
         
         var applicationResults = Firewall.ApplicationRuleCollections.Select(collection => new ApplicationProcessingResponse(
+            GroupPriority: collection.GroupPriority,
             Priority: collection.Priority,
             CollectionName: collection.Name,
             RuleAction: collection.RuleAction,
@@ -108,13 +112,13 @@ public class RuleProcessor(IDnsResolver dnsResolver, Firewall firewall)
             var matches = collection.GetMatches(applicationRequest);
             if (matches.Length != 0)
             {
-                accumulator.Add(new ApplicationProcessingResponse(collection.Priority, collection.Name, collection.RuleAction, MatchedRules: matches));
+                accumulator.Add(new ApplicationProcessingResponse(collection.GroupPriority, collection.Priority, collection.Name, collection.RuleAction, MatchedRules: matches));
             }
             return accumulator;
         });
 
         var networkResults = await networkRequestTask;
 
-        return [.. networkResults.OrderBy(item => item.Priority), .. results.Distinct().OrderBy(item => item.Priority)];
+        return [.. networkResults.OrderBy(item => item.GroupPriority).ThenBy(item => item.Priority), .. results.Distinct().OrderBy(item => item.Priority)];
     }
 }

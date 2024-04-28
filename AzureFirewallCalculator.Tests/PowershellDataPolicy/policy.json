@@ -1,0 +1,41 @@
+[
+  {
+    "Identity": null,
+    "ThreatIntelMode": "Alert",
+    "ThreatIntelWhitelist": null,
+    "BasePolicy": null,
+    "ProvisioningState": "Succeeded",
+    "Size": "0.002340317 MB",
+    "RuleCollectionGroups": [
+      {
+        "Id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourcegroups/AzureFirewallCalculator/providers/Microsoft.Network/firewallPolicies/FirewallTest-firewall-policy/ruleCollectionGroups/SecondaryRuleCollectionGroup"
+      },
+      {
+        "Id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourcegroups/AzureFirewallCalculator/providers/Microsoft.Network/firewallPolicies/FirewallTest-firewall-policy/ruleCollectionGroups/DefaultApplicationRuleCollectionGroup"
+      },
+      {
+        "Id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourcegroups/AzureFirewallCalculator/providers/Microsoft.Network/firewallPolicies/FirewallTest-firewall-policy/ruleCollectionGroups/DefaultApplicationRuleGroup"
+      }
+    ],
+    "DnsSettings": null,
+    "SqlSetting": null,
+    "IntrusionDetection": null,
+    "TransportSecurity": null,
+    "Sku": {
+      "Tier": "Standard"
+    },
+    "Snat": null,
+    "ExplicitProxy": null,
+    "PrivateRange": null,
+    "ResourceGroupName": "AzureFirewallCalculator",
+    "Location": "centralus",
+    "ResourceGuid": null,
+    "Type": "Microsoft.Network/FirewallPolicies",
+    "Tag": null,
+    "TagsTable": null,
+    "Name": "FirewallTest-firewall-policy",
+    "Etag": "b590a6c3-3d4f-4d2d-a6d0-797868004b86",
+    "Id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourcegroups/AzureFirewallCalculator/providers/Microsoft.Network/firewallPolicies/FirewallTest-firewall-policy",
+    "PrivateRangeText": "null"
+  }
+]
