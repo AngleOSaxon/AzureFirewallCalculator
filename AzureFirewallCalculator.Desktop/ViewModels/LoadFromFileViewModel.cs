@@ -17,6 +17,8 @@ using Microsoft.Extensions.Logging;
 using AzureFirewallCalculator.Core;
 using Firewall = AzureFirewallCalculator.Core.PowershellSource.Firewall;
 using AzureFirewallCalculator.Core.Serialization;
+using Microsoft.Extensions.Azure;
+using System.Text.Json.Serialization;
 
 namespace AzureFirewallCalculator.Desktop.ViewModels;
 
@@ -32,6 +34,8 @@ public class LoadFromFileViewModel : ReactiveObject, IRoutableViewModel, IScreen
         serviceTags = [];
         LoadFirewallCommand = ReactiveCommand.CreateFromTask(() => LoadFirewall());
         LoadIpGroupsCommand = ReactiveCommand.CreateFromTask(() => LoadIpGroups());
+        LoadPoliciesCommand = ReactiveCommand.CreateFromTask(() => LoadPolicies());
+        LoadRuleCollectionGroupsCommand = ReactiveCommand.CreateFromTask(() => LoadRuleCollectionGroups());
         LoadServiceTagsCommand = ReactiveCommand.CreateFromTask(() => LoadServiceTags());
         SaveFirewallExportScriptCommand = ReactiveCommand.CreateFromTask(() => SaveFirewallExportScript());
     }
@@ -45,6 +49,8 @@ public class LoadFromFileViewModel : ReactiveObject, IRoutableViewModel, IScreen
     public RoutingState Router { get; } = new RoutingState();
     public ReactiveCommand<Unit, Unit> LoadFirewallCommand { get; }
     public ReactiveCommand<Unit, Unit> LoadIpGroupsCommand { get; }
+    public ReactiveCommand<Unit, Unit> LoadPoliciesCommand { get; }
+    public ReactiveCommand<Unit, Unit> LoadRuleCollectionGroupsCommand { get; }
     public ReactiveCommand<Unit, Unit> LoadServiceTagsCommand { get; }
     public ReactiveCommand<Unit, Unit> SaveFirewallExportScriptCommand { get; }
     private string? firewallFileName;
@@ -90,6 +96,38 @@ public class LoadFromFileViewModel : ReactiveObject, IRoutableViewModel, IScreen
     {
         get { return ipGroupsLoaded; }
         set { this.RaiseAndSetIfChanged(ref ipGroupsLoaded, value); }
+    }
+    private Policy[]? policies;
+    public Policy[]? Policies
+    {
+        get { return policies; }
+        set
+        {
+            this.RaiseAndSetIfChanged(ref policies, value);
+            PoliciesLoaded = value != default;
+        }
+    }
+    private bool policiesLoaded;
+    public bool PoliciesLoaded
+    {
+        get { return policiesLoaded; }
+        set { this.RaiseAndSetIfChanged(ref policiesLoaded, value); }
+    }
+    private RuleCollectionGroup[]? ruleCollectionGroups;
+    public RuleCollectionGroup[]? RuleCollectionGroups
+    {
+        get { return ruleCollectionGroups; }
+        set
+        {
+            this.RaiseAndSetIfChanged(ref ruleCollectionGroups, value);
+            RuleCollectionGroupsLoaded = value != default;
+        }
+    }
+    private bool ruleCollectionGroupsLoaded;
+    public bool RuleCollectionGroupsLoaded
+    {
+        get { return ruleCollectionGroupsLoaded; }
+        set { this.RaiseAndSetIfChanged(ref ruleCollectionGroupsLoaded, value); }
     }
     private ServiceTag[] serviceTags;
     public ServiceTag[] ServiceTags
@@ -154,13 +192,49 @@ public class LoadFromFileViewModel : ReactiveObject, IRoutableViewModel, IScreen
         await CheckAndConvert();
     }
 
+    public async Task LoadPolicies()
+    {
+        await Load("Importing Policy", async () =>
+        {
+            var filestream = await FileService.OpenFileAsync("Open Policy json export");
+            if (filestream == null)
+            {
+                return;
+            }
+            Policies = await JsonSerializer.DeserializeAsync(await filestream.OpenReadAsync(), SourceGenerationContext.Default.PolicyArray);
+        });
+        
+        await CheckAndConvert();
+    }
+
+    public async Task LoadRuleCollectionGroups()
+    {
+        await Load("Importing RuleCollectionGroups", async () =>
+        {
+            var filestream = await FileService.OpenFileAsync("Open RuleCollectionGroups json export");
+            if (filestream == null)
+            {
+                return;
+            }
+            var options = new JsonSerializerOptions()
+            {
+                PropertyNameCaseInsensitive = true
+            };
+            options.Converters.Add(new RuleCollectionJsonConverter());
+            options.TypeInfoResolverChain.Add(SourceGenerationContext.Default);
+            RuleCollectionGroups = await JsonSerializer.DeserializeAsync<RuleCollectionGroup[]>(await filestream.OpenReadAsync(), options: options);
+        });
+        
+        await CheckAndConvert();
+    }
+
     public async Task SaveFirewallExportScript()
     {
-        using var scriptStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("AzureFirewallCalculator.Desktop.IncludeScripts.Export-Firewall.ps1")
+        using var scriptStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("AzureFirewallCalculator.Desktop.IncludeScripts.Export-PolicyFirewall.ps1")
             ?? throw new Exception("Unable to find embedded script file for export");
         await FileService.SaveFileAsync(
             prompt: "Save script file",
-            fileName: "Export-Firewall",
+            fileName: "Export-PolicyFirewall.ps1",
             extension: "ps1",
             fileStream: scriptStream
         );
@@ -178,19 +252,25 @@ public class LoadFromFileViewModel : ReactiveObject, IRoutableViewModel, IScreen
 
     private async Task CheckAndConvert()
     {
-        if (ipGroups == null || firewall == null || serviceTags == null)
+        if (ipGroups == null || firewall == null || serviceTags == null || policies == null || ruleCollectionGroups == null)
         {
-            Logger.LogInformation("Unable to load firewall. {nullResource} was null", ipGroups == null 
+            Logger.LogInformation("Unable to load firewall. {nullResource} was not loaded", ipGroups == null 
                 ? "IPGroups"
                 : firewall == null
                     ? "Firewall"
-                    : "ServiceTags");
+                    : serviceTags == null
+                        ? "ServiceTags"
+                        : policies == null
+                            ? "Policies"
+                            : "Rule Collection Groups");
             return;
         }
         await Load("Importing firewall", async () =>
         {
             var ipGroupDictionary = ipGroups.ToDictionary(item => item.Id, StringComparer.CurrentCultureIgnoreCase);
-            var convertedFirewall = await firewall.Value.ConvertToFirewall(ipGroupDictionary, DnsResolver, serviceTags, LoggerFactory.CreateLogger<Firewall>());
+            var policyDictionary = policies?.ToDictionary(item => item.Id, StringComparer.CurrentCultureIgnoreCase);
+            var ruleCollectionGroupDictionary = ruleCollectionGroups?.ToDictionary(item => item.Properties.Id, StringComparer.CurrentCultureIgnoreCase);
+            var convertedFirewall = await firewall.Value.ConvertToFirewall(ipGroupDictionary, policyDictionary ?? [], ruleCollectionGroupDictionary ?? [], DnsResolver, serviceTags, LoggerFactory.CreateLogger<Firewall>());
             Dispatcher.UIThread.Invoke(() => Router.Navigate.Execute(new CheckTrafficViewModel(convertedFirewall, DnsResolver, this)));
         });
     }

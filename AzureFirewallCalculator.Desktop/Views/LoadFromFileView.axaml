@@ -10,15 +10,23 @@
         <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
             <Button Content="Import Firewall File" Command="{Binding LoadFirewallCommand}" IsEnabled="{Binding !ShowLoadIndicator}" />
             <Button Content="Import IPGroups File" Command="{Binding LoadIpGroupsCommand}" IsEnabled="{Binding !ShowLoadIndicator}" />
+            <Button Content="Import Policy File" Command="{Binding LoadPoliciesCommand}" IsEnabled="{Binding !ShowLoadIndicator}" />
+            <Button Content="Import RuleCollectionGroup File" Command="{Binding LoadRuleCollectionGroupsCommand}" IsEnabled="{Binding !ShowLoadIndicator}" />
             <Button Content="Download Service Tags" Command="{Binding LoadServiceTagsCommand}" IsEnabled="{Binding !ShowLoadIndicator}" />
             <ProgressBar Margin="20,0,20,0" IsVisible="{Binding ShowLoadIndicator}"
                 Minimum="0" Maximum="100" Value="{Binding LoadIndicator}"
                 ShowProgressText="False" />
             <TextBlock Text="Importing..."  VerticalAlignment="Center" IsVisible="{Binding ShowLoadIndicator}" />
+        </StackPanel>
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
             <TextBlock Margin="20,0,5,0" Text="Loaded Firewall: " IsVisible="{Binding FirewallLoaded}" />
             <TextBlock Margin="0,0,20,0" Text="{Binding Firewall.Value.Name}" IsVisible="{Binding FirewallLoaded}" />
             <TextBlock Text="IP Group Count:" IsVisible="{Binding IpGroupsLoaded}" />
             <TextBlock Margin="0,0,20,0" Text="{Binding IpGroups.Length}" IsVisible="{Binding IpGroupsLoaded}" />
+            <TextBlock Text="Policy Count:" IsVisible="{Binding PoliciesLoaded}" />
+            <TextBlock Margin="0,0,20,0" Text="{Binding Policies.Length}" IsVisible="{Binding PoliciesLoaded}" />
+            <TextBlock Text="RuleCollectionGroup Count:" IsVisible="{Binding RuleCollectionGroupsLoaded}" />
+            <TextBlock Margin="0,0,20,0" Text="{Binding RuleCollectionGroups.Length}" IsVisible="{Binding RuleCollectionGroupsLoaded}" />
             <TextBlock Text="Service Tag Count:" IsVisible="{Binding ServiceTagsLoaded}" />
             <TextBlock Text="{Binding ServiceTags.Length}" IsVisible="{Binding ServiceTagsLoaded}" />
         </StackPanel>

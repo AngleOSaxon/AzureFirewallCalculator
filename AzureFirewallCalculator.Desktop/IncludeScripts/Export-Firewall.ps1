@@ -10,7 +10,7 @@ Import-Module Az;
 Import-Module Az.Network;
 
 $subscriptionName = $null; #replace with subscription name; eg mycompany-dev
-$firewallName = $null; #repace with firewall name
+$firewallName = $null; #replace with firewall name
 
 if (-Not($subscriptionName) -or -Not($firewallname)) {
     Write-Error "Please edit this script to add your subscription name and firewall name";

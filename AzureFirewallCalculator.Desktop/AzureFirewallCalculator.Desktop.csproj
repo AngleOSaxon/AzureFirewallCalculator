@@ -13,6 +13,7 @@
     <Folder Include="Models\" />
     <AvaloniaResource Include="Assets\**" />
     <EmbeddedResource Include="IncludeScripts/Export-Firewall.ps1" />
+    <EmbeddedResource Include="IncludeScripts/Export-PolicyFirewall.ps1" />
   </ItemGroup>
 
   <ItemGroup>

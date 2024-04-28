@@ -24,6 +24,11 @@ public record struct Firewall
     {
         var serviceTags = await ServiceTagImporter.GetServiceTags(DateTimeOffset.UtcNow);
 
+        return await ConvertToFirewall(ipGroups, policies, ruleCollectionGroups, resolver, serviceTags, logger);
+    }
+
+    public readonly async Task<Core.Firewall> ConvertToFirewall(Dictionary<string, IpGroup> ipGroups, Dictionary<string, Policy> policies, Dictionary<string, RuleCollectionGroup> ruleCollectionGroups, CachingResolver resolver, ServiceTag[] serviceTags, ILogger logger)
+    {
         RuleCollectionGroup[] ruleCollectionGroupsFromPolicy = [];
         if (policies.TryGetValue(FirewallPolicy.Id, out var policy))
         {
