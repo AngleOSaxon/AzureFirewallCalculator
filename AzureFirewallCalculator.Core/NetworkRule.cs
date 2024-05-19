@@ -5,19 +5,19 @@ namespace AzureFirewallCalculator.Core;
 
 public record class NetworkRule
 {
-    public string Name { get;}
+    public string Name { get; init; }
 
-    public RuleIpRange[] SourceIps { get; }
+    public RuleIpRange[] SourceIps { get; init; }
 
     public RuleIpRange[] DestinationIps { get; init; }
 
-    public string[] DestinationFqdns { get; }
+    public string[] DestinationFqdns { get; init; }
 
-    public RulePortRange[] DestinationPorts { get; }
+    public RulePortRange[] DestinationPorts { get; init; }
 
-    public NetworkProtocols NetworkProtocols { get; }
+    public NetworkProtocols NetworkProtocols { get; init; }
 
-    public IDnsResolver DnsResolver { get; }
+    public IDnsResolver DnsResolver { get; init; }
 
     public NetworkRule(string name, RuleIpRange[] sourceIps, RuleIpRange[] destinationIps, RulePortRange[] destinationPorts, string[] destinationFqdns, NetworkProtocols networkProtocols, IDnsResolver dnsResolver)
     {

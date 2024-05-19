@@ -1,72 +1,161 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using AzureFirewallCalculator.Core;
+using AzureFirewallCalculator.Test;
 
 namespace AzureFirewallCalculator.Tests;
 
 public class TestOverlapAnalysis
 {
-
-    public static IEnumerable<object[]> SourceData() 
-    {
-        var sourceRule = new NetworkRule(
-            name: "Test",
-            sourceIps: [ new RuleIpRange(IPAddress.Parse("10.0.1.0").ConvertToUint(), IPAddress.Parse("10.0.1.127").ConvertToUint()) ],
-            destinationIps: [ new RuleIpRange(IPAddress.Parse("10.0.2.128").ConvertToUint(), IPAddress.Parse("10.0.2.255").ConvertToUint()) ],
-            destinationPorts: [ new RulePortRange(88, 88) ],
-            destinationFqdns: [],
-            networkProtocols: NetworkProtocols.TCP,
-            dnsResolver: null!
-        );
-        var comparisonRules = new NetworkRule[]
-        {
-            new(
-                name: "ShouldMatch",
-                sourceIps: [ new RuleIpRange(IPAddress.Parse("10.0.1.0").ConvertToUint(), IPAddress.Parse("10.0.1.255").ConvertToUint()) ],
-                destinationIps: [ new RuleIpRange(IPAddress.Parse("10.0.2.0").ConvertToUint(), IPAddress.Parse("10.0.3.0").ConvertToUint()) ],
-                destinationPorts: [ new RulePortRange(50, 100) ],
-                destinationFqdns: [],
-                networkProtocols: NetworkProtocols.TCP,
-                dnsResolver: null!
-            ),
-            new(
-                name: "ShouldNotMatch",
-                sourceIps: [ new RuleIpRange(IPAddress.Parse("10.1.1.0").ConvertToUint(), IPAddress.Parse("10.1.1.255").ConvertToUint()) ],
-                destinationIps: [ new RuleIpRange(IPAddress.Parse("10.1.2.0").ConvertToUint(), IPAddress.Parse("10.1.3.0").ConvertToUint()) ],
-                destinationPorts: [ new RulePortRange(50, 100) ],
-                destinationFqdns: [],
-                networkProtocols: NetworkProtocols.TCP,
-                dnsResolver: null!
-            ),
-        };
-        yield return new object[] 
-        { 
-            sourceRule,
-            comparisonRules,
-            new OverlapAnalyzer.OverlapSummary(
-                SourceRule: sourceRule,
-                CumulativeOverlap: OverlapAnalyzer.OverlapType.Partial,
-                Overlaps:
-                [
-                    new(
-                        OverlapType: OverlapAnalyzer.OverlapType.Full,
-                        OverlappingRule: comparisonRules[0],
-                        OverlappingSourceRanges: [new(start: IPAddress.Parse("10.0.1.0").ConvertToUint(), end: IPAddress.Parse("10.0.1.127").ConvertToUint())],
-                        OverlappingDestinationRanges: [new(start: IPAddress.Parse("10.0.2.128").ConvertToUint(), end: IPAddress.Parse("10.0.2.255").ConvertToUint())],
-                        OverlappingPorts: [new RulePortRange(88, 88)],
-                        OverlappingProtocols: NetworkProtocols.TCP
-                    )
-                ]
-            )
-         };
-    }
-
     [Theory]
-    [MemberData(nameof(SourceData))]
+    [ClassData(typeof(OverlapAnalysisData))]
     public void TestNetworkRuleOverlapAnalysis(NetworkRule rule, NetworkRule[] comparisonRules, OverlapAnalyzer.OverlapSummary expectedOverlap)
     {
         var result = OverlapAnalyzer.CheckForOverlap(sourceRule: rule, comparisonRules: comparisonRules);
         AssertOverlapsMatch(expectedOverlap, result);
+    }
+
+    private readonly NetworkRule BaseRule = new("Test",
+            sourceIps: [ new RuleIpRange() ],
+            destinationIps: [ new RuleIpRange() ],
+            destinationPorts: [ new RulePortRange() ],
+            destinationFqdns: [],
+            networkProtocols: NetworkProtocols.Any,
+            dnsResolver: null!
+        );
+
+    
+    [Theory]
+    [InlineData(NetworkProtocols.Any, NetworkProtocols.TCP, NetworkProtocols.TCP, OverlapAnalyzer.OverlapType.Partial)]
+    [InlineData(NetworkProtocols.Any, NetworkProtocols.UDP, NetworkProtocols.UDP, OverlapAnalyzer.OverlapType.Partial)]
+    [InlineData(NetworkProtocols.Any, NetworkProtocols.ICMP, NetworkProtocols.ICMP, OverlapAnalyzer.OverlapType.Partial)]
+    [InlineData(NetworkProtocols.TCP, NetworkProtocols.Any, NetworkProtocols.TCP, OverlapAnalyzer.OverlapType.Full)]
+    [InlineData(NetworkProtocols.TCP, NetworkProtocols.TCP, NetworkProtocols.TCP, OverlapAnalyzer.OverlapType.Full)]
+    [InlineData(NetworkProtocols.TCP | NetworkProtocols.UDP, NetworkProtocols.UDP, NetworkProtocols.UDP, OverlapAnalyzer.OverlapType.Partial)]
+    [InlineData(NetworkProtocols.TCP, NetworkProtocols.TCP | NetworkProtocols.UDP, NetworkProtocols.TCP, OverlapAnalyzer.OverlapType.Full)]
+    public void TestNetworkProtocolOverlaps_Match(NetworkProtocols sourceProtocols, NetworkProtocols comparisonProtocols, NetworkProtocols expectedMatch, OverlapAnalyzer.OverlapType expectedOverlapType)
+    {
+        var sourceRule = BaseRule with { NetworkProtocols = sourceProtocols };
+        var comparisonRule = BaseRule with { NetworkProtocols = comparisonProtocols };
+
+        var results = OverlapAnalyzer.CheckForOverlap(sourceRule, [comparisonRule]);
+        Assert.Equal(expectedMatch, results.Overlaps[0].OverlappingProtocols);
+        Assert.Equal(expectedOverlapType, results.Overlaps[0].OverlapType);
+    }
+
+    [Theory]
+    [InlineData(NetworkProtocols.UDP, NetworkProtocols.TCP)]
+    [InlineData(NetworkProtocols.Any, NetworkProtocols.None)]
+    [InlineData(NetworkProtocols.TCP, NetworkProtocols.ICMP)]
+    [InlineData(NetworkProtocols.UDP, NetworkProtocols.ICMP)]
+    [InlineData(NetworkProtocols.ICMP, NetworkProtocols.TCP | NetworkProtocols.UDP)]
+    [InlineData(NetworkProtocols.TCP | NetworkProtocols.UDP, NetworkProtocols.ICMP)]
+    public void TestNetworkProtocolOverlaps_NoMatch(NetworkProtocols sourceProtocols, NetworkProtocols comparisonProtocols)
+    {
+        var sourceRule = BaseRule with { NetworkProtocols = sourceProtocols };
+        var comparisonRule = BaseRule with { NetworkProtocols = comparisonProtocols };
+
+        var results = OverlapAnalyzer.CheckForOverlap(sourceRule, [comparisonRule]);
+
+        Assert.Empty(results.Overlaps);
+    }
+
+    public static IEnumerable<object[]> NetworkPortOverlaps()
+    {
+        yield return new object[]
+        {
+            new RulePortRange[] { new(55, 55) },
+            new RulePortRange[] { new(50, 100) },
+            new RulePortRange[] { new(55, 55) },
+            OverlapAnalyzer.OverlapType.Full
+        };
+        yield return new object[]
+        {
+            new RulePortRange[] { new(50, 100) },
+            new RulePortRange[] { new(55, 55) },
+            new RulePortRange[] { new(55, 55) },
+            OverlapAnalyzer.OverlapType.Partial
+        };
+        yield return new object[]
+        {
+            new RulePortRange[] { new(50, 100) },
+            new RulePortRange[] { new(55, 55), new(40, 52) },
+            new RulePortRange[] { new(55, 55), new(50, 52) },
+            OverlapAnalyzer.OverlapType.Partial
+        };
+        yield return new object[]
+        {
+            new RulePortRange[] { new(50, 100) },
+            new RulePortRange[] { new(40, 55), new(90, 125) },
+            new RulePortRange[] { new(50, 55), new(90, 100) },
+            OverlapAnalyzer.OverlapType.Partial
+        };
+        yield return new object[]
+        {
+            new RulePortRange[] { new(50, 100) },
+            new RulePortRange[] { new(40, 75), new(75, 125) },
+            new RulePortRange[] { new(50, 100) },
+            OverlapAnalyzer.OverlapType.Full
+        };
+        yield return new object[]
+        {
+            new RulePortRange[] { new(55, 55), new(56, 56) },
+            new RulePortRange[] { new(50, 100) },
+            new RulePortRange[] { new(55, 56) },
+            OverlapAnalyzer.OverlapType.Full
+        };
+        yield return new object[]
+        {
+            new RulePortRange[] { new(55, 55), new(56, 56) },
+            new RulePortRange[] { new(ushort.MinValue, ushort.MaxValue), new(50, 60) },
+            new RulePortRange[] { new(55, 56) },
+            OverlapAnalyzer.OverlapType.Full
+        };
+    }
+
+    [Theory]
+    [MemberData(nameof(NetworkPortOverlaps))]
+    public void TestNetworkPortOverlaps_Match(RulePortRange[] sourcePorts, RulePortRange[] comparisonPorts, RulePortRange[] expectedMatch, OverlapAnalyzer.OverlapType expectedOverlapType)
+    {
+        var sourceRule = BaseRule with { DestinationPorts = sourcePorts };
+        var comparisonRule = BaseRule with { DestinationPorts = comparisonPorts };
+        var results = OverlapAnalyzer.CheckForOverlap(sourceRule, [comparisonRule]);
+
+        var baseOverlapSummary = new OverlapAnalyzer.OverlapSummary(BaseRule, OverlapAnalyzer.OverlapType.Partial, []);
+        var baseOverlap = new OverlapAnalyzer.Overlap(OverlapAnalyzer.OverlapType.Full, BaseRule, [new()], [new()], [new()], NetworkProtocols.Any);
+        OverlapAnalyzer.Overlap[] expected = [baseOverlap with { OverlapType = expectedOverlapType, OverlappingRule = comparisonRule, OverlappingPorts = expectedMatch }];
+
+        Assert.True(expected.ElementByElementCompare(results.Overlaps, OverlapEquals));
+    }
+
+    public static IEnumerable<object[]> NetworkPortNoOverlap()
+    {
+        yield return new object[]
+        {
+            new RulePortRange[] { new(25, 35) },
+            new RulePortRange[] { new(50, 100) }
+        };
+        yield return new object[]
+        {
+            new RulePortRange[] { new(50, 50), new(75, 80) },
+            new RulePortRange[] { new(55, 55) }
+        };
+        yield return new object[]
+        {
+            new RulePortRange[] { new(50, 50), new(30, 39) },
+            new RulePortRange[] { new(55, 55), new(40, 49) }
+        };
+    }
+
+    [Theory]
+    [MemberData(nameof(NetworkPortNoOverlap))]
+    public void TestNetworkPortOverlaps_NoMatch(RulePortRange[] sourcePorts, RulePortRange[] comparisonPorts)
+    {
+        var sourceRule = BaseRule with { DestinationPorts = sourcePorts };
+        var comparisonRule = BaseRule with { DestinationPorts = comparisonPorts };
+        var results = OverlapAnalyzer.CheckForOverlap(sourceRule, [comparisonRule]);
+
+        Assert.Empty(results.Overlaps);
     }
 
     private static void AssertOverlapsMatch(OverlapAnalyzer.OverlapSummary expected, OverlapAnalyzer.OverlapSummary actual)
@@ -81,9 +170,9 @@ public class TestOverlapAnalysis
     {
         return (x?.OverlapType == y?.OverlapType)
             && (x?.OverlappingRule.Equals(y?.OverlappingRule) ?? false)
-            && (x?.OverlappingSourceRanges.ElementByElementCompare(y.OverlappingSourceRanges) ?? false)
-            && (x?.OverlappingDestinationRanges.ElementByElementCompare(y.OverlappingDestinationRanges) ?? false)
-            && (x?.OverlappingPorts.ElementByElementCompare(y.OverlappingPorts) ?? false)
+            && (x?.OverlappingSourceRanges.OrderBy(item => item.Start).ElementByElementCompare(y.OverlappingSourceRanges.OrderBy(item => item.Start)) ?? false)
+            && (x?.OverlappingDestinationRanges.OrderBy(item => item.Start).ElementByElementCompare(y.OverlappingDestinationRanges.OrderBy(item => item.Start)) ?? false)
+            && (x?.OverlappingPorts.OrderBy(item => item.Start).ElementByElementCompare(y.OverlappingPorts.OrderBy(item => item.Start)) ?? false)
             && (x?.OverlappingProtocols.Equals(y?.OverlappingProtocols) ?? false);
     }
 }

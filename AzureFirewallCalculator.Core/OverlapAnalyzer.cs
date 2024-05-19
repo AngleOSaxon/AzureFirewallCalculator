@@ -4,6 +4,7 @@ public static class OverlapAnalyzer
 {
     public enum OverlapType
     {
+        None,
         Partial,
         Full
     }
@@ -22,13 +23,14 @@ public static class OverlapAnalyzer
             {
                 continue;
             }
-            var isFullOverlap = rule.NetworkProtocols == protocolOverlap;
+            var isFullOverlap = sourceRule.NetworkProtocols == protocolOverlap;
 
             var portOverlap = GetPortOverlaps(sourceRule.DestinationPorts, rule.DestinationPorts);
             if (portOverlap.Length == 0)
             {
                 continue;
             }
+            portOverlap = ConsolidateRanges(portOverlap);
             isFullOverlap &= sourceRule.DestinationPorts.All(item => portOverlap.Any(overlap => overlap.Start <= item.Start && overlap.End >= item.End));
 
             var sourceIpOverlap = GetIpOverlaps(sourceRule.SourceIps, rule.SourceIps);
@@ -57,7 +59,7 @@ public static class OverlapAnalyzer
 
         return new OverlapSummary(
             SourceRule: sourceRule,
-            CumulativeOverlap: OverlapType.Partial, // TODO: Replace with actual calculation
+            CumulativeOverlap: matches.Count != 0 ? OverlapType.Partial : OverlapType.None, // TODO: Replace with actual calculation of partial vs full
             Overlaps: [.. matches]
         );
     }
@@ -69,7 +71,7 @@ public static class OverlapAnalyzer
         {
             foreach (var comparisonRange in comparisonRanges)
             {
-                if ((sourceRange.Start >= comparisonRange.Start && sourceRange.Start <= comparisonRange.End) || (sourceRange.End <= comparisonRange.End && sourceRange.End >= comparisonRange.Start))
+                if ((sourceRange.Start <= comparisonRange.End) || (sourceRange.End <= comparisonRange.End && sourceRange.End >= comparisonRange.Start))
                 {
                     var start = Math.Max(sourceRange.Start, comparisonRange.Start);
                     var end = Math.Min(sourceRange.End, comparisonRange.End);
@@ -87,7 +89,7 @@ public static class OverlapAnalyzer
         {
             foreach (var comparisonRange in comparisonRanges)
             {
-                if ((sourceRange.Start >= comparisonRange.Start && sourceRange.Start <= comparisonRange.End) || (sourceRange.End <= comparisonRange.End && sourceRange.End >= comparisonRange.Start))
+                if (sourceRange.Start <= comparisonRange.End && sourceRange.End >= comparisonRange.Start)
                 {
                     var start = Math.Max(sourceRange.Start, comparisonRange.Start);
                     var end = Math.Min(sourceRange.End, comparisonRange.End);
@@ -96,5 +98,35 @@ public static class OverlapAnalyzer
             }
         }
         return [.. overlaps];
+    }
+
+    public static RulePortRange[] ConsolidateRanges(RulePortRange[] ranges)
+    {
+        if (ranges.Length < 2)
+        {
+            return ranges;
+        }
+
+        var result = ranges.OrderBy(item => item.Start).Aggregate(new List<RulePortRange>(), (seed, range) =>
+        {
+            if (seed.Count == 0)
+            {
+                seed.Add(range);
+                return seed;
+            }
+
+            var prevRange = seed.Last();
+            if (range.Start <= (prevRange.End + 1) && range.End >= prevRange.End)
+            {
+                seed.Remove(prevRange);
+                seed.Add(new(prevRange.Start, range.End));
+            }
+            else
+            {
+                seed.Add(range);
+            }
+            return seed;
+        });
+        return [..result];
     }
 }
