@@ -30,7 +30,6 @@ public static class OverlapAnalyzer
             {
                 continue;
             }
-            portOverlap = ConsolidateRanges(portOverlap);
             isFullOverlap &= sourceRule.DestinationPorts.All(item => portOverlap.Any(overlap => overlap.Start <= item.Start && overlap.End >= item.End));
 
             var sourceIpOverlap = GetIpOverlaps(sourceRule.SourceIps, rule.SourceIps);
@@ -79,7 +78,7 @@ public static class OverlapAnalyzer
                 }
             }
         }
-        return [.. overlaps];
+        return ConsolidateRanges(overlaps);
     }
 
     public static RulePortRange[] GetPortOverlaps(RulePortRange[] sourceRanges, RulePortRange[] comparisonRanges)
@@ -97,14 +96,14 @@ public static class OverlapAnalyzer
                 }
             }
         }
-        return [.. overlaps];
+        return ConsolidateRanges(overlaps);
     }
 
-    public static RulePortRange[] ConsolidateRanges(RulePortRange[] ranges)
+    public static RulePortRange[] ConsolidateRanges(IEnumerable<RulePortRange> ranges)
     {
-        if (ranges.Length < 2)
+        if (ranges.Count() < 2)
         {
-            return ranges;
+            return [.. ranges];
         }
 
         var result = ranges.OrderBy(item => item.Start).Aggregate(new List<RulePortRange>(), (seed, range) =>
@@ -130,11 +129,11 @@ public static class OverlapAnalyzer
         return [..result];
     }
 
-    public static RuleIpRange[] ConsolidateRanges(RuleIpRange[] ranges)
+    public static RuleIpRange[] ConsolidateRanges(IEnumerable<RuleIpRange> ranges)
     {
-        if (ranges.Length < 2)
+        if (ranges.Count() < 2)
         {
-            return ranges;
+            return [.. ranges];
         }
 
         var result = ranges.OrderBy(item => item.Start).Aggregate(new List<RuleIpRange>(), (seed, range) =>

@@ -195,6 +195,40 @@ public class TestOverlapAnalysis
         };
         yield return new object[]
         {
+            new RuleIpRange[] 
+            {
+                new(IPAddress.Parse("10.0.0.0").ConvertToUint(), IPAddress.Parse("10.0.255.255").ConvertToUint()),
+            },
+            new RuleIpRange[]
+            { 
+                new(IPAddress.Parse("10.0.0.0").ConvertToUint(), IPAddress.Parse("10.0.127.255").ConvertToUint()), 
+                new(IPAddress.Parse("10.0.128.0").ConvertToUint(), IPAddress.Parse("10.0.255.255").ConvertToUint()) 
+            },
+            new RuleIpRange[]
+            {
+                new(IPAddress.Parse("10.0.0.0").ConvertToUint(), IPAddress.Parse("10.0.255.255").ConvertToUint()),
+            },
+            OverlapAnalyzer.OverlapType.Full
+        };
+        yield return new object[]
+        {
+            new RuleIpRange[] 
+            {
+                new(IPAddress.Parse("9.0.0.0").ConvertToUint(), IPAddress.Parse("11.0.255.255").ConvertToUint()),
+            },
+            new RuleIpRange[]
+            { 
+                new(IPAddress.Parse("10.0.0.0").ConvertToUint(), IPAddress.Parse("10.0.127.255").ConvertToUint()), 
+                new(IPAddress.Parse("10.0.128.0").ConvertToUint(), IPAddress.Parse("10.0.255.255").ConvertToUint()) 
+            },
+            new RuleIpRange[]
+            {
+                new(IPAddress.Parse("10.0.0.0").ConvertToUint(), IPAddress.Parse("10.0.255.255").ConvertToUint()),
+            },
+            OverlapAnalyzer.OverlapType.Partial
+        };
+        yield return new object[]
+        {
             new RuleIpRange[] { new(IPAddress.Parse("9.0.0.0").ConvertToUint(), IPAddress.Parse("11.0.0.0").ConvertToUint()) },
             new RuleIpRange[] { new(IPAddress.Parse("10.0.0.0").ConvertToUint(), IPAddress.Parse("10.0.0.0").ConvertToUint()) },
             new RuleIpRange[] { new(IPAddress.Parse("10.0.0.0").ConvertToUint(), IPAddress.Parse("10.0.0.0").ConvertToUint()) },
