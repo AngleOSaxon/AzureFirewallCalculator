@@ -13,6 +13,10 @@ public readonly record struct RuleIpRange
 
     public RuleIpRange(uint start, uint end)
     {
+        if (end < start)
+        {
+            throw new ArgumentException($"Invalid range.  End value ({end}) cannot come before Start value ({start})");
+        }
         Start = start;
         End = end;
     }

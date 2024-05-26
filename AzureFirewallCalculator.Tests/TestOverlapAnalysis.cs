@@ -158,6 +158,132 @@ public class TestOverlapAnalysis
         Assert.Empty(results.Overlaps);
     }
 
+    public static IEnumerable<object[]> IpOverlaps()
+    {
+        yield return new object[]
+        {
+            new RuleIpRange[] { new(IPAddress.Parse("10.0.0.0").ConvertToUint(), IPAddress.Parse("10.0.0.0").ConvertToUint()) },
+            new RuleIpRange[] { new(IPAddress.Parse("9.0.0.0").ConvertToUint(), IPAddress.Parse("11.0.0.0").ConvertToUint()) },
+            new RuleIpRange[] { new(IPAddress.Parse("10.0.0.0").ConvertToUint(), IPAddress.Parse("10.0.0.0").ConvertToUint()) },
+            OverlapAnalyzer.OverlapType.Full
+        };
+        yield return new object[]
+        {
+            new RuleIpRange[] { new(IPAddress.Parse("9.0.0.0").ConvertToUint(), IPAddress.Parse("11.0.0.0").ConvertToUint()), },
+            new RuleIpRange[] { new(IPAddress.Parse("10.0.0.0").ConvertToUint(), IPAddress.Parse("10.0.0.0").ConvertToUint()) },
+            new RuleIpRange[] { new(IPAddress.Parse("10.0.0.0").ConvertToUint(), IPAddress.Parse("10.0.0.0").ConvertToUint()) },
+            OverlapAnalyzer.OverlapType.Partial
+        };
+        yield return new object[]
+        {
+            new RuleIpRange[] 
+            {
+                new(IPAddress.Parse("10.0.0.0").ConvertToUint(), IPAddress.Parse("10.0.0.0").ConvertToUint()),
+                new(IPAddress.Parse("25.0.0.0").ConvertToUint(), IPAddress.Parse("25.0.0.0").ConvertToUint()), 
+            },
+            new RuleIpRange[]
+            { 
+                new(IPAddress.Parse("9.0.0.0").ConvertToUint(), IPAddress.Parse("11.0.0.0").ConvertToUint()), 
+                new(IPAddress.Parse("20.0.0.0").ConvertToUint(), IPAddress.Parse("30.0.0.0").ConvertToUint()) 
+            },
+            new RuleIpRange[]
+            {
+                new(IPAddress.Parse("10.0.0.0").ConvertToUint(), IPAddress.Parse("10.0.0.0").ConvertToUint()),
+                new(IPAddress.Parse("25.0.0.0").ConvertToUint(), IPAddress.Parse("25.0.0.0").ConvertToUint()) 
+            },
+            OverlapAnalyzer.OverlapType.Full
+        };
+        yield return new object[]
+        {
+            new RuleIpRange[] { new(IPAddress.Parse("9.0.0.0").ConvertToUint(), IPAddress.Parse("11.0.0.0").ConvertToUint()) },
+            new RuleIpRange[] { new(IPAddress.Parse("10.0.0.0").ConvertToUint(), IPAddress.Parse("10.0.0.0").ConvertToUint()) },
+            new RuleIpRange[] { new(IPAddress.Parse("10.0.0.0").ConvertToUint(), IPAddress.Parse("10.0.0.0").ConvertToUint()) },
+            OverlapAnalyzer.OverlapType.Partial
+        };
+    }
+
+    [Theory]
+    [MemberData(nameof(IpOverlaps))]
+    public void TestSourceIpsOverlaps_Match(RuleIpRange[] sourceIps, RuleIpRange[] comparisonIps, RuleIpRange[] expectedMatch, OverlapAnalyzer.OverlapType expectedOverlapType)
+    {
+        var sourceRule = BaseRule with { SourceIps = sourceIps };
+        var comparisonRule = BaseRule with { SourceIps = comparisonIps };
+        var results = OverlapAnalyzer.CheckForOverlap(sourceRule, [comparisonRule]);
+
+        var baseOverlapSummary = new OverlapAnalyzer.OverlapSummary(BaseRule, OverlapAnalyzer.OverlapType.Partial, []);
+        var baseOverlap = new OverlapAnalyzer.Overlap(OverlapAnalyzer.OverlapType.Full, BaseRule, [new()], [new()], [new()], NetworkProtocols.Any);
+        OverlapAnalyzer.Overlap[] expected = [baseOverlap with { OverlapType = expectedOverlapType, OverlappingRule = comparisonRule, OverlappingSourceRanges = expectedMatch }];
+
+        Assert.True(expected.ElementByElementCompare(results.Overlaps, OverlapEquals));
+    }
+
+    [Theory]
+    [MemberData(nameof(IpOverlaps))]
+    public void TestDestinationIpsOverlaps_Match(RuleIpRange[] destinationIps, RuleIpRange[] comparisonIps, RuleIpRange[] expectedMatch, OverlapAnalyzer.OverlapType expectedOverlapType)
+    {
+        var sourceRule = BaseRule with { DestinationIps = destinationIps };
+        var comparisonRule = BaseRule with { DestinationIps = comparisonIps };
+        var results = OverlapAnalyzer.CheckForOverlap(sourceRule, [comparisonRule]);
+
+        var baseOverlapSummary = new OverlapAnalyzer.OverlapSummary(BaseRule, OverlapAnalyzer.OverlapType.Partial, []);
+        var baseOverlap = new OverlapAnalyzer.Overlap(OverlapAnalyzer.OverlapType.Full, BaseRule, [new()], [new()], [new()], NetworkProtocols.Any);
+        OverlapAnalyzer.Overlap[] expected = [baseOverlap with { OverlapType = expectedOverlapType, OverlappingRule = comparisonRule, OverlappingDestinationRanges = expectedMatch }];
+
+        Assert.True(expected.ElementByElementCompare(results.Overlaps, OverlapEquals));
+    }
+
+    public static IEnumerable<object[]> IpsNoOverlap()
+    {
+        yield return new object[]
+        {
+            new RuleIpRange[] { new(IPAddress.Parse("10.0.1.0").ConvertToUint(), IPAddress.Parse("10.0.2.0").ConvertToUint()) },
+            new RuleIpRange[] { new(IPAddress.Parse("9.0.0.0").ConvertToUint(), IPAddress.Parse("9.1.0.0").ConvertToUint()) }
+        };
+        yield return new object[]
+        {
+            new RuleIpRange[] { new(IPAddress.Parse("9.0.0.0").ConvertToUint(), IPAddress.Parse("11.0.0.0").ConvertToUint()), },
+            new RuleIpRange[] { new(IPAddress.Parse("13.0.0.0").ConvertToUint(), IPAddress.Parse("13.0.0.0").ConvertToUint()) },
+        };
+        yield return new object[]
+        {
+            new RuleIpRange[] 
+            {
+                new(IPAddress.Parse("10.0.0.0").ConvertToUint(), IPAddress.Parse("10.0.0.255").ConvertToUint()),
+                new(IPAddress.Parse("10.0.2.0").ConvertToUint(), IPAddress.Parse("10.0.2.255").ConvertToUint()), 
+            },
+            new RuleIpRange[]
+            { 
+                new(IPAddress.Parse("9.0.0.0").ConvertToUint(), IPAddress.Parse("9.255.255.255").ConvertToUint()), 
+                new(IPAddress.Parse("10.0.1.0").ConvertToUint(), IPAddress.Parse("10.0.1.255").ConvertToUint()),
+                new(IPAddress.Parse("10.0.3.0").ConvertToUint(), IPAddress.Parse("10.0.3.0").ConvertToUint()) 
+            }
+        };
+    }
+
+    [Theory]
+    [MemberData(nameof(IpsNoOverlap))]
+    public void TestSourceIpsOverlaps_NoMatch(RuleIpRange[] sourceIps, RuleIpRange[] comparisonIps)
+    {
+        var sourceRule = BaseRule with { SourceIps = sourceIps };
+        var comparisonRule = BaseRule with { SourceIps = comparisonIps };
+        var results = OverlapAnalyzer.CheckForOverlap(sourceRule, [comparisonRule]);
+
+        Assert.Empty(results.Overlaps);
+        Assert.Equal(OverlapAnalyzer.OverlapType.None, results.CumulativeOverlap);
+    }
+
+    [Theory]
+    [MemberData(nameof(IpsNoOverlap))]
+    public void TestDestinationIpsOverlaps_NoMatch(RuleIpRange[] destinationIps, RuleIpRange[] comparisonIps)
+    {
+        var sourceRule = BaseRule with { DestinationIps = destinationIps };
+        var comparisonRule = BaseRule with { DestinationIps = comparisonIps };
+        var results = OverlapAnalyzer.CheckForOverlap(sourceRule, [comparisonRule]);
+
+        Assert.Empty(results.Overlaps);
+        Assert.Equal(OverlapAnalyzer.OverlapType.None, results.CumulativeOverlap);
+    }
+
     private static void AssertOverlapsMatch(OverlapAnalyzer.OverlapSummary expected, OverlapAnalyzer.OverlapSummary actual)
     {
         Assert.Equal(expected.CumulativeOverlap, actual.CumulativeOverlap);

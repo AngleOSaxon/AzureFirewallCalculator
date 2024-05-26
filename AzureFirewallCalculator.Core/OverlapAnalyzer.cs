@@ -71,7 +71,7 @@ public static class OverlapAnalyzer
         {
             foreach (var comparisonRange in comparisonRanges)
             {
-                if ((sourceRange.Start <= comparisonRange.End) || (sourceRange.End <= comparisonRange.End && sourceRange.End >= comparisonRange.Start))
+                if (sourceRange.Start <= comparisonRange.End && sourceRange.End >= comparisonRange.Start)
                 {
                     var start = Math.Max(sourceRange.Start, comparisonRange.Start);
                     var end = Math.Min(sourceRange.End, comparisonRange.End);
@@ -108,6 +108,36 @@ public static class OverlapAnalyzer
         }
 
         var result = ranges.OrderBy(item => item.Start).Aggregate(new List<RulePortRange>(), (seed, range) =>
+        {
+            if (seed.Count == 0)
+            {
+                seed.Add(range);
+                return seed;
+            }
+
+            var prevRange = seed.Last();
+            if (range.Start <= (prevRange.End + 1) && range.End >= prevRange.End)
+            {
+                seed.Remove(prevRange);
+                seed.Add(new(prevRange.Start, range.End));
+            }
+            else
+            {
+                seed.Add(range);
+            }
+            return seed;
+        });
+        return [..result];
+    }
+
+    public static RuleIpRange[] ConsolidateRanges(RuleIpRange[] ranges)
+    {
+        if (ranges.Length < 2)
+        {
+            return ranges;
+        }
+
+        var result = ranges.OrderBy(item => item.Start).Aggregate(new List<RuleIpRange>(), (seed, range) =>
         {
             if (seed.Count == 0)
             {
