@@ -138,7 +138,7 @@ public class OverlapAnalysisData : IEnumerable<object[]>
                 Overlaps: 
                 [
                     new(
-                        OverlapType: OverlapAnalyzer.OverlapType.Partial,
+                        OverlapType: OverlapAnalyzer.OverlapType.Full,
                         OverlappingRule: comparisonRules[0],
                         OverlappingSourceRanges: [new(start: IPAddress.Parse("10.0.1.0").ConvertToUint(), end: IPAddress.Parse("10.0.1.127").ConvertToUint())],
                         OverlappingDestinationRanges: [new(start: IPAddress.Parse("10.0.2.128").ConvertToUint(), end: IPAddress.Parse("10.0.2.255").ConvertToUint())],
