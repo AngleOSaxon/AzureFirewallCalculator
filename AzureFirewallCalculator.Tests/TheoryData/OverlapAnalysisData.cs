@@ -44,7 +44,7 @@ public class OverlapAnalysisData : IEnumerable<object[]>
             comparisonRules,
             new OverlapAnalyzer.OverlapSummary(
                 SourceRule: sourceRule,
-                CumulativeOverlap: OverlapAnalyzer.OverlapType.Partial,
+                CumulativeOverlap: OverlapAnalyzer.OverlapType.Full,
                 Overlaps:
                 [
                     new(
@@ -134,7 +134,7 @@ public class OverlapAnalysisData : IEnumerable<object[]>
             comparisonRules,
             new OverlapAnalyzer.OverlapSummary(
                 SourceRule: sourceRule,
-                CumulativeOverlap: OverlapAnalyzer.OverlapType.Partial,
+                CumulativeOverlap: OverlapAnalyzer.OverlapType.Full,
                 Overlaps: 
                 [
                     new(
