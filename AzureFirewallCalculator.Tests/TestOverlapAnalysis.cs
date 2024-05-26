@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
+using Azure.ResourceManager.Network;
 using AzureFirewallCalculator.Core;
 using AzureFirewallCalculator.Test;
 
@@ -15,7 +16,7 @@ public class TestOverlapAnalysis
         AssertOverlapsMatch(expectedOverlap, result);
     }
 
-    private readonly NetworkRule BaseRule = new("Test",
+    private static readonly NetworkRule BaseRule = new("Test",
             sourceIps: [ new RuleIpRange() ],
             destinationIps: [ new RuleIpRange() ],
             destinationPorts: [ new RulePortRange() ],
@@ -24,6 +25,14 @@ public class TestOverlapAnalysis
             dnsResolver: null!
         );
 
+    private static readonly OverlapAnalyzer.Overlap BaseOverlap = new(
+        OverlapType: OverlapAnalyzer.OverlapType.Partial,
+        OverlappingRule: BaseRule,
+        OverlappingSourceRanges: [ new RuleIpRange() ],
+        OverlappingDestinationRanges: [ new RuleIpRange() ],
+        OverlappingPorts: [ new RulePortRange() ],
+        OverlappingProtocols: NetworkProtocols.None
+    );
     
     [Theory]
     [InlineData(NetworkProtocols.Any, NetworkProtocols.TCP, NetworkProtocols.TCP, OverlapAnalyzer.OverlapType.Partial)]
@@ -316,6 +325,53 @@ public class TestOverlapAnalysis
 
         Assert.Empty(results.Overlaps);
         Assert.Equal(OverlapAnalyzer.OverlapType.None, results.CumulativeOverlap);
+    }
+
+    public static IEnumerable<object[]> CumulativeOverlaps()
+    {
+        yield return new object[]
+        {
+            NetworkProtocols.Any,
+            new OverlapAnalyzer.Overlap[] 
+            {
+                BaseOverlap with { OverlappingProtocols = NetworkProtocols.ICMP }
+            },
+            OverlapAnalyzer.OverlapType.Partial
+        };
+        yield return new object[]
+        {
+            NetworkProtocols.Any,
+            Array.Empty<OverlapAnalyzer.Overlap>(),
+            OverlapAnalyzer.OverlapType.None
+        };
+        yield return new object[]
+        {
+            NetworkProtocols.ICMP,
+            new OverlapAnalyzer.Overlap[] 
+            {
+                BaseOverlap with { OverlappingProtocols = NetworkProtocols.Any }
+            },
+            OverlapAnalyzer.OverlapType.Full
+        };
+        yield return new object[]
+        {
+            NetworkProtocols.TCP | NetworkProtocols.UDP,
+            new OverlapAnalyzer.Overlap[] 
+            {
+                BaseOverlap with { OverlappingProtocols = NetworkProtocols.UDP | NetworkProtocols.ICMP }
+            },
+            OverlapAnalyzer.OverlapType.Partial
+        };
+    }
+
+    [Theory]
+    [MemberData(nameof(CumulativeOverlaps))]
+    public void TestCumulativeOverlap(NetworkProtocols sourceProtocols, OverlapAnalyzer.Overlap[] accumulatingOverlaps, OverlapAnalyzer.OverlapType expected)
+    {
+        var sourceRule = BaseRule with { NetworkProtocols = sourceProtocols };
+        var results = OverlapAnalyzer.GetCumulativeOverlap(sourceRule, accumulatingOverlaps);
+
+        Assert.Equal(expected, results);
     }
 
     private static void AssertOverlapsMatch(OverlapAnalyzer.OverlapSummary expected, OverlapAnalyzer.OverlapSummary actual)
