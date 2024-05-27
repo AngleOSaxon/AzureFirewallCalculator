@@ -5,17 +5,6 @@ namespace AzureFirewallCalculator.Core;
 
 public static class OverlapAnalyzer
 {
-    public enum OverlapType
-    {
-        None,
-        Partial,
-        Full
-    }
-
-    public record Overlap(OverlapType OverlapType, NetworkRule OverlappingRule, RuleIpRange[] OverlappingSourceRanges, RuleIpRange[] OverlappingDestinationRanges, RulePortRange[] OverlappingPorts, NetworkProtocols OverlappingProtocols);
-
-    public record OverlapSummary(NetworkRule SourceRule, OverlapType CumulativeOverlap, Overlap[] Overlaps);
-
     public static OverlapSummary CheckForOverlap(NetworkRule sourceRule, NetworkRule[] comparisonRules)
     {
         var matches = new List<Overlap>();
@@ -222,6 +211,6 @@ public static class OverlapAnalyzer
 
 [GenerateOneOf]
 public partial class OneOfRuleOverlapResult : OneOfBase<
-    (OverlapAnalyzer.OverlapType overlapType, NetworkProtocols protocols, RuleIpRange[] sourceIpRanges, RuleIpRange[] destinationIpRanges, RulePortRange[] destinationPortRange), 
+    (OverlapType overlapType, NetworkProtocols protocols, RuleIpRange[] sourceIpRanges, RuleIpRange[] destinationIpRanges, RulePortRange[] destinationPortRange), 
     None
     > { }

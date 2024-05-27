@@ -42,13 +42,13 @@ public class OverlapAnalysisData : IEnumerable<object[]>
         { 
             sourceRule,
             comparisonRules,
-            new OverlapAnalyzer.OverlapSummary(
+            new OverlapSummary(
                 SourceRule: sourceRule,
-                CumulativeOverlap: OverlapAnalyzer.OverlapType.Full,
+                CumulativeOverlap: OverlapType.Full,
                 Overlaps:
                 [
                     new(
-                        OverlapType: OverlapAnalyzer.OverlapType.Full,
+                        OverlapType: OverlapType.Full,
                         OverlappingRule: comparisonRules[0],
                         OverlappingSourceRanges: [new(start: IPAddress.Parse("10.0.1.0").ConvertToUint(), end: IPAddress.Parse("10.0.1.127").ConvertToUint())],
                         OverlappingDestinationRanges: [new(start: IPAddress.Parse("10.0.2.128").ConvertToUint(), end: IPAddress.Parse("10.0.2.255").ConvertToUint())],
@@ -92,9 +92,9 @@ public class OverlapAnalysisData : IEnumerable<object[]>
         { 
             sourceRule,
             comparisonRules,
-            new OverlapAnalyzer.OverlapSummary(
+            new OverlapSummary(
                 SourceRule: sourceRule,
-                CumulativeOverlap: OverlapAnalyzer.OverlapType.None,
+                CumulativeOverlap: OverlapType.None,
                 Overlaps: []
             )
          };
@@ -132,13 +132,13 @@ public class OverlapAnalysisData : IEnumerable<object[]>
         { 
             sourceRule,
             comparisonRules,
-            new OverlapAnalyzer.OverlapSummary(
+            new OverlapSummary(
                 SourceRule: sourceRule,
-                CumulativeOverlap: OverlapAnalyzer.OverlapType.Full,
+                CumulativeOverlap: OverlapType.Full,
                 Overlaps: 
                 [
                     new(
-                        OverlapType: OverlapAnalyzer.OverlapType.Full,
+                        OverlapType: OverlapType.Full,
                         OverlappingRule: comparisonRules[0],
                         OverlappingSourceRanges: [new(start: IPAddress.Parse("10.0.1.0").ConvertToUint(), end: IPAddress.Parse("10.0.1.127").ConvertToUint())],
                         OverlappingDestinationRanges: [new(start: IPAddress.Parse("10.0.2.128").ConvertToUint(), end: IPAddress.Parse("10.0.2.255").ConvertToUint())],
@@ -146,7 +146,7 @@ public class OverlapAnalysisData : IEnumerable<object[]>
                         OverlappingProtocols: NetworkProtocols.UDP
                     ),
                     new(
-                        OverlapType: OverlapAnalyzer.OverlapType.Full,
+                        OverlapType: OverlapType.Full,
                         OverlappingRule: comparisonRules[1],
                         OverlappingSourceRanges: [new(start: IPAddress.Parse("10.0.1.0").ConvertToUint(), end: IPAddress.Parse("10.0.1.127").ConvertToUint())],
                         OverlappingDestinationRanges: [new(start: IPAddress.Parse("10.0.2.128").ConvertToUint(), end: IPAddress.Parse("10.0.2.255").ConvertToUint())],

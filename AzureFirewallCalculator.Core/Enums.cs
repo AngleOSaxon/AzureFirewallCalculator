@@ -24,3 +24,10 @@ public enum ApplicationProtocol
     Https,
     Mssql,
 }
+
+public enum OverlapType
+{
+    None,
+    Partial,
+    Full
+}

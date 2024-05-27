@@ -20,3 +20,7 @@ public record class ApplicationProcessingResponse(int GroupPriority, int Priorit
     : ProcessingResponseBase(GroupPriority, Priority, CollectionName, RuleAction);
 
 public record class ServiceTag(string Name, string[] AddressPrefixes);
+
+public record Overlap(OverlapType OverlapType, NetworkRule OverlappingRule, RuleIpRange[] OverlappingSourceRanges, RuleIpRange[] OverlappingDestinationRanges, RulePortRange[] OverlappingPorts, NetworkProtocols OverlappingProtocols);
+
+public record OverlapSummary(NetworkRule SourceRule, OverlapType CumulativeOverlap, Overlap[] Overlaps);
