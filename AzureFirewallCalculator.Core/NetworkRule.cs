@@ -79,4 +79,9 @@ public record class NetworkRule
             }
         );
     }
+
+    public override string ToString()
+    {
+        return $"{string.Join(',', SourceIps)} to {string.Join(',', DestinationIps)} on {NetworkProtocols}/{string.Join(',', DestinationPorts)}";
+    }
 }

@@ -331,7 +331,7 @@ public class TestOverlapAnalysis
     {
         yield return new object[]
         {
-            NetworkProtocols.Any,
+            BaseRule with { NetworkProtocols = NetworkProtocols.Any },
             new Overlap[] 
             {
                 BaseOverlap with { OverlappingProtocols = NetworkProtocols.ICMP }
@@ -340,13 +340,13 @@ public class TestOverlapAnalysis
         };
         yield return new object[]
         {
-            NetworkProtocols.Any,
+            BaseRule with { NetworkProtocols = NetworkProtocols.Any },
             Array.Empty<Overlap>(),
             OverlapType.None
         };
         yield return new object[]
         {
-            NetworkProtocols.ICMP,
+            BaseRule with { NetworkProtocols = NetworkProtocols.ICMP },
             new Overlap[] 
             {
                 BaseOverlap with { OverlappingProtocols = NetworkProtocols.Any }
@@ -355,23 +355,164 @@ public class TestOverlapAnalysis
         };
         yield return new object[]
         {
-            NetworkProtocols.TCP | NetworkProtocols.UDP,
+            BaseRule with { NetworkProtocols = NetworkProtocols.UDP | NetworkProtocols.TCP },
             new Overlap[] 
             {
                 BaseOverlap with { OverlappingProtocols = NetworkProtocols.UDP | NetworkProtocols.ICMP }
             },
             OverlapType.Partial
         };
+        yield return new object[]
+        {
+            BaseRule with
+            {
+                Name = "Non-overlapping Protocols",
+                NetworkProtocols = NetworkProtocols.UDP | NetworkProtocols.TCP,
+                SourceIps = [ new (start: new IpAddressBytes("10.0.1.0"), end: new IpAddressBytes("10.0.1.255")) ],
+                DestinationIps = [ new (start: new IpAddressBytes("10.1.1.0"), end: new IpAddressBytes("10.1.1.255")) ],
+                DestinationPorts = [ new (85, 85) ]
+            },
+            new Overlap[] 
+            {
+                BaseOverlap with
+                { 
+                    OverlappingProtocols = NetworkProtocols.UDP,
+                    OverlappingSourceRanges = [ new (start: new IpAddressBytes("10.0.1.0"), end: new IpAddressBytes("10.0.1.127")) ],
+                    OverlappingDestinationRanges = [ new (start: new IpAddressBytes("10.1.1.0"), end: new IpAddressBytes("10.1.1.127")) ],
+                    OverlappingPorts = [ new (85, 85) ]
+                },
+                BaseOverlap with
+                { 
+                    OverlappingProtocols = NetworkProtocols.TCP,
+                    OverlappingSourceRanges = [ new (start: new IpAddressBytes("10.0.1.128"), end: new IpAddressBytes("10.0.1.255")) ],
+                    OverlappingDestinationRanges = [ new (start: new IpAddressBytes("10.1.1.128"), end: new IpAddressBytes("10.1.1.255")) ],
+                    OverlappingPorts = [ new (85, 85) ]
+                }
+            },
+            OverlapType.Partial // UDP only allowed in the first half of the range and TCP only allowed in the second half of the range
+        };
+        yield return new object[]
+        {
+            BaseRule with
+            {
+                Name = "Non-overlapping ports",
+                NetworkProtocols = NetworkProtocols.TCP,
+                SourceIps = [ new (start: new IpAddressBytes("10.0.1.0"), end: new IpAddressBytes("10.0.1.255")) ],
+                DestinationIps = [ new (start: new IpAddressBytes("10.1.1.0"), end: new IpAddressBytes("10.1.1.255")) ],
+                DestinationPorts = [ new (84, 85) ]
+            },
+            new Overlap[] 
+            {
+                BaseOverlap with
+                { 
+                    OverlappingProtocols = NetworkProtocols.TCP,
+                    OverlappingSourceRanges = [ new (start: new IpAddressBytes("10.0.1.0"), end: new IpAddressBytes("10.0.1.0")) ],
+                    OverlappingDestinationRanges = [ new (start: new IpAddressBytes("10.1.1.0"), end: new IpAddressBytes("10.1.1.255")) ],
+                    OverlappingPorts = [ new (84, 84) ]
+                },
+                BaseOverlap with
+                { 
+                    OverlappingProtocols = NetworkProtocols.TCP,
+                    OverlappingSourceRanges = [ new (start: new IpAddressBytes("10.0.1.0"), end: new IpAddressBytes("10.0.1.255")) ],
+                    OverlappingDestinationRanges = [ new (start: new IpAddressBytes("10.1.1.0"), end: new IpAddressBytes("10.1.1.0")) ],
+                    OverlappingPorts = [ new (85, 85) ]
+                }
+            },
+            OverlapType.Partial // TCP/84 only allowed from a single IP, and TCP/85 only allowed to a single IP
+        };
+        yield return new object[]
+        {
+            BaseRule with
+            {
+                Name = "Abutting Rules",
+                NetworkProtocols = NetworkProtocols.TCP,
+                SourceIps = [ new (start: new IpAddressBytes("10.0.1.0"), end: new IpAddressBytes("10.0.1.255")) ],
+                DestinationIps = [ new (start: new IpAddressBytes("10.1.1.0"), end: new IpAddressBytes("10.1.1.255")) ],
+                DestinationPorts = [ new (84, 85) ]
+            },
+            new Overlap[] 
+            {
+                BaseOverlap with
+                { 
+                    OverlappingProtocols = NetworkProtocols.TCP,
+                    OverlappingSourceRanges = [ new (start: new IpAddressBytes("10.0.1.0"), end: new IpAddressBytes("10.0.1.255")) ],
+                    OverlappingDestinationRanges = [ new (start: new IpAddressBytes("10.1.1.0"), end: new IpAddressBytes("10.1.1.127")) ],
+                    OverlappingPorts = [ new (84, 85) ]
+                },
+                BaseOverlap with
+                { 
+                    OverlappingProtocols = NetworkProtocols.TCP,
+                    OverlappingSourceRanges = [ new (start: new IpAddressBytes("10.0.1.0"), end: new IpAddressBytes("10.0.1.255")) ],
+                    OverlappingDestinationRanges = [ new (start: new IpAddressBytes("10.1.1.128"), end: new IpAddressBytes("10.1.1.255")) ],
+                    OverlappingPorts = [ new (84, 85) ]
+                }
+            },
+            OverlapType.Full // Two rules have the same source, port, and protocol, and their destination ranges abut one another
+        };
+        yield return new object[]
+        {
+            BaseRule with
+            {
+                Name = "Abutting Rules - 4-plex",
+                NetworkProtocols = NetworkProtocols.TCP,
+                SourceIps = [ new (start: new IpAddressBytes("10.0.1.0"), end: new IpAddressBytes("10.0.1.255")) ],
+                DestinationIps = [ new (start: new IpAddressBytes("10.1.1.0"), end: new IpAddressBytes("10.1.1.255")) ],
+                DestinationPorts = [ new (84, 85) ]
+            },
+            new Overlap[] 
+            {
+                BaseOverlap with
+                { 
+                    OverlappingProtocols = NetworkProtocols.TCP,
+                    OverlappingSourceRanges = [ new (start: new IpAddressBytes("10.0.1.0"), end: new IpAddressBytes("10.0.1.127")) ],
+                    OverlappingDestinationRanges = [ new (start: new IpAddressBytes("10.1.1.0"), end: new IpAddressBytes("10.1.1.127")) ],
+                    OverlappingPorts = [ new (84, 85) ]
+                },
+                BaseOverlap with
+                { 
+                    OverlappingProtocols = NetworkProtocols.TCP,
+                    OverlappingSourceRanges = [ new (start: new IpAddressBytes("10.0.1.128"), end: new IpAddressBytes("10.0.1.255")) ],
+                    OverlappingDestinationRanges = [ new (start: new IpAddressBytes("10.1.1.128"), end: new IpAddressBytes("10.1.1.255")) ],
+                    OverlappingPorts = [ new (84, 85) ]
+                },
+                BaseOverlap with
+                { 
+                    OverlappingProtocols = NetworkProtocols.TCP,
+                    OverlappingSourceRanges = [ new (start: new IpAddressBytes("10.0.1.128"), end: new IpAddressBytes("10.0.1.255")) ],
+                    OverlappingDestinationRanges = [ new (start: new IpAddressBytes("10.1.1.0"), end: new IpAddressBytes("10.1.1.127")) ],
+                    OverlappingPorts = [ new (84, 85) ]
+                },
+                BaseOverlap with
+                { 
+                    OverlappingProtocols = NetworkProtocols.TCP,
+                    OverlappingSourceRanges = [ new (start: new IpAddressBytes("10.0.1.0"), end: new IpAddressBytes("10.0.1.127")) ],
+                    OverlappingDestinationRanges = [ new (start: new IpAddressBytes("10.1.1.128"), end: new IpAddressBytes("10.1.1.255")) ],
+                    OverlappingPorts = [ new (84, 85) ]
+                }
+            },
+            OverlapType.Full // All have the same port/protocol combinations, and their IP ranges crisscross
+        };
     }
 
     [Theory]
     [MemberData(nameof(CumulativeOverlaps))]
-    public void TestCumulativeOverlap(NetworkProtocols sourceProtocols, Overlap[] accumulatingOverlaps, OverlapType expected)
+    public void TestCumulativeOverlap(NetworkRule sourceRule, Overlap[] accumulatingOverlaps, OverlapType expected)
     {
-        var sourceRule = BaseRule with { NetworkProtocols = sourceProtocols };
         var results = OverlapAnalyzer.GetCumulativeOverlap(sourceRule, accumulatingOverlaps);
 
         Assert.Equal(expected, results);
+    }
+
+    [Theory]
+    [InlineData("10.0.0.0", "10.0.0.255", "10.0.0.128", "10.0.0.255", "10.0.0.0", "10.0.0.127")]
+    [InlineData("10.0.0.0", "10.0.0.255", "10.0.0.0", "10.0.0.127", "10.0.0.128", "10.0.0.255")]
+    public void TestIpNonOverlap(string sourceStart, string sourceEnd, string comparisonStart, string comparisonEnd, string expectedStart, string expectedEnd)
+    {
+        RuleIpRange[] source = [ new(new IpAddressBytes(sourceStart), new IpAddressBytes(sourceEnd)) ];
+        RuleIpRange[] comparison = [ new(new IpAddressBytes(comparisonStart), new IpAddressBytes(comparisonEnd)) ];
+        RuleIpRange[] expected = [ new(new IpAddressBytes(expectedStart), new IpAddressBytes(expectedEnd)) ];
+        var result = OverlapAnalyzer.GetIpNonOverlaps(source, comparison);
+        Assert.Equal(expected, result);
     }
 
     private static void AssertOverlapsMatch(OverlapSummary expected, OverlapSummary actual)

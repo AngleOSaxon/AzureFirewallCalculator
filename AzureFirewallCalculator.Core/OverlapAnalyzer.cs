@@ -1,3 +1,4 @@
+using System.Xml.Schema;
 using OneOf;
 using OneOf.Types;
 
@@ -10,6 +11,11 @@ public static class OverlapAnalyzer
         var matches = new List<Overlap>();
         foreach (var rule in comparisonRules)
         {
+            if (rule == sourceRule)
+            {
+                continue;
+            }
+            
             var match = GetRuleOverlap(
                 sourceRule: sourceRule,
                 comparisonProtocols: rule.NetworkProtocols,
@@ -45,26 +51,86 @@ public static class OverlapAnalyzer
             return overlapType;
         }
 
-        var consolidatedProtocols = matches.Aggregate(
-            seed: NetworkProtocols.None,
-            func: (protocols, overlap) => protocols | overlap.OverlappingProtocols
-        );
-        var consolidatedPorts = ConsolidateRanges(matches.SelectMany(item => item.OverlappingPorts)).OrderBy(item => item.Start).ThenBy(item => item.End);
-        var consolidatedSourceIps = ConsolidateRanges(matches.SelectMany(item => item.OverlappingSourceRanges)).OrderBy(item => item.Start).ThenBy(item => item.End);
-        var consolidatedDestinationIps = ConsolidateRanges(matches.SelectMany(item => item.OverlappingDestinationRanges)).OrderBy(item => item.Start).ThenBy(item => item.End);
- 
-        var match = GetRuleOverlap(
-            sourceRule: sourceRule, 
-            comparisonProtocols: consolidatedProtocols,
-            comparisonSourceIpRanges: consolidatedSourceIps,
-            comparisonDestinationIpRanges: consolidatedDestinationIps,
-            comparisonPortRanges: consolidatedPorts
-        );
-        if (match.IsT1)
+        var unmatchedRulePortions = new List<NetworkRule> { sourceRule };
+
+        foreach (var overlap in matches)
         {
-            throw new Exception("No rule overlaps found, despite an OverlapType other than None.  This should not be possible");
+            var newUnmatchedPortions = new List<NetworkRule>();
+            foreach (var unmatched in unmatchedRulePortions)
+            {
+                // I suspect someone with more knowledge of matrix math could produce a better and more rigorously defined solution
+                // But I'm not that guy
+
+                // This attempts to determine if any portion of the original rule is unhandled by the other rules.
+                // It does so by progressively carving the original rule into smaller components by removing 
+                // all the portions that are matched by a comparison rule.
+                
+                // We compare an unmatched rule segment to an overlap and find any components that are handled
+                // and any components that are unhandled.  Each unhandled component is combined with the matched components
+                // to create a new rule segment, so that we wind up with a collection of rules that combined form the inverse
+                // of the overlap.
+                // If there are any left by the time we've completed all comparisons, then it's only a partial match.  If
+                // there are none, then it's a full match.
+
+                var unmatchedSourceIps = GetIpNonOverlaps(unmatched.SourceIps, overlap.OverlappingSourceRanges);
+                var matchedSourceIps = GetIpOverlaps(unmatched.SourceIps, overlap.OverlappingSourceRanges);
+                var unmatchedDestinationIps = GetIpNonOverlaps(unmatched.DestinationIps, overlap.OverlappingDestinationRanges);
+                var matchedDestinationIps = GetIpOverlaps(unmatched.DestinationIps, overlap.OverlappingDestinationRanges);
+                var unmatchedDestinationPorts = GetPortNonOverlaps(unmatched.DestinationPorts, overlap.OverlappingPorts);
+                var matchedDestinationPorts = GetPortOverlaps(unmatched.DestinationPorts, overlap.OverlappingPorts);
+                var unmatchedProtocols = (unmatched.NetworkProtocols ^ overlap.OverlappingProtocols) & sourceRule.NetworkProtocols;
+                var matchedProtocols = unmatched.NetworkProtocols & overlap.OverlappingProtocols;
+
+                if (unmatchedSourceIps.Length != 0)
+                {
+                    newUnmatchedPortions.Add(unmatched with 
+                    {
+                        SourceIps = unmatchedSourceIps,
+                        DestinationIps = matchedDestinationIps,
+                        DestinationPorts = matchedDestinationPorts,
+                        NetworkProtocols = matchedProtocols
+                    });
+                }
+                
+                if (unmatchedDestinationIps.Length != 0)
+                {
+                    newUnmatchedPortions.Add(unmatched with
+                    {
+                        SourceIps = matchedSourceIps,
+                        DestinationIps = unmatchedDestinationIps,
+                        DestinationPorts = matchedDestinationPorts,
+                        NetworkProtocols = matchedProtocols
+                    });
+                }
+
+                if (unmatchedDestinationPorts.Length != 0)
+                {
+                    newUnmatchedPortions.Add(unmatched with
+                    {
+                        SourceIps = matchedSourceIps,
+                        DestinationIps = matchedDestinationIps,
+                        DestinationPorts = unmatchedDestinationPorts,
+                        NetworkProtocols = matchedProtocols
+                    });
+                }
+
+                if (unmatchedProtocols != NetworkProtocols.None)
+                {
+                    newUnmatchedPortions.Add(unmatched with
+                    {
+                        SourceIps = matchedSourceIps,
+                        DestinationIps = matchedDestinationIps,
+                        DestinationPorts = matchedDestinationPorts,
+                        NetworkProtocols = unmatchedProtocols
+                    });
+                }
+            }
+            unmatchedRulePortions = newUnmatchedPortions;
         }
-        return match.AsT0.overlapType;
+
+        return unmatchedRulePortions.Any(item => item.DestinationIps.Length > 0 || item.SourceIps.Length > 0 || item.DestinationPorts.Length > 0 || item.NetworkProtocols != NetworkProtocols.None)
+            ? OverlapType.Partial
+            : OverlapType.Full;
     }
 
     public static RuleIpRange[] GetIpOverlaps(IEnumerable<RuleIpRange> sourceRanges, IEnumerable<RuleIpRange> comparisonRanges)
@@ -85,6 +151,35 @@ public static class OverlapAnalyzer
         return ConsolidateRanges(overlaps);
     }
 
+    public static RuleIpRange[] GetIpNonOverlaps(IEnumerable<RuleIpRange> sourceRanges, IEnumerable<RuleIpRange> comparisonRanges)
+    {
+        var nonOverlappingRanges = new List<RuleIpRange>();
+        static uint IncrementSafe(uint number) => number == uint.MaxValue ? number : number + 1;
+        foreach (var sourceRange in sourceRanges)
+        {
+            var rangeStart = sourceRange.Start;
+            foreach (var comparisonRange in comparisonRanges)
+            {
+                // We're completely outside the comparison range
+                if (sourceRange.Start > comparisonRange.End || sourceRange.End < comparisonRange.Start)
+                {
+                    continue;
+                }
+
+                if (rangeStart < comparisonRange.Start)
+                {
+                    nonOverlappingRanges.Add(new (rangeStart, Math.Min(IncrementSafe(sourceRange.End), comparisonRange.Start)));
+                }
+                rangeStart = Math.Max(rangeStart, comparisonRange.End);
+            }
+            if (rangeStart < sourceRange.End)
+            {
+                nonOverlappingRanges.Add(new (IncrementSafe(rangeStart), sourceRange.End));
+            }
+        }
+        return ConsolidateRanges(nonOverlappingRanges);
+    }
+
     public static RulePortRange[] GetPortOverlaps(IEnumerable<RulePortRange> sourceRanges, IEnumerable<RulePortRange> comparisonRanges)
     {
         var overlaps = new List<RulePortRange>();
@@ -101,6 +196,34 @@ public static class OverlapAnalyzer
             }
         }
         return ConsolidateRanges(overlaps);
+    }
+
+    public static RulePortRange[] GetPortNonOverlaps(IEnumerable<RulePortRange> sourceRanges, IEnumerable<RulePortRange> comparisonRanges)
+    {
+        var nonOverlappingRanges = new List<RulePortRange>();
+        foreach (var sourceRange in nonOverlappingRanges)
+        {
+            var rangeStart = sourceRange.Start;
+            foreach (var comparisonRange in comparisonRanges)
+            {
+                // We're completely outside the comparison range
+                if (sourceRange.Start > comparisonRange.End || sourceRange.End < comparisonRange.Start)
+                {
+                    continue;
+                }
+
+                if (rangeStart < comparisonRange.Start)
+                {
+                    nonOverlappingRanges.Add(new (rangeStart, Math.Min(sourceRange.End, comparisonRange.Start)));
+                }
+                rangeStart = Math.Max(rangeStart, comparisonRange.End);
+            }
+            if (rangeStart < sourceRange.End)
+            {
+                nonOverlappingRanges.Add(new (rangeStart, sourceRange.End));
+            }
+        }
+        return ConsolidateRanges(nonOverlappingRanges);
     }
 
     public static RulePortRange[] ConsolidateRanges(IEnumerable<RulePortRange> ranges)
