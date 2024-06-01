@@ -271,7 +271,7 @@ public class LoadFromFileViewModel : ReactiveObject, IRoutableViewModel, IScreen
             var policyDictionary = policies?.ToDictionary(item => item.Id, StringComparer.CurrentCultureIgnoreCase);
             var ruleCollectionGroupDictionary = ruleCollectionGroups?.ToDictionary(item => item.Properties.Id, StringComparer.CurrentCultureIgnoreCase);
             var convertedFirewall = await firewall.Value.ConvertToFirewall(ipGroupDictionary, policyDictionary ?? [], ruleCollectionGroupDictionary ?? [], DnsResolver, serviceTags, LoggerFactory.CreateLogger<Firewall>());
-            Dispatcher.UIThread.Invoke(() => Router.Navigate.Execute(new CheckTrafficViewModel(convertedFirewall, DnsResolver, this)));
+            Dispatcher.UIThread.Invoke(() => Router.Navigate.Execute(new LoadedFirewallViewModel(convertedFirewall, DnsResolver, this)));
         });
     }
 

@@ -187,7 +187,7 @@ public class LoadFromArmViewModel : ReactiveObject, IRoutableViewModel, IScreen
             }
 
             ConvertedFirewall = await ArmService.ConvertToFirewall(firewall, ipGroups, serviceTags ?? Array.Empty<ServiceTag>());
-            await Router.NavigateAndReset.Execute(new CheckTrafficViewModel(ConvertedFirewall, DnsResolver, this));
+            await Router.NavigateAndReset.Execute(new LoadedFirewallViewModel(ConvertedFirewall, DnsResolver, this));
         });
     }
 

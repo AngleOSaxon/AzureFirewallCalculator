@@ -48,7 +48,8 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel, INotify
     // Use Object list to stop cast exceptions when the Selected event fires.  Jesus.
     public AvaloniaList<object> RuleProcessingResponses { get; set; } = [];
     public ReactiveCommand<Unit, Task> CheckFirewallRulesCommand { get; }
-    public string? UrlPathSegment => "check-traffic";
+    public const string CheckTrafficUrlPathSegment = "check-traffic";
+    public string? UrlPathSegment => CheckTrafficUrlPathSegment;
     public IScreen HostScreen { get; }
     public event EventHandler<DataErrorsChangedEventArgs>? ErrorsChanged;
     public AvaloniaList<ResolvedDns> ResolvedIps { get; } = [];

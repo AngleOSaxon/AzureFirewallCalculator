@@ -14,12 +14,14 @@ public class MatchedNetworkProtocolTemplate : IDataTemplate
 {
     public Control? Build(object? param)
     {
-        if (param is not NetworkRuleMatch match)
+        var (protocols, matchedProtocols) = param switch
         {
-            throw new InvalidOperationException($"Template {nameof(MatchedNetworkProtocolTemplate)} expects an object of type {nameof(NetworkRuleMatch)}, but received object of type {param?.GetType().FullName}");
-        }
+            NetworkRuleMatch match => (match.Rule.NetworkProtocols, match.MatchedProtocols),
+            Overlap overlap => (overlap.OverlappingRule.NetworkProtocols, overlap.OverlappingProtocols),
+            _ => throw new InvalidOperationException($"Template {nameof(MatchedNetworkProtocolTemplate)} expects an object of type {nameof(NetworkRuleMatch)} or of type {nameof(Overlap)}, but received object of type {param?.GetType().FullName}")
+        };
 
-        if (match.Rule.NetworkProtocols.HasFlag(NetworkProtocols.Any))
+        if (protocols.HasFlag(NetworkProtocols.Any))
         {
             return new SelectableTextBlock
             {
@@ -29,10 +31,10 @@ public class MatchedNetworkProtocolTemplate : IDataTemplate
         }
 
         var block = new SelectableTextBlock();
-        var ruleProtocols = Enum.GetValues<NetworkProtocols>().Where(item => item != NetworkProtocols.None && match.Rule.NetworkProtocols.HasFlag(item));
+        var ruleProtocols = Enum.GetValues<NetworkProtocols>().Where(item => item != NetworkProtocols.None && protocols.HasFlag(item));
         var inlines = ruleProtocols.SelectMany(item =>
         {
-            var weight = (match.MatchedProtocols & item) > 0
+            var weight = (matchedProtocols & item) > 0
                 ? FontWeight.ExtraBold
                 : FontWeight.Normal;
             return new List<Run>
@@ -50,5 +52,5 @@ public class MatchedNetworkProtocolTemplate : IDataTemplate
         return block;
     }
 
-    public bool Match(object? data) => data is NetworkRuleMatch;
+    public bool Match(object? data) => data is NetworkRuleMatch || data is Overlap;
 }

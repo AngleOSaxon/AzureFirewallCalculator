@@ -1,0 +1,23 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:AzureFirewallCalculator.Desktop.ViewModels"
+             xmlns:v="using:AzureFirewallCalculator.Desktop.Views"
+             xmlns:rxui="clr-namespace:Avalonia.ReactiveUI;assembly=Avalonia.ReactiveUI"
+             xmlns:local="using:AzureFirewallCalculator.Desktop.Views"
+             xmlns:i="clr-namespace:Avalonia.Xaml.Interactivity;assembly=Avalonia.Xaml.Interactivity"
+             xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Avalonia.Xaml.Interactions"
+             x:DataType="vm:LoadedFirewallViewModel"
+             x:Class="AzureFirewallCalculator.Desktop.Views.LoadedFirewallView">
+    <DockPanel LastChildFill="True">
+        <StackPanel Classes="FirewallOptions" DockPanel.Dock="Top" Orientation="Horizontal">
+            <TabStrip>
+                <TabItem Header="Check Traffic" PointerReleased="TabStripItem_CheckTrafficClicked"></TabItem>
+                <TabItem Header="Rule Overlap" PointerReleased="TabStripItem_RuleOverlapClicked"></TabItem>
+            </TabStrip>
+        </StackPanel>
+        <rxui:RoutedViewHost Router="{Binding Router}">
+            <rxui:RoutedViewHost.DefaultContent>
+            </rxui:RoutedViewHost.DefaultContent>
+        </rxui:RoutedViewHost>
+    </DockPanel>
+</UserControl>
