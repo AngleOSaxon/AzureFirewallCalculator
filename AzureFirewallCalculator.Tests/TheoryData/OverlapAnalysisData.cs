@@ -2,7 +2,7 @@ using System.Collections;
 using System.Net;
 using AzureFirewallCalculator.Core;
 
-namespace AzureFirewallCalculator.Test;
+namespace AzureFirewallCalculator.Tests.TheoryData;
 
 public class OverlapAnalysisData : IEnumerable<object[]>
 {
@@ -15,7 +15,7 @@ public class OverlapAnalysisData : IEnumerable<object[]>
             destinationPorts: [ new RulePortRange(88, 88) ],
             destinationFqdns: [],
             networkProtocols: NetworkProtocols.TCP,
-            dnsResolver: null!
+            dnsResolver: DummyDnsResolver.DummyResolver
         );
         var comparisonRules = new NetworkRule[]
         {
@@ -26,7 +26,7 @@ public class OverlapAnalysisData : IEnumerable<object[]>
                 destinationPorts: [ new RulePortRange(50, 100) ],
                 destinationFqdns: [],
                 networkProtocols: NetworkProtocols.TCP,
-                dnsResolver: null!
+                dnsResolver: DummyDnsResolver.DummyResolver
             ),
             new(
                 name: "ShouldNotMatch",
@@ -35,7 +35,7 @@ public class OverlapAnalysisData : IEnumerable<object[]>
                 destinationPorts: [ new RulePortRange(50, 100) ],
                 destinationFqdns: [],
                 networkProtocols: NetworkProtocols.TCP,
-                dnsResolver: null!
+                DummyDnsResolver.DummyResolver
             ),
         };
         yield return new object[] 
@@ -65,7 +65,7 @@ public class OverlapAnalysisData : IEnumerable<object[]>
             destinationPorts: [ new RulePortRange(88, 88) ],
             destinationFqdns: [],
             networkProtocols: NetworkProtocols.UDP,
-            dnsResolver: null!
+            dnsResolver: DummyDnsResolver.DummyResolver
         );
         comparisonRules =
         [
@@ -76,7 +76,7 @@ public class OverlapAnalysisData : IEnumerable<object[]>
                 destinationPorts: [ new RulePortRange(50, 100) ],
                 destinationFqdns: [],
                 networkProtocols: NetworkProtocols.TCP,
-                dnsResolver: null!
+                dnsResolver: DummyDnsResolver.DummyResolver
             ),
             new(
                 name: "ShouldNotMatch",
@@ -85,7 +85,7 @@ public class OverlapAnalysisData : IEnumerable<object[]>
                 destinationPorts: [ new RulePortRange(50, 100) ],
                 destinationFqdns: [],
                 networkProtocols: NetworkProtocols.UDP,
-                dnsResolver: null!
+                dnsResolver: DummyDnsResolver.DummyResolver
             ),
         ];
         yield return new object[] 
@@ -105,7 +105,7 @@ public class OverlapAnalysisData : IEnumerable<object[]>
             destinationPorts: [ new RulePortRange(88, 88) ],
             destinationFqdns: [],
             networkProtocols: NetworkProtocols.UDP,
-            dnsResolver: null!
+            dnsResolver: DummyDnsResolver.DummyResolver
         );
         comparisonRules =
         [
@@ -116,7 +116,7 @@ public class OverlapAnalysisData : IEnumerable<object[]>
                 destinationPorts: [ new RulePortRange(50, 100) ],
                 destinationFqdns: [],
                 networkProtocols: NetworkProtocols.TCP | NetworkProtocols.UDP,
-                dnsResolver: null!
+                dnsResolver: DummyDnsResolver.DummyResolver
             ),
             new(
                 name: "ShouldMatch",
@@ -125,7 +125,7 @@ public class OverlapAnalysisData : IEnumerable<object[]>
                 destinationPorts: [ new RulePortRange(50, 100) ],
                 destinationFqdns: [],
                 networkProtocols: NetworkProtocols.UDP,
-                dnsResolver: null!
+                dnsResolver: DummyDnsResolver.DummyResolver
             ),
         ];
         yield return new object[] 
