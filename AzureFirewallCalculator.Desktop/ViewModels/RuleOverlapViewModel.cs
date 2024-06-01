@@ -25,6 +25,8 @@ public class RuleOverlapViewModel : ReactiveObject, IRoutableViewModel
 
     public RoutingState Router { get; } = new RoutingState();
 
+    public AvaloniaList<object> OverlapSummaries { get; } = [];
+
     public RuleOverlapViewModel(Firewall firewall, IDnsResolver dnsResolver, IScreen hostScreen)
     {
         Firewall = firewall;
@@ -34,17 +36,13 @@ public class RuleOverlapViewModel : ReactiveObject, IRoutableViewModel
         _ = Init();
     }
 
-    public AvaloniaList<OverlapSummary> OverlapSummaries { get; } = [];
-
     public async Task Init()
     {
-        // I think there's a bug in the cumulative calculations, inasmuch as it consolidates each component individually, even if other components from one rule don't match everything
         try
         {
             OverlapSummaries.Clear();
             var overlap = await Task.Run(() =>
             {
-                //var coll1 = Firewall.NetworkRuleCollections[0];
                 var networkRules = Firewall.NetworkRuleCollections.SelectMany(item => item.Rules).ToArray();
                 var results = networkRules.Select(item => OverlapAnalyzer.CheckForOverlap(item, networkRules)).Where(item => item.CumulativeOverlap != OverlapType.None).ToList();
                 return results;
