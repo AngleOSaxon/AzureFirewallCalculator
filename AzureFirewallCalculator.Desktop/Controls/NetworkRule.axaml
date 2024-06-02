@@ -5,9 +5,13 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:dataTemplates="using:AzureFirewallCalculator.Desktop.DataTemplates"
     xmlns:controls="using:AzureFirewallCalculator.Desktop.Controls"
+    xmlns:Converters="using:AzureFirewallCalculator.Desktop.Converters"
     mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-    x:Class="AzureFirewallCalculator.Desktop.Controls.NetworkRule"
-    >
+    x:Class="AzureFirewallCalculator.Desktop.Controls.NetworkRule" >
+    <UserControl.Resources>
+        <Converters:MatchFontWeightConverter x:Key="MatchFontWeightConverter" />
+        <Converters:ListConcatConverter x:Key="ListConcatConverter" />
+    </UserControl.Resources>
   <UserControl.Styles>
     </UserControl.Styles>
     <Grid ColumnDefinitions="3*,2*,2*,1*,1*" RowDefinitions="Auto,Auto" Classes="Header">
@@ -28,13 +32,13 @@
         <ItemsRepeater Grid.Column="4" Grid.Row="1" x:Name="RuleDestinationPortsRepeater">
             <ItemsRepeater.ItemTemplate>
                 <DataTemplate x:CompileBindings="False">
-                    <SelectableTextBlock Text="{Binding}" x:CompileBindings="False">
-                        <!-- <SelectableTextBlock.FontWeight>
+                    <SelectableTextBlock Text="{Binding}" x:CompileBindings="False" x:Name="RuleDestinationPortsDisplay">
+                        <SelectableTextBlock.FontWeight>
                             <MultiBinding Converter="{StaticResource MatchFontWeightConverter}">
                                 <Binding Path="." />
-                                <Binding RelativeSource="{RelativeSource AncestorType=ItemsRepeater}" Path="DataContext.DestinationPortMatches"/>
+                                <Binding RelativeSource="{RelativeSource AncestorType=ItemsRepeater}" Path="DataContext"/>
                             </MultiBinding>
-                        </SelectableTextBlock.FontWeight> -->
+                        </SelectableTextBlock.FontWeight>
                     </SelectableTextBlock>
                 </DataTemplate>
             </ItemsRepeater.ItemTemplate>

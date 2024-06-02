@@ -14,6 +14,7 @@ public partial class NetworkRule : UserControl
     public NetworkRule()
     {
         InitializeComponent();
+        RuleDestinationPortsRepeater.DataContext = DestinationPortMatches;
     }
 
     public static readonly StyledProperty<string> RuleNameProperty = AvaloniaProperty.Register<NetworkRule, string>(nameof(RuleName), string.Empty);
@@ -64,6 +65,14 @@ public partial class NetworkRule : UserControl
         set => SetValue(NetworkProtocolsProperty, value);
     }
 
+    public static readonly StyledProperty<NetworkProtocols> NetworkProtocolMatchesProperty = AvaloniaProperty.Register<NetworkRule, NetworkProtocols>(nameof(NetworkProtocolMatches), Core.NetworkProtocols.None);
+
+    public NetworkProtocols NetworkProtocolMatches
+    {
+        get => GetValue(NetworkProtocolMatchesProperty);
+        set => SetValue(NetworkProtocolMatchesProperty, value);
+    }
+
     public static readonly StyledProperty<RulePortRange[]> DestinationPortsProperty = AvaloniaProperty.Register<NetworkRule, RulePortRange[]>(nameof(DestinationPorts), []);
 
     public RulePortRange[] DestinationPorts
@@ -106,7 +115,11 @@ public partial class NetworkRule : UserControl
         }
         else if (change.Property == NetworkProtocolsProperty)
         {
-            this.NetworkProtocolsDisplay.Content = (NetworkProtocols)(change.NewValue ?? NetworkProtocols.None);
+            this.NetworkProtocolsDisplay.Content = ((NetworkProtocols)(change.NewValue ?? NetworkProtocols.None), NetworkProtocolMatches);
+        }
+        else if (change.Property == NetworkProtocolMatchesProperty)
+        {
+            this.NetworkProtocolsDisplay.Content = (NetworkProtocols, (NetworkProtocols)(change.NewValue ?? NetworkProtocols.None));
         }
         else if (change.Property == DestinationPortsProperty)
         {
@@ -114,7 +127,7 @@ public partial class NetworkRule : UserControl
         }
         else if (change.Property == DestinationPortMatchesProperty)
         {
-            // Leaving disabled for now
+            RuleDestinationPortsRepeater.DataContext = change.NewValue;
         }
     }
 }

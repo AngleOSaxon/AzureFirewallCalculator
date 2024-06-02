@@ -25,9 +25,6 @@
                 </Style>
             </TreeView.Styles>
             <TreeView.DataTemplates>
-                <!-- <DataTemplate DataType="core:NetworkRule">
-                    
-                </DataTemplate> -->
                 <DataTemplate DataType="core:Overlap">
                     <Grid ColumnDefinitions="3*,2*,2*,1*,1*,2*" RowDefinitions="Auto,Auto" Classes="Header">
                         <TextBlock Grid.Column="0" Grid.Row="0" Text="Rule Name" />
@@ -66,31 +63,21 @@
                     </Grid>
                 </DataTemplate>
                 <TreeDataTemplate x:DataType="core:OverlapSummary" ItemsSource="{Binding Overlaps}">
-                    <Grid ColumnDefinitions="1*,1*" RowDefinitions="Auto,Auto" Classes="Header">
-                        <SelectableTextBlock Grid.Column="0" Grid.Row="0" Text="{Binding SourceRule.Name}" />
-                        <SelectableTextBlock Grid.Column="1" Grid.Row="0" Text="{Binding CumulativeOverlap}" />
-                        <controls:NetworkRule Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="1"
+                    <DockPanel>
+                        <Grid DockPanel.Dock="Right" ColumnDefinitions="Auto" RowDefinitions="Auto,Auto" Classes="Header">
+                            <TextBlock Grid.Column="0" Grid.Row="0" Text="Overall Overlap" />
+                            <SelectableTextBlock Grid.Column="0" Grid.Row="1" Text="{Binding CumulativeOverlap}" />
+                        </Grid>
+                        <controls:NetworkRule
+                            RuleName="{Binding SourceRule.Name}"
                             SourceIps="{Binding SourceRule.SourceIps}"
                             DestinationIps="{Binding SourceRule.DestinationIps}"
                             DestinationPorts="{Binding SourceRule.DestinationPorts}" 
                             NetworkProtocols="{Binding SourceRule.NetworkProtocols}"
                             />
-                    </Grid>
+                    </DockPanel>
                 </TreeDataTemplate>
             </TreeView.DataTemplates>
         </TreeView>
-        <!-- <ItemsRepeater x:Name="OverlapSummaries" ItemsSource="{Binding OverlapSummaries}">
-            <ItemsRepeater.ItemTemplate>
-                <DataTemplate>
-                    <StackPanel>
-                        <SelectableTextBlock Text="{Binding SourceRule.Name}"></SelectableTextBlock>
-                        <SelectableTextBlock Text="{Binding CumulativeOverlap}"></SelectableTextBlock>
-                    </StackPanel>
-                </DataTemplate>
-            </ItemsRepeater.ItemTemplate>
-            <ItemsRepeater.Layout>
-                <StackLayout Orientation="Vertical" />
-            </ItemsRepeater.Layout>
-        </ItemsRepeater> -->
     </DockPanel>
 </UserControl>

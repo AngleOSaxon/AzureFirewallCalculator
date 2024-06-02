@@ -63,8 +63,6 @@ public partial class DisplayMatchedIps : UserControl
         set => SetValue(MatchesProperty, value);
     }
 
-    //private SelectableTextBlock IpDisplay => this.FindControl<SelectableTextBlock>("IpDisplay") ?? throw new InvalidOperationException("Unable to find expected element named 'IpDisplay'");
-
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
         base.OnPropertyChanged(change);

@@ -23,5 +23,9 @@
             <Setter Property="Padding" Value="6,3,6,2" />
             <Setter Property="Height" Value="25" />
         </Style>
+        <Style Selector="Grid.Header TextBlock">
+            <Setter Property="FontWeight" Value="ExtraBold" />
+            <Setter Property="TextDecorations" Value="Underline" />
+        </Style>
     </Application.Styles>
 </Application>
