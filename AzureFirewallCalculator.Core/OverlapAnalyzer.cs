@@ -158,6 +158,7 @@ public static class OverlapAnalyzer
         foreach (var sourceRange in sourceRanges)
         {
             var rangeStart = sourceRange.Start;
+            bool totallyUnmatched = true;
             foreach (var comparisonRange in comparisonRanges)
             {
                 // We're completely outside the comparison range
@@ -166,15 +167,20 @@ public static class OverlapAnalyzer
                     continue;
                 }
 
+                totallyUnmatched = false;
                 if (rangeStart < comparisonRange.Start)
                 {
-                    nonOverlappingRanges.Add(new (rangeStart, Math.Min(IncrementSafe(sourceRange.End), comparisonRange.Start)));
+                    nonOverlappingRanges.Add(new (rangeStart, Math.Min(IncrementSafe(sourceRange.End), comparisonRange.Start - 1)));
                 }
                 rangeStart = Math.Max(rangeStart, comparisonRange.End);
             }
             if (rangeStart < sourceRange.End)
             {
                 nonOverlappingRanges.Add(new (IncrementSafe(rangeStart), sourceRange.End));
+            }
+            if (totallyUnmatched)
+            {
+                nonOverlappingRanges.Add(sourceRange);
             }
         }
         return ConsolidateRanges(nonOverlappingRanges);

@@ -62,7 +62,7 @@ public class TestOverlapAnalysis
     [InlineData(NetworkProtocols.TCP, NetworkProtocols.TCP | NetworkProtocols.UDP, NetworkProtocols.TCP, OverlapType.Full)]
     public void TestNetworkProtocolOverlaps_Match(NetworkProtocols sourceProtocols, NetworkProtocols comparisonProtocols, NetworkProtocols expectedMatch, OverlapType expectedOverlapType)
     {
-        var sourceRule = BaseRule with { NetworkProtocols = sourceProtocols };
+        var sourceRule = BaseRule with { NetworkProtocols = sourceProtocols, SourceIps = new RuleIpRange[1] /* Prevent rules from passing equality check */ };
         var comparisonRule = BaseRule with { NetworkProtocols = comparisonProtocols };
 
         var results = OverlapAnalyzer.CheckForOverlap(sourceRule, [comparisonRule]);
@@ -510,6 +510,28 @@ public class TestOverlapAnalysis
             },
             OverlapType.Full // All have the same port/protocol combinations, and their IP ranges crisscross
         };
+        yield return new object[]
+        {
+            BaseRule with
+            {
+                Name = "Unmatched range",
+                NetworkProtocols = NetworkProtocols.TCP,
+                SourceIps = [ new (start: new IpAddressBytes("10.0.1.0"), end: new IpAddressBytes("10.0.1.255")), new (start: new IpAddressBytes("192.168.1.0"), end: new IpAddressBytes("192.168.1.0")) ],
+                DestinationIps = [ new (start: new IpAddressBytes("10.1.1.0"), end: new IpAddressBytes("10.1.1.255")) ],
+                DestinationPorts = [ new (84, 85) ]
+            },
+            new NetworkRule[] 
+            {
+                BaseRule with
+                { 
+                    NetworkProtocols = NetworkProtocols.TCP,
+                    SourceIps = [ new (start: new IpAddressBytes("10.0.1.0"), end: new IpAddressBytes("10.0.1.255")) ],
+                    DestinationIps = [ new (start: new IpAddressBytes("10.1.1.0"), end: new IpAddressBytes("10.1.1.255")) ],
+                    DestinationPorts = [ new (84, 85) ]
+                }
+            },
+            OverlapType.Partial // Nothing to match the 192.168.1.0 address
+        };
     }
 
     [Theory]
@@ -519,11 +541,16 @@ public class TestOverlapAnalysis
         var accumulatingOverlaps = OverlapAnalyzer.CheckForOverlap(sourceRule, overlappingRules);
         var results = OverlapAnalyzer.GetCumulativeOverlap(sourceRule, accumulatingOverlaps.Overlaps);
         var bulkRequests = BulkRequestGenerator.GenerateRequests(sourceRule);
+        var foo = bulkRequests.FirstOrDefault(item => item.SourceIp == new IpAddressBytes("192.168.1.0"));
         var matches = await Task.WhenAll(bulkRequests.Select(async request => (await Task.WhenAll(overlappingRules.Select(async item => await item.Matches([request])))).Any(item => item.Matched)));
         if (matches.Any(item => item))
         {
             if (matches.All(item => item))
             {
+                if (results == OverlapType.Partial)
+                {
+
+                }
                 Assert.Equal(OverlapType.Full, results);
             }
             else
