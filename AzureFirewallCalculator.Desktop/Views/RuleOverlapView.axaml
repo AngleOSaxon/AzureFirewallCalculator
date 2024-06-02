@@ -17,6 +17,19 @@
         <Converters:ListConcatConverter x:Key="ListConcatConverter" />
     </UserControl.Resources>
     <DockPanel LastChildFill="True">
+        <Grid DockPanel.Dock="Top" ColumnDefinitions="150,300,150" RowDefinitions="Auto">
+            <TextBlock Grid.Column="0" Grid.Row="0" Text="Select rule: " />
+            <AutoCompleteBox Grid.Column="1" Grid.Row="1" 
+                ItemsSource="{Binding NetworkRules}" FilterMode="Custom" ItemSelector="{Binding AutoCompleteSelector}" ItemFilter="{Binding AutoCompleteFilterPredicate}"
+                SelectedItem="{Binding SelectedRule}">
+                <AutoCompleteBox.ItemTemplate>
+                    <DataTemplate x:DataType="core:NetworkRule">
+                        <TextBlock Text="{Binding Name}" />
+                    </DataTemplate>
+                </AutoCompleteBox.ItemTemplate>
+            </AutoCompleteBox>
+            <Button Grid.Column="3" Grid.Row="0" Content="Show all" Command="{Binding CalculateAllOverlaps}" />
+        </Grid>
         <TreeView ItemsSource="{Binding OverlapSummaries}" Name="OverlapSummaries">
             <TreeView.Styles>
                 <Style Selector="TreeViewItem:selected">
