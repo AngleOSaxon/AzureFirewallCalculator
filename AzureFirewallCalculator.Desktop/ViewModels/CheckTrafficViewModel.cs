@@ -145,7 +145,7 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel, INotify
         var results = await responsesTask;
         Dispatcher.UIThread.Invoke(() =>
         {
-            if (validNetworkProtocol && results.Any(item => item is ApplicationProcessingResponse))
+            if (validNetworkProtocol && destinationPort != null && results.Any(item => item is ApplicationProcessingResponse))
             {
                 Warnings.Add(@"Warning: This request matched an application rule on a non-standard port.  If this request is not handled by a network rule first, it will be processed using the application protocol of that application rule, regardless of destination IP or FQDN.
 If that is not the correct protocol, application errors are likely and the traffic may not appear correctly in the logs.");
