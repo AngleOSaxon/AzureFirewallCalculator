@@ -1,0 +1,46 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:sys="System"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:dataTemplates="using:AzureFirewallCalculator.Desktop.DataTemplates"
+    xmlns:controls="using:AzureFirewallCalculator.Desktop.Controls"
+    mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+    x:Class="AzureFirewallCalculator.Desktop.Controls.NetworkRule"
+    >
+  <UserControl.Styles>
+    </UserControl.Styles>
+    <Grid ColumnDefinitions="3*,2*,2*,1*,1*" RowDefinitions="Auto,Auto" Classes="Header">
+        <TextBlock Grid.Column="0" Grid.Row="0" Text="Rule Name" />
+        <TextBlock Grid.Column="1" Grid.Row="0" Text="Source Ips" />
+        <TextBlock Grid.Column="2" Grid.Row="0" Text="Destinations" />
+        <TextBlock Grid.Column="3" Grid.Row="0" Text="Protocols" />
+        <TextBlock Grid.Column="4" Grid.Row="0" Text="Ports" />
+
+        <SelectableTextBlock Grid.Column="0" Grid.Row="1" Name="RuleNameTextBlock" />
+        <controls:DisplayMatchedIps Grid.Column="1" Grid.Row="1" Name="SourceIpDisplay" />
+        <controls:DisplayMatchedIps Grid.Column="2" Grid.Row="1" Name="DestinationIpDisplay" />
+        <ContentControl Grid.Column="3" Grid.Row="1" Name="NetworkProtocolsDisplay">
+            <ContentControl.ContentTemplate>
+                <dataTemplates:MatchedNetworkProtocolTemplate />
+            </ContentControl.ContentTemplate>
+        </ContentControl>
+        <ItemsRepeater Grid.Column="4" Grid.Row="1" x:Name="RuleDestinationPortsRepeater">
+            <ItemsRepeater.ItemTemplate>
+                <DataTemplate x:CompileBindings="False">
+                    <SelectableTextBlock Text="{Binding}" x:CompileBindings="False">
+                        <!-- <SelectableTextBlock.FontWeight>
+                            <MultiBinding Converter="{StaticResource MatchFontWeightConverter}">
+                                <Binding Path="." />
+                                <Binding RelativeSource="{RelativeSource AncestorType=ItemsRepeater}" Path="DataContext.DestinationPortMatches"/>
+                            </MultiBinding>
+                        </SelectableTextBlock.FontWeight> -->
+                    </SelectableTextBlock>
+                </DataTemplate>
+            </ItemsRepeater.ItemTemplate>
+            <ItemsRepeater.Layout>
+                <StackLayout Orientation="Vertical" />
+            </ItemsRepeater.Layout>
+        </ItemsRepeater>
+    </Grid>
+</UserControl>

@@ -44,7 +44,7 @@ public class RuleOverlapViewModel : ReactiveObject, IRoutableViewModel
             var overlap = await Task.Run(() =>
             {
                 var networkRules = Firewall.NetworkRuleCollections.SelectMany(item => item.Rules).ToArray();
-                var results = networkRules.Select(item => OverlapAnalyzer.CheckForOverlap(item, networkRules)).Where(item => item.CumulativeOverlap != OverlapType.None).ToList();
+                var results = networkRules.Select(item => OverlapAnalyzer.CheckForOverlap(item, networkRules)).Where(item => item.CumulativeOverlap == OverlapType.Full).ToList();
                 return results;
             });
             OverlapSummaries.AddRange(overlap);

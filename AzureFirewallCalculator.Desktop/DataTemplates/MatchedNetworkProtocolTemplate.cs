@@ -18,6 +18,7 @@ public class MatchedNetworkProtocolTemplate : IDataTemplate
         {
             NetworkRuleMatch match => (match.Rule.NetworkProtocols, match.MatchedProtocols),
             Overlap overlap => (overlap.OverlappingRule.NetworkProtocols, overlap.OverlappingProtocols),
+            NetworkProtocols suppliedProtocols => (suppliedProtocols, NetworkProtocols.None),
             _ => throw new InvalidOperationException($"Template {nameof(MatchedNetworkProtocolTemplate)} expects an object of type {nameof(NetworkRuleMatch)} or of type {nameof(Overlap)}, but received object of type {param?.GetType().FullName}")
         };
 
@@ -52,5 +53,5 @@ public class MatchedNetworkProtocolTemplate : IDataTemplate
         return block;
     }
 
-    public bool Match(object? data) => data is NetworkRuleMatch || data is Overlap;
+    public bool Match(object? data) => data is NetworkRuleMatch || data is Overlap || data is NetworkProtocols;
 }
