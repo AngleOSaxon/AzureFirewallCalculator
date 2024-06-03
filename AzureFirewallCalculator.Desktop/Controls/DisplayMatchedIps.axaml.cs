@@ -74,7 +74,7 @@ public partial class DisplayMatchedIps : UserControl
         IpDisplay.Inlines = [
             ..Ips.Aggregate(new List<Inline>(), (controls, item) =>
             {
-                var weight = Matches.Contains(item)
+                var weight = Matches.Any(match => match.Contains(item))
                     ? FontWeight.ExtraBold
                     : FontWeight.Normal;
 

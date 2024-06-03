@@ -21,6 +21,11 @@ public readonly record struct RuleIpRange
         End = end;
     }
 
+    public bool Contains(RuleIpRange range)
+    {
+        return Start <= range.Start && End >= range.End;
+    }
+
     public override string ToString()
     {
         var start = new IPAddress(BitConverter.GetBytes(Start).Reverse().ToArray());
