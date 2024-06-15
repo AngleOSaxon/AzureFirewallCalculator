@@ -63,6 +63,14 @@ public partial class DisplayMatchedIps : UserControl
         set => SetValue(MatchesProperty, value);
     }
 
+    public static readonly StyledProperty<bool> ExactMatchOnlyProperty = AvaloniaProperty.Register<DisplayMatchedIps, bool>(nameof(ExactMatchOnly), true);
+
+    public bool ExactMatchOnly
+    {
+        get => GetValue(ExactMatchOnlyProperty);
+        set => SetValue(ExactMatchOnlyProperty, value);
+    }
+
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
         base.OnPropertyChanged(change);
@@ -74,7 +82,12 @@ public partial class DisplayMatchedIps : UserControl
         IpDisplay.Inlines = [
             ..Ips.Aggregate(new List<Inline>(), (controls, item) =>
             {
-                var weight = Matches.Any(match => match.Contains(item))
+                static bool ExactMatch(IEnumerable<RuleIpRange> values, RuleIpRange item) => values.Contains(item);
+                static bool ContainedMatch(IEnumerable<RuleIpRange> values, RuleIpRange item) => values.Any(value => value.Contains(item));
+
+                Func<IEnumerable<RuleIpRange>, RuleIpRange, bool> shouldBold = ExactMatchOnly ? ExactMatch : ContainedMatch;
+
+                var weight = shouldBold(Matches, item)
                     ? FontWeight.ExtraBold
                     : FontWeight.Normal;
 

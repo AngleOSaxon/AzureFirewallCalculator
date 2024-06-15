@@ -48,8 +48,8 @@
                         <TextBlock Grid.Column="5" Grid.Row="0" Text="Overlap Type" />
 
                         <SelectableTextBlock Grid.Column="0" Grid.Row="1" Text="{Binding OverlappingRule.Name}" />
-                        <controls:DisplayMatchedIps Grid.Column="1" Grid.Row="1" Ips="{Binding OverlappingRule.SourceIps}" Matches="{Binding OverlappingSourceRanges}" />
-                        <controls:DisplayMatchedIps Grid.Column="2" Grid.Row="1" Ips="{Binding OverlappingRule.DestinationIps}" Matches="{Binding OverlappingDestinationRanges}" />
+                        <controls:DisplayMatchedIps Grid.Column="1" Grid.Row="1" Ips="{Binding OverlappingRule.SourceIps}" Matches="{Binding OverlappingSourceRanges}" ExactMatchOnly="{x:False}" />
+                        <controls:DisplayMatchedIps Grid.Column="2" Grid.Row="1" Ips="{Binding OverlappingRule.DestinationIps}" Matches="{Binding OverlappingDestinationRanges}" ExactMatchOnly="{x:False}" />
                         <ContentControl Grid.Column="3" Grid.Row="1" Content="{Binding .}">
                             <ContentControl.ContentTemplate>
                                 <dataTemplates:MatchedNetworkProtocolTemplate />
@@ -87,6 +87,7 @@
                             DestinationIps="{Binding SourceRule.DestinationIps}"
                             DestinationPorts="{Binding SourceRule.DestinationPorts}" 
                             NetworkProtocols="{Binding SourceRule.NetworkProtocols}"
+                            BoldExactMatchOnly="{x:False}"
                             />
                     </DockPanel>
                 </TreeDataTemplate>

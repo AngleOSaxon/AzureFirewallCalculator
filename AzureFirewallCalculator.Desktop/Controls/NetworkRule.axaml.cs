@@ -89,6 +89,14 @@ public partial class NetworkRule : UserControl
         set => SetValue(DestinationPortMatchesProperty, value);
     }
 
+    public static readonly StyledProperty<bool> BoldExactMatchOnlyProperty = AvaloniaProperty.Register<NetworkRule, bool>(nameof(BoldExactMatchOnly), true);
+
+    public bool BoldExactMatchOnly
+    {
+        get => GetValue(BoldExactMatchOnlyProperty);
+        set => SetValue(BoldExactMatchOnlyProperty, value);
+    }
+
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
         base.OnPropertyChanged(change);
@@ -96,6 +104,11 @@ public partial class NetworkRule : UserControl
         if (change.Property == RuleNameProperty)
         {
             this.RuleNameTextBlock.Text = (string)(change.NewValue ?? string.Empty);
+        }
+        else if (change.Property == BoldExactMatchOnlyProperty)
+        {
+            this.SourceIpDisplay.ExactMatchOnly = (bool)(change.NewValue ?? false);
+            this.DestinationIpDisplay.ExactMatchOnly = (bool)(change.NewValue ?? false);
         }
         else if (change.Property == SourceIpsProperty)
         {
