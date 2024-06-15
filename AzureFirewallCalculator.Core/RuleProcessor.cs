@@ -23,7 +23,7 @@ public class RuleProcessor(IDnsResolver dnsResolver, Firewall firewall)
             MatchedRules: await collection.GetMatches(networkRequests)
         ));
 
-        var nonstandardApplicationSearches = networkRequests.Where(item => item.DestinationPort == null || !ApplicationPorts.Contains(item.DestinationPort.Value))
+        var nonstandardApplicationSearches = networkRequests.Where(item => (item.DestinationPort == null || !ApplicationPorts.Contains(item.DestinationPort.Value)) && item.Protocol != NetworkProtocols.ICMP)
         .SelectMany<NetworkRequest, ApplicationRequest>(item => 
         [
             new ApplicationRequest(
