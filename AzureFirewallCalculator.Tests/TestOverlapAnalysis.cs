@@ -577,6 +577,55 @@ public class TestOverlapAnalysis
         Assert.Equal(expected, result);
     }
 
+    public static IEnumerable<object[]> OverlappingIpRanges()
+    {
+        yield return new object[]
+        {
+            new RuleIpRange[]
+            {
+                new(new IpAddressBytes("10.0.0.0"), new IpAddressBytes("10.0.1.1")),
+                new(new IpAddressBytes("10.0.1.0"), new IpAddressBytes("10.0.1.2")),
+            },
+            new RuleIpRange[]
+            {
+                new(new IpAddressBytes("10.0.0.0"), new IpAddressBytes("10.0.1.2"))
+            }
+        };
+        yield return new object[]
+        {
+            new RuleIpRange[]
+            {
+                new(new IpAddressBytes("10.0.0.0"), new IpAddressBytes("10.0.1.0")),
+                new(new IpAddressBytes("10.0.2.0"), new IpAddressBytes("10.0.2.2")),
+            },
+            new RuleIpRange[]
+            {
+                new(new IpAddressBytes("10.0.0.0"), new IpAddressBytes("10.0.1.0")),
+                new(new IpAddressBytes("10.0.2.0"), new IpAddressBytes("10.0.2.2"))
+            }
+        };
+        yield return new object[]
+        {
+            new RuleIpRange[]
+            {
+                new(new IpAddressBytes("255.255.255.0"), new IpAddressBytes("255.255.255.255")),
+                new(new IpAddressBytes("255.255.255.0"), new IpAddressBytes("255.255.255.255")),
+            },
+            new RuleIpRange[]
+            {
+                new(new IpAddressBytes("255.255.255.0"), new IpAddressBytes("255.255.255.255")),
+            }
+        };
+    }
+
+    [Theory]
+    [MemberData(nameof(OverlappingIpRanges))]
+    public void TestIpRangeConsolidation(RuleIpRange[] ranges, RuleIpRange[] expected)
+    {
+        var result = OverlapAnalyzer.ConsolidateRanges(ranges);
+        Assert.Equal(expected, result);
+    }
+
     private static void AssertOverlapsMatch(OverlapSummary expected, OverlapSummary actual)
     {
         Assert.Equal(expected.CumulativeOverlap, actual.CumulativeOverlap);

@@ -288,6 +288,8 @@ public static class OverlapAnalyzer
             return [.. ranges];
         }
 
+        static uint IncrementSafe(uint number) => number == uint.MaxValue ? number : number + 1;
+
         var result = ranges.OrderBy(item => item.Start).Aggregate(new List<RuleIpRange>(), (seed, range) =>
         {
             if (seed.Count == 0)
@@ -297,7 +299,7 @@ public static class OverlapAnalyzer
             }
 
             var prevRange = seed.Last();
-            if (range.Start <= (prevRange.End + 1) && range.End >= prevRange.End)
+            if (range.Start <= IncrementSafe(prevRange.End) && range.End >= prevRange.End)
             {
                 seed.Remove(prevRange);
                 seed.Add(new(prevRange.Start, range.End));
