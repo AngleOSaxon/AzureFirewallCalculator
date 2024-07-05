@@ -299,10 +299,10 @@ public static class OverlapAnalyzer
             }
 
             var prevRange = seed.Last();
-            if (range.Start <= IncrementSafe(prevRange.End) && range.End >= prevRange.End)
+            if (range.Start <= IncrementSafe(prevRange.End))
             {
                 seed.Remove(prevRange);
-                seed.Add(new(prevRange.Start, range.End));
+                seed.Add(new(prevRange.Start, Math.Max(range.End, prevRange.End)));
             }
             else
             {

@@ -616,6 +616,18 @@ public class TestOverlapAnalysis
                 new(new IpAddressBytes("255.255.255.0"), new IpAddressBytes("255.255.255.255")),
             }
         };
+        yield return new object[]
+        {
+            new RuleIpRange[]
+            {
+                new(new IpAddressBytes("255.255.255.0"), new IpAddressBytes("255.255.255.255")),
+                new(new IpAddressBytes("255.255.255.0"), new IpAddressBytes("255.255.255.128")),
+            },
+            new RuleIpRange[]
+            {
+                new(new IpAddressBytes("255.255.255.0"), new IpAddressBytes("255.255.255.255")),
+            }
+        };
     }
 
     [Theory]
