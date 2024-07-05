@@ -173,7 +173,6 @@ public static class OverlapAnalyzer
     public static RuleIpRange[] GetIpNonOverlaps(IEnumerable<RuleIpRange> sourceRanges, IEnumerable<RuleIpRange> comparisonRanges)
     {
         var nonOverlappingRanges = new List<RuleIpRange>();
-        static uint IncrementSafe(uint number) => number == uint.MaxValue ? number : number + 1;
         foreach (var sourceRange in sourceRanges)
         {
             var rangeStart = sourceRange.Start;
@@ -189,13 +188,13 @@ public static class OverlapAnalyzer
                 totallyUnmatched = false;
                 if (rangeStart < comparisonRange.Start)
                 {
-                    nonOverlappingRanges.Add(new (rangeStart, Math.Min(IncrementSafe(sourceRange.End), comparisonRange.Start - 1)));
+                    nonOverlappingRanges.Add(new (rangeStart, Math.Min(Utils.IncrementSafe(sourceRange.End), comparisonRange.Start - 1)));
                 }
                 rangeStart = Math.Max(rangeStart, comparisonRange.End);
             }
             if (rangeStart < sourceRange.End)
             {
-                nonOverlappingRanges.Add(new (IncrementSafe(rangeStart), sourceRange.End));
+                nonOverlappingRanges.Add(new (Utils.IncrementSafe(rangeStart), sourceRange.End));
             }
             if (totallyUnmatched)
             {
@@ -288,8 +287,6 @@ public static class OverlapAnalyzer
             return [.. ranges];
         }
 
-        static uint IncrementSafe(uint number) => number == uint.MaxValue ? number : number + 1;
-
         var result = ranges.OrderBy(item => item.Start).Aggregate(new List<RuleIpRange>(), (seed, range) =>
         {
             if (seed.Count == 0)
@@ -299,7 +296,7 @@ public static class OverlapAnalyzer
             }
 
             var prevRange = seed.Last();
-            if (range.Start <= IncrementSafe(prevRange.End))
+            if (range.Start <= Utils.IncrementSafe(prevRange.End))
             {
                 seed.Remove(prevRange);
                 seed.Add(new(prevRange.Start, Math.Max(range.End, prevRange.End)));

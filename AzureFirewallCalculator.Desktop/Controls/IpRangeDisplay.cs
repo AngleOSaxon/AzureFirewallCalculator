@@ -48,9 +48,6 @@ public class IpRangeDisplay : Control
 
     public override void Render(DrawingContext context)
     {
-        uint IncrementSafe(uint number) => number == uint.MaxValue ? uint.MaxValue : number + 1;
-        uint DecrementSafe(uint number) => number == uint.MinValue ? uint.MinValue : number - 1;
-
         // At most, this percent of control width should be used to show gaps
         const double maxGapPercentage = 0.1d;
         const double baseRangeHeight = 5;
@@ -72,7 +69,7 @@ public class IpRangeDisplay : Control
                 if (range.Range.Start > lastRangeEnd)
                 {
                     // Issue with abutting ranges; produces -1 sized gap
-                    gaps.Add(new (IncrementSafe(lastRangeEnd), DecrementSafe(range.Range.Start)));
+                    gaps.Add(new (Utils.IncrementSafe(lastRangeEnd), Utils.DecrementSafe(range.Range.Start)));
                 }
                 lastRangeEnd = range.Range.End;
             }
@@ -113,7 +110,7 @@ public class IpRangeDisplay : Control
                 distanceCovered += gapLength;
                 // Adjust offset to place us at the farthest-right element + gapSize, so the next box knows where to start correctly
                 // range end will be next range's start -1
-                offset = Math.Round(IncrementSafe(range.Range.End) * ratio, maxPrecision) - distanceCovered;
+                offset = Math.Round(Utils.IncrementSafe(range.Range.End) * ratio, maxPrecision) - distanceCovered;
                 // TODO: draw elision indicator
             }
             else
