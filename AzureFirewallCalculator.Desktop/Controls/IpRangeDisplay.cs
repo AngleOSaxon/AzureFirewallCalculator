@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography;
+using System.Numerics;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
@@ -17,32 +17,88 @@ public class IpRangeDisplay : Control
     public IpRangeDisplay()
     {
         List<RuleIpRange> baseRanges = [
-            new RuleIpRange(new IpAddressBytes("10.0.0.0"), new IpAddressBytes("10.0.0.255")),
-            new RuleIpRange(new IpAddressBytes("10.0.3.0"), new IpAddressBytes("10.0.127.255")),
-            new RuleIpRange(new IpAddressBytes("10.0.0.128"), new IpAddressBytes("10.0.127.128")),
-            new RuleIpRange(new IpAddressBytes("10.0.6.128"), new IpAddressBytes("10.0.7.128")),
-            new RuleIpRange(new IpAddressBytes("10.0.7.0"), new IpAddressBytes("10.0.9.255")),
-            new RuleIpRange(new IpAddressBytes("10.1.7.0"), new IpAddressBytes("10.1.9.255")),
+            new RuleIpRange(new IpAddressBytes("10.0.0.0"), new IpAddressBytes("10.0.0.255")), // r
+            new RuleIpRange(new IpAddressBytes("10.0.3.0"), new IpAddressBytes("10.0.127.255")), // b
+            new RuleIpRange(new IpAddressBytes("10.0.0.128"), new IpAddressBytes("10.0.127.128")), // g
+            new RuleIpRange(new IpAddressBytes("10.0.6.128"), new IpAddressBytes("10.0.7.128")), // r
+            new RuleIpRange(new IpAddressBytes("10.0.7.0"), new IpAddressBytes("10.0.9.255")), // g
+            new RuleIpRange(new IpAddressBytes("10.1.7.0"), new IpAddressBytes("10.1.9.255")), // b
+            new RuleIpRange(new IpAddressBytes("10.0.7.0"), new IpAddressBytes("10.0.11.127")), // g
+            new RuleIpRange(new IpAddressBytes("10.0.10.0"), new IpAddressBytes("10.0.11.255")), // g
+            new RuleIpRange(new IpAddressBytes("10.0.9.0"), new IpAddressBytes("10.0.11.255")),
+            new RuleIpRange(new IpAddressBytes("10.0.9.1"), new IpAddressBytes("10.0.12.255"))
         ];
 
         var foo = baseRanges.OrderBy(item => item.Start).Select(item => new IpRangeWithDepth(range: item, depth: 0, gap: false)).ToList();
-        // Current state:
-        // depth calc obviously broken; final range gets depth 2 instead of 0
-        foreach (var current in foo)
-        {
-            foreach (var comparison in foo)
-            {
-                if (comparison == current)
-                {
-                    continue;
-                }
 
-                if (current.Range.Start > comparison.Range.Start && current.Range.Start <= comparison.Range.End)
+        var bar = new List<(RuleIpRange overlap, List<IpRangeWithDepth> ranges)>();
+
+        for (int index = 0; index < foo.Count; index++)
+        {
+            var tst = foo[index].Range;
+            var overlaps = OverlapAnalyzer.GetIpOverlaps([tst], foo.Where(item => item != foo[index]).Select(range => range.Range), consolidate: false);
+            var matching = overlaps.Select(overlap => (overlap: overlap, ranges: foo.Where(item => item.Range.Contains(overlap)).ToList()));
+            foreach (var (overlap, ranges) in matching)
+            {
+                var matched = bar.SingleOrDefault(item => item.overlap == overlap);
+                if (matched == default)
                 {
-                    current.Depth = Math.Max(comparison.Depth + 1, current.Depth + 1);
+                    bar.Add((overlap, ranges));
+                }
+                else
+                {
+                    matched.ranges.AddRange(ranges.Except(matched.ranges));
                 }
             }
         }
+
+        // This seems to work, but I'm suspicious of it
+        // Starts with a list of overlaps and the ranges involved, ordered by the Start of the overlap
+        // Then we order the associated ranges by their Starts
+        // Check to see if we have a Depth set already, so ranges that are involved in multiple overlaps
+        // don't constantly lose their depth
+        // Updates an ongoing bitmap of previously-seen depth values for this specific overlap, so we know
+        // if we're stepping on another range
+        // If depth hasn't been set yet, check if there's space already before any known depths
+        // Else set depth to be after the latest known depth
+        // It's 11:45 and I don't remember my thought process clearly; I think an aspect of the
+        // ordering allows it to avoid issues where subsequent steps might move a properly-ordered
+        // range forward to cover another range
+        // I *think* it's that the earliest ranges get priority, so their depths win out, so therefore their
+        // depths don't change--only the ones with later Start values, which won't be involved in an earlier overlap
+        foreach (var (overlap, ranges) in bar)
+        {
+            var ordered = ranges.OrderBy(item => item.Range.Start).ToList();
+            uint knownDepths = 0;
+            for (int index = 0; index < ranges.Count; index++)
+            {
+                uint relevantBit = 1U << ordered[index].Depth;
+                var seenDepthBefore = knownDepths & relevantBit;
+                if (ordered[index].Depth != default)
+                {
+                    if (seenDepthBefore != 0)
+                    {
+                        ordered[index].Depth = knownDepths == 0 ? 0 : BitOperations.Log2(knownDepths) + 1;
+                    }
+                }
+                else
+                {
+                    var trailingZeros = BitOperations.TrailingZeroCount(knownDepths);
+                    if (knownDepths != 0 && trailingZeros != 0)
+                    {
+                        ordered[index].Depth = trailingZeros - 1;
+                    }
+                    else
+                    {
+                        int mostSignificantPosition = knownDepths == 0 ? 0 : BitOperations.Log2(knownDepths) + 1;
+                        ordered[index].Depth = Math.Max(index, mostSignificantPosition);
+                    }
+                }
+                relevantBit = 1U << ordered[index].Depth;
+                knownDepths |= relevantBit;
+            }
+        }
+
         IpRanges = foo;
     }
 

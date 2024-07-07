@@ -152,7 +152,7 @@ public static class OverlapAnalyzer
             : OverlapType.Full;
     }
 
-    public static RuleIpRange[] GetIpOverlaps(IEnumerable<RuleIpRange> sourceRanges, IEnumerable<RuleIpRange> comparisonRanges)
+    public static RuleIpRange[] GetIpOverlaps(IEnumerable<RuleIpRange> sourceRanges, IEnumerable<RuleIpRange> comparisonRanges, bool consolidate = true)
     {
         var overlaps = new List<RuleIpRange>();
         foreach (var sourceRange in sourceRanges)
@@ -167,7 +167,7 @@ public static class OverlapAnalyzer
                 }
             }
         }
-        return ConsolidateRanges(overlaps);
+        return consolidate ? ConsolidateRanges(overlaps) : [..overlaps.Distinct()];
     }
 
     public static RuleIpRange[] GetIpNonOverlaps(IEnumerable<RuleIpRange> sourceRanges, IEnumerable<RuleIpRange> comparisonRanges)
