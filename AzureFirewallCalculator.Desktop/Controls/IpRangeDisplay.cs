@@ -12,7 +12,7 @@ namespace AzureFirewallCalculator.Desktop.Controls;
 
 public class IpRangeDisplay : Control
 {
-    private List<IpRangeWithDepth> IpRanges { get; } = [];
+    private List<DisplayableRange> IpRanges { get; } = [];
 
     public IpRangeDisplay()
     {
@@ -29,21 +29,21 @@ public class IpRangeDisplay : Control
             new RuleIpRange(new IpAddressBytes("10.0.9.1"), new IpAddressBytes("10.0.12.255"))
         ];
 
-        var foo = baseRanges.OrderBy(item => item.Start).Select(item => new IpRangeWithDepth(range: item, depth: 0, gap: false)).ToList();
+        var displayableRanges = baseRanges.OrderBy(item => item.Start).Select(item => new DisplayableRange(range: item, depth: 0, gap: false)).ToList();
 
-        var bar = new List<(RuleIpRange overlap, List<IpRangeWithDepth> ranges)>();
+        var overlapDisplayMapping = new List<(RuleIpRange overlap, List<DisplayableRange> ranges)>();
 
-        for (int index = 0; index < foo.Count; index++)
+        for (int index = 0; index < displayableRanges.Count; index++)
         {
-            var tst = foo[index].Range;
-            var overlaps = OverlapAnalyzer.GetIpOverlaps([tst], foo.Where(item => item != foo[index]).Select(range => range.Range), consolidate: false);
-            var matching = overlaps.Select(overlap => (overlap: overlap, ranges: foo.Where(item => item.Range.Contains(overlap)).ToList()));
+            var displayableRange = displayableRanges[index].Range;
+            var overlaps = OverlapAnalyzer.GetIpOverlaps([displayableRange], displayableRanges.Where(item => item != displayableRanges[index]).Select(range => range.Range), consolidate: false);
+            var matching = overlaps.Select(overlap => (overlap: overlap, ranges: displayableRanges.Where(item => item.Range.Contains(overlap)).ToList()));
             foreach (var (overlap, ranges) in matching)
             {
-                var matched = bar.SingleOrDefault(item => item.overlap == overlap);
+                var matched = overlapDisplayMapping.SingleOrDefault(item => item.overlap == overlap);
                 if (matched == default)
                 {
-                    bar.Add((overlap, ranges));
+                    overlapDisplayMapping.Add((overlap, ranges));
                 }
                 else
                 {
@@ -61,14 +61,16 @@ public class IpRangeDisplay : Control
         // if we're stepping on another range
         // If depth hasn't been set yet, check if there's space already before any known depths
         // Else set depth to be after the latest known depth
-        // It's 11:45 and I don't remember my thought process clearly; I think an aspect of the
+        // It's 23:45 and I don't remember my thought process clearly; I think an aspect of the
         // ordering allows it to avoid issues where subsequent steps might move a properly-ordered
         // range forward to cover another range
         // I *think* it's that the earliest ranges get priority, so their depths win out, so therefore their
         // depths don't change--only the ones with later Start values, which won't be involved in an earlier overlap
-        foreach (var (overlap, ranges) in bar)
+        foreach (var (overlap, ranges) in overlapDisplayMapping)
         {
             var ordered = ranges.OrderBy(item => item.Range.Start).ToList();
+            // This could more easily and clearly be a hashset indicating known depths, but I wanted to play around
+            // with bitmaps and this is a side project.  So there.
             uint knownDepths = 0;
             for (int index = 0; index < ranges.Count; index++)
             {
@@ -99,7 +101,7 @@ public class IpRangeDisplay : Control
             }
         }
 
-        IpRanges = foo;
+        IpRanges = displayableRanges;
     }
 
     public override void Render(DrawingContext context)
@@ -145,7 +147,7 @@ public class IpRangeDisplay : Control
         var pen2 = new Pen(new SolidColorBrush(Color.FromRgb(r: 0, g: 255, b: 0)));
         var pen3 = new Pen(new SolidColorBrush(Color.FromRgb(r: 0, g: 0, b: 255)));
         int count = 0;
-        var ranges = orderedIpRanges.Concat(gaps.Select(item => new IpRangeWithDepth(range: item, gap: true, depth: 0))).OrderBy(item => item.Range.Start);
+        var ranges = orderedIpRanges.Concat(gaps.Select(item => new DisplayableRange(range: item, gap: true, depth: 0))).OrderBy(item => item.Range.Start);
 
         double offset = Math.Round((ranges.FirstOrDefault()?.Range.Start ?? 0) * ratio, maxPrecision);
         var minDisplaySize = Math.Round(controlWidth / 100, maxPrecision);
@@ -192,7 +194,14 @@ public class IpRangeDisplay : Control
         }
     }
 
-    private class IpRangeWithDepth(RuleIpRange range, int depth, bool gap)
+    /// <summary>
+    /// Contains the necessary information to display a range so that its overlaps with other
+    /// IP ranges will be visible
+    /// </summary>
+    /// <param name="range">The IP range that will be displayed</param>
+    /// <param name="depth">What depth the <paramref name="range"/> needs to appear at, to avoid being drawn on top of other ranges</param>
+    /// <param name="gap">Whether this merely represents a gap between ranges</param>
+    private class DisplayableRange(RuleIpRange range, int depth, bool gap)
     {
         public RuleIpRange Range { get; set; } = range;
         public int Depth { get; set; } = depth;
