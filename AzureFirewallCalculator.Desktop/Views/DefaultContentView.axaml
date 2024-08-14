@@ -16,7 +16,7 @@
             </TextBlock.Text>
         </TextBlock>
         <Grid ColumnDefinitions="*" RowDefinitions="50" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-            <controls:IpRangeDisplay Grid.Column="1" Grid.Row="1" />
+            <controls:IpOverlapDisplay Grid.Column="1" Grid.Row="1" />
         </Grid>
     </StackPanel>
 </UserControl>

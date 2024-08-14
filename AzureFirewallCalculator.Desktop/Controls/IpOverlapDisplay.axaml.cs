@@ -5,17 +5,20 @@ using System.Numerics;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
-using Avalonia.Media.TextFormatting.Unicode;
 using AzureFirewallCalculator.Core;
 
 namespace AzureFirewallCalculator.Desktop.Controls;
 
-public class IpRangeDisplay : Control
+public partial class IpOverlapDisplay : UserControl
 {
     private List<DisplayableRange> IpRanges { get; } = [];
 
-    public IpRangeDisplay()
+    private List<IpRangeDisplay> IpRangeDisplays { get; set; } = [];
+
+    public IpOverlapDisplay()
     {
+        InitializeComponent();
+
         List<RuleIpRange> baseRanges = [
             new RuleIpRange(new IpAddressBytes("10.0.0.0"), new IpAddressBytes("10.0.0.255")), // r
             new RuleIpRange(new IpAddressBytes("10.0.3.0"), new IpAddressBytes("10.0.127.255")), // b
@@ -104,8 +107,10 @@ public class IpRangeDisplay : Control
         IpRanges = displayableRanges;
     }
 
-    public override void Render(DrawingContext context)
+    protected override Size ArrangeOverride(Size finalSize)
     {
+        var arrangement = base.ArrangeOverride(finalSize);
+
         // At most, this percent of control width should be used to show gaps
         const double maxGapPercentage = 0.1d;
         const double baseRangeHeight = 5;
@@ -114,8 +119,12 @@ public class IpRangeDisplay : Control
         const double verticalMargin = 2;
         const int maxPrecision = 3;
 
-        var controlWidth = Bounds.Width;
-        var controlHeight = Math.Min(Bounds.Height, 50);
+        // Empty the list of controls.  Likely more efficient to keep and re-render them later
+        // but one problem at a time.
+        IpRangeDisplays = [];
+        RangeDisplay.Children.Clear();
+
+        var controlWidth = finalSize.Width;
 
         var gaps = new List<RuleIpRange>();
         var orderedIpRanges = IpRanges.OrderBy(item => item.Range.Start).ToList();
@@ -152,6 +161,7 @@ public class IpRangeDisplay : Control
         double offset = Math.Round((ranges.FirstOrDefault()?.Range.Start ?? 0) * ratio, maxPrecision);
         var minDisplaySize = Math.Round(controlWidth / 100, maxPrecision);
         var distanceCovered = 0d;
+        double maxHeightObserved = 0d;
         foreach (var range in ranges)
         {
             var boxStart = Math.Round(range.Range.Start * ratio, maxPrecision) - offset;
@@ -189,9 +199,26 @@ public class IpRangeDisplay : Control
                 };
                 var heightStart = range.Depth * rangeHeight + (verticalMargin * range.Depth);
                 var rect = new Rect(topLeft: new Point(boxStart, heightStart), bottomRight: new Point(boxEnd, rangeHeight + heightStart));
-                context.DrawRectangle(pen.Brush, pen, rect);
+                IpRangeDisplay display = new()
+                {
+                    Range = range.Range,
+                    IsGap = range.Gap,
+                    Pen = pen,
+                    Height = rangeHeight,
+                    Width = rect.Width,
+                    MinWidth = rect.Width,
+                };
+                IpRangeDisplays.Add(display);
+                Canvas.SetLeft(display, boxStart);
+                Canvas.SetTop(display, heightStart);
+                this.RangeDisplay.Children.Add(display);
+
+                maxHeightObserved = Math.Max(maxHeightObserved, rangeHeight + heightStart);
             }
         }
+
+        var size = arrangement.WithHeight(maxHeightObserved);
+        return size;
     }
 
     /// <summary>
