@@ -107,13 +107,13 @@ public partial class IpOverlapDisplay : UserControl
         IpRanges = displayableRanges;
     }
 
-    protected override Size ArrangeOverride(Size finalSize)
+    protected override Size MeasureOverride(Size finalSize)
     {
-        var arrangement = base.ArrangeOverride(finalSize);
+        //var arrangement = base.MeasureOverride(finalSize);
 
         // At most, this percent of control width should be used to show gaps
         const double maxGapPercentage = 0.1d;
-        const double baseRangeHeight = 5;
+        const double baseRangeHeight = 10;
         const double rangeHeightMultiplier = 1; // TODO: dynamically fetch based on text scaling?
         const double rangeHeight = baseRangeHeight * rangeHeightMultiplier;
         const double verticalMargin = 2;
@@ -217,7 +217,7 @@ public partial class IpOverlapDisplay : UserControl
             }
         }
 
-        var size = arrangement.WithHeight(maxHeightObserved);
+        var size = finalSize.WithHeight(maxHeightObserved);
         return size;
     }
 

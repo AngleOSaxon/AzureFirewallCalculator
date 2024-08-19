@@ -15,8 +15,8 @@
                 Load a firewall and enter a network request to see what rules it would trigger
             </TextBlock.Text>
         </TextBlock>
-        <Grid ColumnDefinitions="*" RowDefinitions="50" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-            <controls:IpOverlapDisplay Grid.Column="1" Grid.Row="1" />
-        </Grid>
+        <ScrollViewer HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+            <controls:IpOverlapDisplay />
+        </ScrollViewer>
     </StackPanel>
 </UserControl>
