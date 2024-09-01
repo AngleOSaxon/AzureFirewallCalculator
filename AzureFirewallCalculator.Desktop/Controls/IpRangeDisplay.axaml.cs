@@ -43,7 +43,6 @@ public partial class IpRangeDisplay : UserControl
         base.OnInitialized();
         PenProperty.Changed.Subscribe(e =>
         {
-            Pen = e.NewValue.Value;
             IpShape.Fill = Pen.Brush;
         });
         RangeProperty.Changed.Subscribe(e => 
