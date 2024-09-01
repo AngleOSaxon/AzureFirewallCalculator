@@ -17,9 +17,15 @@ public partial class IpRangeToolTip : UserControl
     public IpRangeToolTip() : base()
     {
         InitializeComponent();
-        RangeProperty.Changed.Subscribe(e => 
+    }
+
+    protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
+    {
+        base.OnPropertyChanged(change);
+
+        if (change.Property == RangeProperty && change.NewValue is RuleIpRange range)
         {
-            RangeText.Text = Range.ToString();
-        });
+            RangeText.Text += range.ToString();
+        }
     }
 }

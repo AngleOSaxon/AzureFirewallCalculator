@@ -41,22 +41,28 @@ public partial class IpRangeDisplay : UserControl
     protected override void OnInitialized()
     {
         base.OnInitialized();
-        PenProperty.Changed.Subscribe(e =>
+        
+        IpShape.Fill = Pen.Brush;
+    }
+
+    protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs e)
+    {
+        base.OnPropertyChanged(e);
+
+        if (e.Property == RangeProperty && e.NewValue is RuleIpRange range)
         {
-            IpShape.Fill = Pen.Brush;
-        });
-        RangeProperty.Changed.Subscribe(e => 
-        {
-            IpBlock.IsVisible = Range.Start != Range.End;
-            SingleIp.IsVisible = Range.Start == Range.End;
+            IpBlock.IsVisible = range.Start != range.End;
+            SingleIp.IsVisible = range.Start == range.End;
 
             if (ToolTip.GetTip(IpShape) is IpRangeToolTip tooltip)
             {
-                tooltip.Range = Range;
+                tooltip.Range = range;
             }
-        });
-
-        IpShape.Fill = Pen.Brush;
+        }
+        else if (e.Property == PenProperty && e.NewValue is Pen pen)
+        {
+            IpShape.Fill = pen.Brush;
+        }
     }
 
     private Shape IpShape => Range.Start == Range.End ? SingleIp : IpBlock;
