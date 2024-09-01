@@ -6,20 +6,22 @@
     xmlns:controls="using:AzureFirewallCalculator.Desktop.Controls"
     x:Class="AzureFirewallCalculator.Desktop.Controls.IpRangeDisplay">
     <UserControl.Styles>
-        <Style Selector="Rectangle.Selected">
-            <Setter Property="StrokeThickness" Value="1" />
-            <Setter Property="Stroke" Value="Black" />
-        </Style>
-        <Style Selector="Rectangle:pointerover, Rectangle.Selected">
-            <Setter Property="Opacity" Value="0.5" />
-            <Setter Property="OpacityMask" Value="Black" />
-        </Style>
-        <Style Selector="Rectangle#RangeBody ToolTip">
-            <Setter Property="CornerRadius" Value="0" />
-            <Setter Property="Background" Value="Transparent" />
-        </Style>
-        <Style Selector="Rectangle#RangeBody ToolTip:open Border">
-            <Setter Property="BorderThickness" Value="0" />
+        <Style Selector=":is(Shape).RangeDisplayShape">
+            <Style Selector="^:pointerover, ^.Selected">
+                <Setter Property="Opacity" Value="0.5" />
+                <Setter Property="OpacityMask" Value="Black" />
+            </Style>
+            <Style Selector="^.Selected">
+                <Setter Property="StrokeThickness" Value="1" />
+                <Setter Property="Stroke" Value="Black" />
+            </Style>
+            <Style Selector="^ ToolTip">
+                <Setter Property="CornerRadius" Value="0" />
+                <Setter Property="Background" Value="Transparent" />
+                <Style Selector="^:open Border">
+                    <Setter Property="BorderThickness" Value="0" />
+                </Style>
+            </Style>
         </Style>
         <Style Selector="StackPanel#IpRangeDetails Grid">
             <Setter Property="Margin" Value="10" />
@@ -30,19 +32,16 @@
             <Setter Property="BorderBrush" Value="Black" />
         </Style>
     </UserControl.Styles>
-    <Rectangle x:Name="RangeBody" Fill="Black" ToolTip.Placement="Bottom" ToolTip.VerticalOffset="0" Focusable="True">
+    <Panel>
+        <Rectangle x:Name="IpBlock" Classes="RangeDisplayShape" ToolTip.Placement="Bottom" ToolTip.VerticalOffset="0" Focusable="True">
             <ToolTip.Tip>
-                <StackPanel Orientation="Vertical" x:Name="IpRangeDetails" Focusable="True">
-                    <!--TODO: Overlap these slightly to produce a nicer point, *or* draw a better polygon that doubles as a border-->
-                    <!--TODO: Adjust colors and opacities to work with dark mode-->
-                    <Polyline HorizontalAlignment="Center" Points="0,8 5,0 10,8" StrokeThickness="1" Stroke="Black" />
-                    <Border Classes="IpRangeDetails">
-                        <Grid ColumnDefinitions="1*,4*" RowDefinitions="1*" Classes="IpRangeDetails" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
-                            <SelectableTextBlock Classes="TooltipRow Header" Grid.Column="0" Grid.Row="0" Text="Range: " />
-                            <SelectableTextBlock x:Name="RangeText" Classes="TooltipRow Detail" Grid.Column="1" Grid.Row="0" Text="" />
-                        </Grid>
-                    </Border>
-                </StackPanel>
+                <controls:IpRangeToolTip />
             </ToolTip.Tip>
-    </Rectangle>
+        </Rectangle>
+        <Ellipse x:Name="SingleIp" Classes="RangeDisplayShape" ToolTip.Placement="Bottom" ToolTip.VerticalOffset="0" Focusable="True" >
+            <ToolTip.Tip>
+                <controls:IpRangeToolTip />
+            </ToolTip.Tip>
+        </Ellipse>
+    </Panel>
 </UserControl>

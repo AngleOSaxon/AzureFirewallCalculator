@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Net;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Security.Cryptography;
@@ -44,7 +45,6 @@ public class RuleOverlapViewModel : ReactiveObject, IRoutableViewModel
         get { return selectedRule; }
         set
         {
-            selectedRule = value;
             this.RaiseAndSetIfChanged(ref selectedRule, value);
             if (value != null)
             {
@@ -52,7 +52,6 @@ public class RuleOverlapViewModel : ReactiveObject, IRoutableViewModel
             }
         }
     }
-    
 
     public RuleOverlapViewModel(Firewall firewall, IDnsResolver dnsResolver, IScreen hostScreen)
     {

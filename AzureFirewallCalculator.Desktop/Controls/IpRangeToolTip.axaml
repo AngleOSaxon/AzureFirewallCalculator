@@ -1,0 +1,19 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+    xmlns:controls="using:AzureFirewallCalculator.Desktop.Controls"
+    x:Class="AzureFirewallCalculator.Desktop.Controls.IpRangeToolTip">
+    <StackPanel Orientation="Vertical" x:Name="IpRangeDetails" Focusable="True">
+        <!--TODO: Overlap these slightly to produce a nicer point, *or* draw a better polygon that doubles as a border-->
+        <!--TODO: Adjust colors and opacities to work with dark mode-->
+        <Polyline HorizontalAlignment="Center" Points="0,8 5,0 10,8" StrokeThickness="1" Stroke="Black" />
+        <Border Classes="IpRangeDetails">
+            <Grid ColumnDefinitions="1*,4*" RowDefinitions="1*" Classes="IpRangeDetails" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+                <SelectableTextBlock Classes="TooltipRow Header" Grid.Column="0" Grid.Row="0" Text="Range: " />
+                <SelectableTextBlock x:Name="RangeText" Classes="TooltipRow Detail" Grid.Column="1" Grid.Row="0" Text="" />
+            </Grid>
+        </Border>
+    </StackPanel>
+</UserControl>

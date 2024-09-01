@@ -3,6 +3,7 @@ using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
+using Avalonia.Controls.Shapes;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
@@ -18,9 +19,19 @@ public partial class IpRangeDisplay : UserControl
         InitializeComponent();
     }
 
-    public RuleIpRange Range { get; set; }
-    public bool IsGap { get; set; }
-    public static readonly StyledProperty<Pen> PenProperty = AvaloniaProperty.Register<Pen, Pen>(nameof(Pen), new Pen(new SolidColorBrush(Color.FromRgb(r: 0, g: 0, b: 0))));
+    public static readonly StyledProperty<RuleIpRange> RangeProperty = AvaloniaProperty.Register<IpRangeDisplay, RuleIpRange>(nameof(Range), new());
+    public RuleIpRange Range
+    {
+        get => GetValue(RangeProperty);
+        set => SetValue(RangeProperty, value);
+    }
+    public static readonly StyledProperty<bool> IsGapProperty = AvaloniaProperty.Register<IpRangeDisplay, bool>(nameof(IsGap), defaultValue: false);
+    public bool IsGap
+    {
+        get => GetValue(IsGapProperty);
+        set => SetValue(IsGapProperty, value);
+    }
+    public static readonly StyledProperty<Pen> PenProperty = AvaloniaProperty.Register<IpRangeDisplay, Pen>(nameof(Pen), new Pen(new SolidColorBrush(Color.FromRgb(r: 0, g: 0, b: 0))));
     public Pen Pen
     {
         get => GetValue(PenProperty);
@@ -30,9 +41,26 @@ public partial class IpRangeDisplay : UserControl
     protected override void OnInitialized()
     {
         base.OnInitialized();
-        RangeBody.Fill = Pen.Brush;
-        RangeText.Text = Range.ToString();
+        PenProperty.Changed.Subscribe(e =>
+        {
+            Pen = e.NewValue.Value;
+            IpShape.Fill = Pen.Brush;
+        });
+        RangeProperty.Changed.Subscribe(e => 
+        {
+            IpBlock.IsVisible = Range.Start != Range.End;
+            SingleIp.IsVisible = Range.Start == Range.End;
+
+            if (ToolTip.GetTip(IpShape) is IpRangeToolTip tooltip)
+            {
+                tooltip.Range = Range;
+            }
+        });
+
+        IpShape.Fill = Pen.Brush;
     }
+
+    private Shape IpShape => Range.Start == Range.End ? SingleIp : IpBlock;
 
     // I want the range to appear selected once focused
     // Including showing the tooltip

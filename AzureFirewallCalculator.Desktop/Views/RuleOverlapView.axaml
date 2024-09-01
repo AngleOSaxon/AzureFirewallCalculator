@@ -39,7 +39,7 @@
             </TreeView.Styles>
             <TreeView.DataTemplates>
                 <DataTemplate DataType="core:Overlap">
-                    <Grid ColumnDefinitions="3*,2*,2*,1*,1*,2*" RowDefinitions="Auto,Auto" Classes="Header">
+                    <Grid ColumnDefinitions="3*,2*,2*,1*,1*,2*" RowDefinitions="Auto,Auto,Auto" Classes="Header">
                         <TextBlock Grid.Column="0" Grid.Row="0" Text="Rule Name" />
                         <TextBlock Grid.Column="1" Grid.Row="0" Text="Source Ips" />
                         <TextBlock Grid.Column="2" Grid.Row="0" Text="Destinations" />
@@ -73,22 +73,26 @@
                             </ItemsRepeater.Layout>
                         </ItemsRepeater>
                         <SelectableTextBlock Grid.Column="5" Grid.Row="1" Text="{Binding OverlapType}" />
+                        <controls:IpOverlapDisplay Grid.ColumnSpan="6" Grid.Row="2" IpRanges="{Binding OverlappingRule.SourceIps}" />
                     </Grid>
                 </DataTemplate>
                 <TreeDataTemplate x:DataType="core:OverlapSummary" ItemsSource="{Binding Overlaps}">
                     <DockPanel>
-                        <Grid DockPanel.Dock="Right" ColumnDefinitions="Auto" RowDefinitions="Auto,Auto" Classes="Header">
-                            <TextBlock Grid.Column="0" Grid.Row="0" Text="Overall Overlap" />
-                            <SelectableTextBlock Grid.Column="0" Grid.Row="1" Text="{Binding CumulativeOverlap}" />
-                        </Grid>
-                        <controls:NetworkRule
-                            RuleName="{Binding SourceRule.Name}"
-                            SourceIps="{Binding SourceRule.SourceIps}"
-                            DestinationIps="{Binding SourceRule.DestinationIps}"
-                            DestinationPorts="{Binding SourceRule.DestinationPorts}" 
-                            NetworkProtocols="{Binding SourceRule.NetworkProtocols}"
-                            BoldExactMatchOnly="{x:False}"
-                            />
+                        <controls:IpOverlapDisplay DockPanel.Dock="Bottom" IpRanges="{Binding SourceRule.SourceIps}" />
+                        <DockPanel>
+                            <Grid DockPanel.Dock="Right" ColumnDefinitions="Auto" RowDefinitions="Auto,Auto" Classes="Header">
+                                <TextBlock Grid.Column="0" Grid.Row="0" Text="Overall Overlap" />
+                                <SelectableTextBlock Grid.Column="0" Grid.Row="1" Text="{Binding CumulativeOverlap}" />
+                            </Grid>
+                            <controls:NetworkRule
+                                RuleName="{Binding SourceRule.Name}"
+                                SourceIps="{Binding SourceRule.SourceIps}"
+                                DestinationIps="{Binding SourceRule.DestinationIps}"
+                                DestinationPorts="{Binding SourceRule.DestinationPorts}" 
+                                NetworkProtocols="{Binding SourceRule.NetworkProtocols}"
+                                BoldExactMatchOnly="{x:False}"
+                                />
+                        </DockPanel>
                     </DockPanel>
                 </TreeDataTemplate>
             </TreeView.DataTemplates>
