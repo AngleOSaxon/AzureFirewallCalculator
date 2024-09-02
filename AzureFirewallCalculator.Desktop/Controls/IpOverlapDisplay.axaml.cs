@@ -23,6 +23,7 @@ public partial class IpOverlapDisplay : UserControl
     static IpOverlapDisplay()
     {
         AffectsMeasure<IpOverlapDisplay>(IpRangesProperty);
+        AffectsMeasure<IpOverlapDisplay>(ComparisonRangesProperty);
     }
 
     public static readonly StyledProperty<RuleIpRange[]> IpRangesProperty = AvaloniaProperty.Register<IpOverlapDisplay, RuleIpRange[]>(nameof(IpRanges), defaultValue: []);
@@ -31,6 +32,15 @@ public partial class IpOverlapDisplay : UserControl
         get => GetValue(IpRangesProperty);
         set => SetValue(IpRangesProperty, value);
     }
+
+    public static readonly StyledProperty<RuleIpRange[]> ComparisonRangesProperty = AvaloniaProperty.Register<IpOverlapDisplay, RuleIpRange[]>(nameof(ComparisonRanges), defaultValue: []);
+    public RuleIpRange[] ComparisonRanges
+    {
+        get => GetValue(ComparisonRangesProperty);
+        set => SetValue(ComparisonRangesProperty, value);
+    }
+
+    private DisplayableRange[] DisplayableRanges = [];
 
     public IpOverlapDisplay()
     {
@@ -54,16 +64,125 @@ public partial class IpOverlapDisplay : UserControl
         // IpRanges.AddRange(baseRanges);
     }
 
+    protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
+    {
+        base.OnPropertyChanged(change);
+
+        if (change.Property == IpRangesProperty && change.NewValue is RuleIpRange[] ranges)
+        {
+            DisplayableRanges = InitDisplayableRanges(ranges, ComparisonRanges);
+        }
+        else if (change.Property == ComparisonRangesProperty && change.NewValue is RuleIpRange[] comparisonRanges)
+        {
+            DisplayableRanges = InitDisplayableRanges(IpRanges, comparisonRanges);
+        }
+    }
+
+    private DisplayableRange[] InitDisplayableRanges(RuleIpRange[] ranges, RuleIpRange[] comparisonRanges)
+    {
+        List<DisplayableRange> displayableRanges = [];
+        var overlapsWithComparison = OverlapAnalyzer.GetIpOverlaps(sourceRanges: ranges, comparisonRanges: comparisonRanges, consolidate: true);
+        foreach (var range in ranges)
+        {
+            if (overlapsWithComparison.Contains(range))
+            {
+                displayableRanges.Add(new DisplayableRange(range: range, depth: 0, gap: false, effectiveLowerBound: range.Start, effectiveUpperBound: range.End));
+            }
+            else
+            {
+                // Single because there should only ever be one match, since consolidate: true is set
+                var matchedOverlap = overlapsWithComparison.SingleOrDefault(overlap => range.Contains(overlap) || overlap.Contains(range));
+                // No matches at all means we're not displayable
+                if (matchedOverlap == default)
+                {
+                    continue;
+                }
+                var lowerBound = Math.Max(matchedOverlap.Start, range.Start);
+                var upperBound = Math.Min(matchedOverlap.End, range.End);
+                displayableRanges.Add(new DisplayableRange(range: range, depth: 0, gap: false, effectiveLowerBound: lowerBound, effectiveUpperBound: upperBound));
+            }
+        }
+
+        var overlapDisplayMapping = new List<(RuleIpRange overlap, List<DisplayableRange> overlappingRanges)>();
+
+        foreach (var displayableRange in displayableRanges)
+        {
+            var overlaps = OverlapAnalyzer.GetIpOverlaps([displayableRange.Range], displayableRanges.Where(item => item != displayableRange).Select(range => range.Range), consolidate: false);
+            var matching = overlaps.Select(overlap => (overlap: overlap, overlappingRanges: displayableRanges.Where(item => item.Range.Contains(overlap)).ToList()));
+            foreach (var (overlap, overlappingRanges) in matching)
+            {
+                var matched = overlapDisplayMapping.SingleOrDefault(item => item.overlap == overlap);
+                if (matched == default)
+                {
+                    overlapDisplayMapping.Add((overlap, overlappingRanges));
+                }
+                else
+                {
+                    matched.overlappingRanges.AddRange(overlappingRanges.Except(matched.overlappingRanges));
+                }
+            }
+        }
+
+        // This seems to work, but I'm suspicious of it
+        // Starts with a list of overlaps and the ranges involved, ordered by the Start of the overlap
+        // Then we order the associated ranges by their Starts
+        // Check to see if we have a Depth set already, so ranges that are involved in multiple overlaps
+        // don't constantly lose their depth
+        // Updates an ongoing bitmap of previously-seen depth values for this specific overlap, so we know
+        // if we're stepping on another range
+        // If depth hasn't been set yet, check if there's space already before any known depths
+        // Else set depth to be after the latest known depth
+        // It's 23:45 and I don't remember my thought process clearly; I think an aspect of the
+        // ordering allows it to avoid issues where subsequent steps might move a properly-ordered
+        // range forward to cover another range
+        // I *think* it's that the earliest ranges get priority, so their depths win out, so therefore their
+        // depths don't change--only the ones with later Start values, which won't be involved in an earlier overlap
+        foreach (var (overlap, overlappingRanges) in overlapDisplayMapping)
+        {
+            var ordered = overlappingRanges.OrderBy(item => item.Range.Start).ToList();
+            // This could more easily and clearly be a hashset indicating known depths, but I wanted to play around
+            // with bitmaps and this is a side project.  So there.
+            uint knownDepths = 0;
+            for (int index = 0; index < overlappingRanges.Count; index++)
+            {
+                uint relevantBit = 1U << ordered[index].Depth;
+                var seenDepthBefore = knownDepths & relevantBit;
+                if (ordered[index].Depth != default)
+                {
+                    if (seenDepthBefore != 0)
+                    {
+                        ordered[index].Depth = knownDepths == 0 ? 0 : BitOperations.Log2(knownDepths) + 1;
+                    }
+                }
+                else
+                {
+                    var trailingZeros = BitOperations.TrailingZeroCount(knownDepths);
+                    if (knownDepths != 0 && trailingZeros != 0)
+                    {
+                        ordered[index].Depth = trailingZeros - 1;
+                    }
+                    else
+                    {
+                        int mostSignificantPosition = knownDepths == 0 ? 0 : BitOperations.Log2(knownDepths) + 1;
+                        ordered[index].Depth = Math.Max(index, mostSignificantPosition);
+                    }
+                }
+                relevantBit = 1U << ordered[index].Depth;
+                knownDepths |= relevantBit;
+            }
+        }
+
+        return [.. displayableRanges];
+    }
+
     protected override Size MeasureOverride(Size finalSize)
     {
-        var rangesWithDepth = CalculateRangeDepths(IpRanges);
-
-        if (rangesWithDepth.Count == 0)
+        if (DisplayableRanges.Length == 0)
         {
             return base.MeasureOverride(finalSize);
         }
 
-        var maxDepth = rangesWithDepth.Max(item => item.Depth);
+        var maxDepth = DisplayableRanges.Max(item => item.Depth);
         var maxHeight = maxDepth * RangeHeight + (VerticalMargin * maxDepth) + RangeHeight;
 
         var baseSize = base.MeasureOverride(finalSize);
@@ -79,16 +198,12 @@ public partial class IpOverlapDisplay : UserControl
 
         var controlWidth = finalSize.Width;
 
-        var rangesWithDepth = CalculateRangeDepths(IpRanges);
-        var gaps = CalculateGaps(IpRanges);
-
-        // TODO: Can pre-create the IpRangeDisplay objects without values, just count(IpRanges) + count(gaps)
-        // Handle that when the IpRanges property updates and assign the values during arrange?  Maybe assign
-        // the values early; don't need to redo all that every time someone resizes the window
-        // Unclear how all this will work when dealing with virtualiation; problem for later
+        var knownDisplayableRanges = DisplayableRanges.Select(item => item.Range).ToList();
 
         // Consolidate to avoid double-counting overlapping ranges
-        var consolidatedRanges = OverlapAnalyzer.ConsolidateRanges(IpRanges.Select(item => item));
+        var consolidatedRanges = OverlapAnalyzer.ConsolidateRanges(knownDisplayableRanges);
+
+        var gaps = CalculateGaps(knownDisplayableRanges);
 
         var numberOfGaps = gaps.Count;
         // At most, this percent of control width should be used to show gaps
@@ -106,7 +221,7 @@ public partial class IpOverlapDisplay : UserControl
         var pen3 = new Pen(new SolidColorBrush(Color.FromRgb(r: 0, g: 0, b: 255)));
         int count = 0;
         
-        var ranges = rangesWithDepth.Concat(gaps).OrderBy(item => item.Range.Start);
+        var ranges = DisplayableRanges.Concat(gaps).OrderBy(item => item.Range.Start);
 
         double offset = Math.Round((ranges.FirstOrDefault()?.Range.Start ?? 0) * ratio, MaxPrecision);
         var distanceCovered = 0d;
@@ -151,6 +266,8 @@ public partial class IpOverlapDisplay : UserControl
                     Range = range.Range,
                     IsGap = range.Gap,
                     Pen = pen,
+                    EffectiveLowerBound = range.EffectiveLowerBound,
+                    EffectiveUpperBound = range.EffectiveUpperBound,
                     Height = RangeHeight,
                     Width = length,
                     MinWidth = length,
@@ -163,83 +280,6 @@ public partial class IpOverlapDisplay : UserControl
 
         var size = base.ArrangeOverride(finalSize);
         return size;
-    }
-
-    private static List<DisplayableRange> CalculateRangeDepths(IEnumerable<RuleIpRange> baseRanges)
-    {
-        var displayableRanges = baseRanges.OrderBy(item => item.Start).Select(item => new DisplayableRange(range: item, depth: 0, gap: false)).ToList();
-
-        var overlapDisplayMapping = new List<(RuleIpRange overlap, List<DisplayableRange> ranges)>();
-
-        for (int index = 0; index < displayableRanges.Count; index++)
-        {
-            var displayableRange = displayableRanges[index].Range;
-            var overlaps = OverlapAnalyzer.GetIpOverlaps([displayableRange], displayableRanges.Where(item => item != displayableRanges[index]).Select(range => range.Range), consolidate: false);
-            var matching = overlaps.Select(overlap => (overlap: overlap, ranges: displayableRanges.Where(item => item.Range.Contains(overlap)).ToList()));
-            foreach (var (overlap, ranges) in matching)
-            {
-                var matched = overlapDisplayMapping.SingleOrDefault(item => item.overlap == overlap);
-                if (matched == default)
-                {
-                    overlapDisplayMapping.Add((overlap, ranges));
-                }
-                else
-                {
-                    matched.ranges.AddRange(ranges.Except(matched.ranges));
-                }
-            }
-        }
-
-        // This seems to work, but I'm suspicious of it
-        // Starts with a list of overlaps and the ranges involved, ordered by the Start of the overlap
-        // Then we order the associated ranges by their Starts
-        // Check to see if we have a Depth set already, so ranges that are involved in multiple overlaps
-        // don't constantly lose their depth
-        // Updates an ongoing bitmap of previously-seen depth values for this specific overlap, so we know
-        // if we're stepping on another range
-        // If depth hasn't been set yet, check if there's space already before any known depths
-        // Else set depth to be after the latest known depth
-        // It's 23:45 and I don't remember my thought process clearly; I think an aspect of the
-        // ordering allows it to avoid issues where subsequent steps might move a properly-ordered
-        // range forward to cover another range
-        // I *think* it's that the earliest ranges get priority, so their depths win out, so therefore their
-        // depths don't change--only the ones with later Start values, which won't be involved in an earlier overlap
-        foreach (var (overlap, ranges) in overlapDisplayMapping)
-        {
-            var ordered = ranges.OrderBy(item => item.Range.Start).ToList();
-            // This could more easily and clearly be a hashset indicating known depths, but I wanted to play around
-            // with bitmaps and this is a side project.  So there.
-            uint knownDepths = 0;
-            for (int index = 0; index < ranges.Count; index++)
-            {
-                uint relevantBit = 1U << ordered[index].Depth;
-                var seenDepthBefore = knownDepths & relevantBit;
-                if (ordered[index].Depth != default)
-                {
-                    if (seenDepthBefore != 0)
-                    {
-                        ordered[index].Depth = knownDepths == 0 ? 0 : BitOperations.Log2(knownDepths) + 1;
-                    }
-                }
-                else
-                {
-                    var trailingZeros = BitOperations.TrailingZeroCount(knownDepths);
-                    if (knownDepths != 0 && trailingZeros != 0)
-                    {
-                        ordered[index].Depth = trailingZeros - 1;
-                    }
-                    else
-                    {
-                        int mostSignificantPosition = knownDepths == 0 ? 0 : BitOperations.Log2(knownDepths) + 1;
-                        ordered[index].Depth = Math.Max(index, mostSignificantPosition);
-                    }
-                }
-                relevantBit = 1U << ordered[index].Depth;
-                knownDepths |= relevantBit;
-            }
-        }
-
-        return displayableRanges;
     }
 
     private static List<DisplayableRange> CalculateGaps(IEnumerable<RuleIpRange> ranges)
@@ -260,7 +300,7 @@ public partial class IpOverlapDisplay : UserControl
             }
         }
 
-        return [ ..gaps.Select(item => new DisplayableRange(range: item, depth: 0, gap: true)) ];
+        return [ ..gaps.Select(item => new DisplayableRange(range: item, depth: 0, gap: true, effectiveLowerBound: item.Start, effectiveUpperBound: item.End)) ];
     }
 
     /// <summary>
@@ -270,11 +310,13 @@ public partial class IpOverlapDisplay : UserControl
     /// <param name="range">The IP range that will be displayed</param>
     /// <param name="depth">What depth the <paramref name="range"/> needs to appear at, to avoid being drawn on top of other ranges</param>
     /// <param name="gap">Whether this merely represents a gap between ranges</param>
-    private class DisplayableRange(RuleIpRange range, int depth, bool gap)
+    private class DisplayableRange(RuleIpRange range, int depth, bool gap, uint effectiveLowerBound, uint effectiveUpperBound)
     {
         public RuleIpRange Range { get; set; } = range;
         public int Depth { get; set; } = depth;
         public bool Gap { get; set; } = gap;
+        public uint EffectiveLowerBound { get; } = effectiveLowerBound;
+        public uint EffectiveUpperBound { get; } = effectiveUpperBound;
     }
 
 }

@@ -73,12 +73,12 @@
                             </ItemsRepeater.Layout>
                         </ItemsRepeater>
                         <SelectableTextBlock Grid.Column="5" Grid.Row="1" Text="{Binding OverlapType}" />
-                        <controls:IpOverlapDisplay Grid.ColumnSpan="6" Grid.Row="2" IpRanges="{Binding OverlappingRule.SourceIps}" />
+                        <controls:IpOverlapDisplay Grid.ColumnSpan="6" Grid.Row="2" IpRanges="{Binding OverlappingRule.SourceIps}" ComparisonRanges="{Binding $parent[TreeViewItem;1].((core:OverlapSummary)DataContext).SourceRule.SourceIps}" />
                     </Grid>
                 </DataTemplate>
                 <TreeDataTemplate x:DataType="core:OverlapSummary" ItemsSource="{Binding Overlaps}">
                     <DockPanel>
-                        <controls:IpOverlapDisplay DockPanel.Dock="Bottom" IpRanges="{Binding SourceRule.SourceIps}" />
+                        <controls:IpOverlapDisplay DockPanel.Dock="Bottom" IpRanges="{Binding SourceRule.SourceIps}" ComparisonRanges="{Binding SourceRule.SourceIps}" />
                         <DockPanel>
                             <Grid DockPanel.Dock="Right" ColumnDefinitions="Auto" RowDefinitions="Auto,Auto" Classes="Header">
                                 <TextBlock Grid.Column="0" Grid.Row="0" Text="Overall Overlap" />

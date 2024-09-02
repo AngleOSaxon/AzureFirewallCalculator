@@ -38,6 +38,20 @@ public partial class IpRangeDisplay : UserControl
         set => SetValue(PenProperty, value);
     }
 
+    public static readonly StyledProperty<uint> EffectiveLowerBoundProperty = AvaloniaProperty.Register<IpRangeDisplay, uint>(nameof(EffectiveLowerBound), 0);
+    public uint EffectiveLowerBound
+    {
+        get => GetValue(EffectiveLowerBoundProperty);
+        set => SetValue(EffectiveLowerBoundProperty, value);
+    }
+
+    public static readonly StyledProperty<uint> EffectiveUpperBoundProperty = AvaloniaProperty.Register<IpRangeDisplay, uint>(nameof(EffectiveUpperBound), uint.MaxValue);
+    public uint EffectiveUpperBound
+    {
+        get => GetValue(EffectiveUpperBoundProperty);
+        set => SetValue(EffectiveUpperBoundProperty, value);
+    }
+
     protected override void OnInitialized()
     {
         base.OnInitialized();
@@ -51,13 +65,24 @@ public partial class IpRangeDisplay : UserControl
 
         if (e.Property == RangeProperty && e.NewValue is RuleIpRange range)
         {
-            IpBlock.IsVisible = range.Start != range.End;
-            SingleIp.IsVisible = range.Start == range.End;
-
-            if (ToolTip.GetTip(IpShape) is IpRangeToolTip tooltip)
+            if (ToolTip.GetTip(IpBlock) is IpRangeToolTip ipBlockTooltip)
             {
-                tooltip.Range = range;
+                ipBlockTooltip.Range = range;
             }
+            if (ToolTip.GetTip(SingleIp) is IpRangeToolTip singleIpTooltip)
+            {
+                singleIpTooltip.Range = range;
+            }
+        }
+        else if (e.Property == EffectiveLowerBoundProperty && e.NewValue is uint effectiveLowerBound)
+        {
+            IpBlock.IsVisible = effectiveLowerBound != EffectiveUpperBound;
+            SingleIp.IsVisible = effectiveLowerBound == EffectiveUpperBound;
+        }
+        else if (e.Property == EffectiveUpperBoundProperty && e.NewValue is uint effectiveUpperBound)
+        {
+            IpBlock.IsVisible = EffectiveLowerBound != effectiveUpperBound;
+            SingleIp.IsVisible = EffectiveLowerBound == effectiveUpperBound;
         }
         else if (e.Property == PenProperty && e.NewValue is Pen pen)
         {
@@ -65,7 +90,7 @@ public partial class IpRangeDisplay : UserControl
         }
     }
 
-    private Shape IpShape => Range.Start == Range.End ? SingleIp : IpBlock;
+    private Shape IpShape => EffectiveLowerBound == EffectiveUpperBound ? SingleIp : IpBlock;
 
     // I want the range to appear selected once focused
     // Including showing the tooltip
