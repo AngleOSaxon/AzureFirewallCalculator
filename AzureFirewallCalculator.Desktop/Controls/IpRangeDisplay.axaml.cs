@@ -65,6 +65,9 @@ public partial class IpRangeDisplay : UserControl
 
         if (e.Property == RangeProperty && e.NewValue is RuleIpRange range)
         {
+            IpBlock.IsVisible = range.Start != range.End;
+            SingleIp.IsVisible = range.Start == range.End;
+
             if (ToolTip.GetTip(IpBlock) is IpRangeToolTip ipBlockTooltip)
             {
                 ipBlockTooltip.Range = range;
@@ -74,23 +77,55 @@ public partial class IpRangeDisplay : UserControl
                 singleIpTooltip.Range = range;
             }
         }
-        else if (e.Property == EffectiveLowerBoundProperty && e.NewValue is uint effectiveLowerBound)
-        {
-            IpBlock.IsVisible = effectiveLowerBound != EffectiveUpperBound;
-            SingleIp.IsVisible = effectiveLowerBound == EffectiveUpperBound;
-        }
-        else if (e.Property == EffectiveUpperBoundProperty && e.NewValue is uint effectiveUpperBound)
-        {
-            IpBlock.IsVisible = EffectiveLowerBound != effectiveUpperBound;
-            SingleIp.IsVisible = EffectiveLowerBound == effectiveUpperBound;
-        }
         else if (e.Property == PenProperty && e.NewValue is Pen pen)
         {
             IpShape.Fill = pen.Brush;
         }
+
+        var gradientStops = new GradientStops();
+        if (Range.Start != EffectiveLowerBound)
+        {
+            gradientStops.Add(new GradientStop
+            {
+                Offset = 0,
+                Color = Colors.Transparent
+            });
+            gradientStops.Add(new GradientStop
+            {
+                Offset = 0.5,
+                Color = Colors.Black
+            });
+        }
+        if (Range.End != EffectiveUpperBound)
+        {
+            gradientStops.Add(new GradientStop
+            {
+                Offset = 1,
+                Color = Colors.Transparent
+            });
+            gradientStops.Add(new GradientStop
+            {
+                Offset = 0.5,
+                Color = Colors.Black
+            });
+        }
+
+        if (gradientStops.Count > 0 && IpBlock != null)
+        {
+            IpBlock.OpacityMask = new LinearGradientBrush()
+            {
+                 GradientStops = gradientStops,
+                 StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),
+                 EndPoint = new RelativePoint(1, 1, RelativeUnit.Relative),
+            };
+        }
+        else if (gradientStops.Count == 0 && IpBlock != null)
+        {
+            IpBlock.OpacityMask = null;
+        }
     }
 
-    private Shape IpShape => EffectiveLowerBound == EffectiveUpperBound ? SingleIp : IpBlock;
+    private Shape IpShape => Range.Start == Range.End ? SingleIp : IpBlock;
 
     // I want the range to appear selected once focused
     // Including showing the tooltip
