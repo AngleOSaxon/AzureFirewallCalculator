@@ -31,7 +31,19 @@ public class RuleOverlapViewModel : ReactiveObject, IRoutableViewModel
 
     public RoutingState Router { get; } = new RoutingState();
 
-    public AvaloniaList<object> OverlapSummaries { get; } = [];
+    // public AvaloniaList<object> OverlapSummaries { get; } = [];
+
+    //public OverlapSummary? OverlapSummary { get; set; }
+    private OverlapSummary? overlapSummary;
+    public OverlapSummary? OverlapSummary
+    {
+        get { return overlapSummary; }
+        set
+        {
+            this.RaiseAndSetIfChanged(ref overlapSummary, value);
+        }
+    }
+    
 
     public AutoCompleteFilterPredicate<object?> AutoCompleteFilterPredicate { get; init; }
 
@@ -77,24 +89,10 @@ public class RuleOverlapViewModel : ReactiveObject, IRoutableViewModel
     public async Task CalculateOverlaps(NetworkRule networkRule)
     {
         await CalculatingOverlaps; // Not sure that's a good idea; need to review the right way to handle this
-        OverlapSummaries.Clear();
         var overlap = await Task.Run(() =>
         {
             return OverlapAnalyzer.CheckForOverlap(networkRule, [.. NetworkRules]);
         });
-        OverlapSummaries.Add(overlap);
-    }
-
-    public async Task CalculateAllOverlaps()
-    {
-        OverlapSummaries.Clear();
-        SelectedRule = null;
-        var overlap = await Task.Run(() =>
-        {
-            var networkRules = Firewall.NetworkRuleCollections.SelectMany(item => item.Rules).ToArray();
-            var results = networkRules.Select(item => OverlapAnalyzer.CheckForOverlap(item, networkRules)).Where(item => item.CumulativeOverlap == OverlapType.Full).ToList();
-            return results;
-        });
-        OverlapSummaries.AddRange(overlap);
+        OverlapSummary = overlap;
     }
 }

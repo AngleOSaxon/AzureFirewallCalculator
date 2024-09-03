@@ -16,8 +16,13 @@
         <Converters:MatchFontWeightConverter x:Key="MatchFontWeightConverter" />
         <Converters:ListConcatConverter x:Key="ListConcatConverter" />
     </UserControl.Resources>
+    <UserControl.Styles>
+        <!-- <Style Selector="controls|IpOverlapDisplay">
+            <Setter Property="Margin" Value="0 0 55 0" />
+        </Style> -->
+    </UserControl.Styles>
     <DockPanel LastChildFill="True">
-        <Grid DockPanel.Dock="Top" ColumnDefinitions="150,300,150" RowDefinitions="Auto">
+        <Grid DockPanel.Dock="Top" ColumnDefinitions="150,300" RowDefinitions="Auto">
             <TextBlock Grid.Column="0" Grid.Row="0" Text="Select rule: " />
             <AutoCompleteBox Grid.Column="1" Grid.Row="1" 
                 ItemsSource="{Binding NetworkRules}" FilterMode="Custom" ItemSelector="{Binding AutoCompleteSelector}" ItemFilter="{Binding AutoCompleteFilterPredicate}"
@@ -28,74 +33,67 @@
                     </DataTemplate>
                 </AutoCompleteBox.ItemTemplate>
             </AutoCompleteBox>
-            <Button Grid.Column="3" Grid.Row="0" Content="Show all" Command="{Binding CalculateAllOverlaps}" />
         </Grid>
-        <TreeView ItemsSource="{Binding OverlapSummaries}" Name="OverlapSummaries">
-            <TreeView.Styles>
-                <Style Selector="TreeViewItem:selected">
-                    <!-- If selected, immediately remove the selection.  This makes no sense, but seems to work to prevent selection -->
-                    <Setter Property="IsSelected" Value="False"/>
-                </Style>
-            </TreeView.Styles>
-            <TreeView.DataTemplates>
-                <DataTemplate DataType="core:Overlap">
-                    <Grid ColumnDefinitions="3*,2*,2*,1*,1*,2*" RowDefinitions="Auto,Auto,Auto" Classes="Header">
-                        <TextBlock Grid.Column="0" Grid.Row="0" Text="Rule Name" />
-                        <TextBlock Grid.Column="1" Grid.Row="0" Text="Source Ips" />
-                        <TextBlock Grid.Column="2" Grid.Row="0" Text="Destinations" />
-                        <TextBlock Grid.Column="3" Grid.Row="0" Text="Protocols" />
-                        <TextBlock Grid.Column="4" Grid.Row="0" Text="Ports" />
-                        <TextBlock Grid.Column="5" Grid.Row="0" Text="Overlap Type" />
+        <DockPanel DockPanel.Dock="Top" IsVisible="{Binding OverlapSummary, Converter={x:Static ObjectConverters.IsNotNull}}">
+            <controls:IpOverlapDisplay DockPanel.Dock="Bottom" IpRanges="{Binding OverlapSummary.SourceRule.SourceIps}" ComparisonRanges="{Binding OverlapSummary.SourceRule.SourceIps}" />
+            <DockPanel>
+                <Grid DockPanel.Dock="Right" ColumnDefinitions="Auto" RowDefinitions="Auto,Auto" Classes="Header">
+                    <TextBlock Grid.Column="0" Grid.Row="0" Text="Overall Overlap" />
+                    <SelectableTextBlock Grid.Column="0" Grid.Row="1" Text="{Binding OverlapSummary.CumulativeOverlap}" />
+                </Grid>
+                <controls:NetworkRule
+                    RuleName="{Binding OverlapSummary.SourceRule.Name}"
+                    SourceIps="{Binding OverlapSummary.SourceRule.SourceIps}"
+                    DestinationIps="{Binding OverlapSummary.SourceRule.DestinationIps}"
+                    DestinationPorts="{Binding OverlapSummary.SourceRule.DestinationPorts}" 
+                    NetworkProtocols="{Binding OverlapSummary.SourceRule.NetworkProtocols}"
+                    BoldExactMatchOnly="{x:False}"
+                    />
+            </DockPanel>
+        </DockPanel>
+        <ScrollViewer IsVisible="{Binding OverlapSummary, Converter={x:Static ObjectConverters.IsNotNull}}">
+            <ItemsRepeater ItemsSource="{Binding OverlapSummary.Overlaps}">
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate DataType="core:Overlap">
+                        <Grid ColumnDefinitions="3*,2*,2*,1*,1*,2*" RowDefinitions="Auto,Auto,Auto" Classes="Header">
+                            <TextBlock Grid.Column="0" Grid.Row="0" Text="Rule Name" />
+                            <TextBlock Grid.Column="1" Grid.Row="0" Text="Source Ips" />
+                            <TextBlock Grid.Column="2" Grid.Row="0" Text="Destinations" />
+                            <TextBlock Grid.Column="3" Grid.Row="0" Text="Protocols" />
+                            <TextBlock Grid.Column="4" Grid.Row="0" Text="Ports" />
+                            <TextBlock Grid.Column="5" Grid.Row="0" Text="Overlap Type" />
 
-                        <SelectableTextBlock Grid.Column="0" Grid.Row="1" Text="{Binding OverlappingRule.Name}" />
-                        <controls:DisplayMatchedIps Grid.Column="1" Grid.Row="1" Ips="{Binding OverlappingRule.SourceIps}" Matches="{Binding OverlappingSourceRanges}" ExactMatchOnly="{x:False}" />
-                        <controls:DisplayMatchedIps Grid.Column="2" Grid.Row="1" Ips="{Binding OverlappingRule.DestinationIps}" Matches="{Binding OverlappingDestinationRanges}" ExactMatchOnly="{x:False}" />
-                        <ContentControl Grid.Column="3" Grid.Row="1" Content="{Binding .}">
-                            <ContentControl.ContentTemplate>
-                                <dataTemplates:MatchedNetworkProtocolTemplate />
-                            </ContentControl.ContentTemplate>
-                        </ContentControl>
-                        <ItemsRepeater Grid.Column="4" Grid.Row="1" x:Name="RuleDestinationPorts" ItemsSource="{Binding OverlappingRule.DestinationPorts}" x:CompileBindings="False">
-                            <ItemsRepeater.ItemTemplate>
-                                <DataTemplate x:CompileBindings="False">
-                                    <SelectableTextBlock Text="{Binding}" x:CompileBindings="False">
-                                        <SelectableTextBlock.FontWeight>
-                                            <MultiBinding Converter="{StaticResource MatchFontWeightConverter}">
-                                                <Binding Path="." />
-                                                <Binding RelativeSource="{RelativeSource AncestorType=ItemsRepeater}" Path="DataContext.OverlappingPorts"/>
-                                            </MultiBinding>
-                                        </SelectableTextBlock.FontWeight>
-                                    </SelectableTextBlock>
-                                </DataTemplate>
-                            </ItemsRepeater.ItemTemplate>
-                            <ItemsRepeater.Layout>
-                                <StackLayout Orientation="Vertical" />
-                            </ItemsRepeater.Layout>
-                        </ItemsRepeater>
-                        <SelectableTextBlock Grid.Column="5" Grid.Row="1" Text="{Binding OverlapType}" />
-                        <controls:IpOverlapDisplay Grid.ColumnSpan="6" Grid.Row="2" IpRanges="{Binding OverlappingRule.SourceIps}" ComparisonRanges="{Binding $parent[TreeViewItem;1].((core:OverlapSummary)DataContext).SourceRule.SourceIps}" />
-                    </Grid>
-                </DataTemplate>
-                <TreeDataTemplate x:DataType="core:OverlapSummary" ItemsSource="{Binding Overlaps}">
-                    <DockPanel>
-                        <controls:IpOverlapDisplay DockPanel.Dock="Bottom" IpRanges="{Binding SourceRule.SourceIps}" ComparisonRanges="{Binding SourceRule.SourceIps}" />
-                        <DockPanel>
-                            <Grid DockPanel.Dock="Right" ColumnDefinitions="Auto" RowDefinitions="Auto,Auto" Classes="Header">
-                                <TextBlock Grid.Column="0" Grid.Row="0" Text="Overall Overlap" />
-                                <SelectableTextBlock Grid.Column="0" Grid.Row="1" Text="{Binding CumulativeOverlap}" />
-                            </Grid>
-                            <controls:NetworkRule
-                                RuleName="{Binding SourceRule.Name}"
-                                SourceIps="{Binding SourceRule.SourceIps}"
-                                DestinationIps="{Binding SourceRule.DestinationIps}"
-                                DestinationPorts="{Binding SourceRule.DestinationPorts}" 
-                                NetworkProtocols="{Binding SourceRule.NetworkProtocols}"
-                                BoldExactMatchOnly="{x:False}"
-                                />
-                        </DockPanel>
-                    </DockPanel>
-                </TreeDataTemplate>
-            </TreeView.DataTemplates>
-        </TreeView>
+                            <SelectableTextBlock Grid.Column="0" Grid.Row="1" Text="{Binding OverlappingRule.Name}" />
+                            <controls:DisplayMatchedIps Grid.Column="1" Grid.Row="1" Ips="{Binding OverlappingRule.SourceIps}" Matches="{Binding OverlappingSourceRanges}" ExactMatchOnly="{x:False}" />
+                            <controls:DisplayMatchedIps Grid.Column="2" Grid.Row="1" Ips="{Binding OverlappingRule.DestinationIps}" Matches="{Binding OverlappingDestinationRanges}" ExactMatchOnly="{x:False}" />
+                            <ContentControl Grid.Column="3" Grid.Row="1" Content="{Binding .}">
+                                <ContentControl.ContentTemplate>
+                                    <dataTemplates:MatchedNetworkProtocolTemplate />
+                                </ContentControl.ContentTemplate>
+                            </ContentControl>
+                            <ItemsRepeater Grid.Column="4" Grid.Row="1" x:Name="RuleDestinationPorts" ItemsSource="{Binding OverlappingRule.DestinationPorts}" x:CompileBindings="False">
+                                <ItemsRepeater.ItemTemplate>
+                                    <DataTemplate x:CompileBindings="False">
+                                        <SelectableTextBlock Text="{Binding}" x:CompileBindings="False">
+                                            <SelectableTextBlock.FontWeight>
+                                                <MultiBinding Converter="{StaticResource MatchFontWeightConverter}">
+                                                    <Binding Path="." />
+                                                    <Binding RelativeSource="{RelativeSource AncestorType=ItemsRepeater}" Path="DataContext.OverlappingPorts"/>
+                                                </MultiBinding>
+                                            </SelectableTextBlock.FontWeight>
+                                        </SelectableTextBlock>
+                                    </DataTemplate>
+                                </ItemsRepeater.ItemTemplate>
+                                <ItemsRepeater.Layout>
+                                    <StackLayout Orientation="Vertical" />
+                                </ItemsRepeater.Layout>
+                            </ItemsRepeater>
+                            <SelectableTextBlock Grid.Column="5" Grid.Row="1" Text="{Binding OverlapType}" />
+                            <controls:IpOverlapDisplay Grid.ColumnSpan="6" Grid.Row="2" IpRanges="{Binding OverlappingRule.SourceIps}" ComparisonRanges="{Binding $parent[DockPanel].((vm:RuleOverlapViewModel)DataContext).OverlapSummary.SourceRule.SourceIps}" />
+                        </Grid>
+                    </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
+        </ScrollViewer>
     </DockPanel>
 </UserControl>
