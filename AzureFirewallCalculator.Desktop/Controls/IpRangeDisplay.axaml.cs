@@ -125,6 +125,12 @@ public partial class IpRangeDisplay : UserControl
         }
     }
 
+    protected override Size MeasureOverride(Size availableSize)
+    {
+        SingleIp.Width = availableSize.Height;
+        return base.MeasureOverride(availableSize);
+    }
+
     private Shape IpShape => Range.Start == Range.End ? SingleIp : IpBlock;
 
     // I want the range to appear selected once focused

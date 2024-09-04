@@ -9,6 +9,8 @@ using Avalonia.Media;
 using AzureFirewallCalculator.Core;
 using DynamicData;
 using Microsoft.CodeAnalysis;
+using Microsoft.Extensions.Logging;
+using Splat;
 
 namespace AzureFirewallCalculator.Desktop.Controls;
 
@@ -42,9 +44,12 @@ public partial class IpOverlapDisplay : UserControl
 
     private DisplayableRange[] DisplayableRanges = [];
 
+    private ILogger<IpOverlapDisplay> Logger { get; }
+
     public IpOverlapDisplay()
     {
         InitializeComponent();
+        Logger = Locator.Current.GetRequiredService<ILoggerFactory>().CreateLogger<IpOverlapDisplay>();
 
         RuleIpRange[] baseRanges = [
             
@@ -85,9 +90,13 @@ public partial class IpOverlapDisplay : UserControl
                 {
                     continue;
                 }
-                var lowerBound = Math.Max(matchedOverlap.Max(item => item.Start), range.Start);
-                var upperBound = Math.Min(matchedOverlap.Min(item => item.End), range.End);
-                displayableRanges.Add(new DisplayableRange(range: range, depth: 0, gap: false, effectiveLowerBound: lowerBound, effectiveUpperBound: upperBound));
+
+                foreach (var match in matchedOverlap)
+                {
+                    var lowerBound = Math.Max(match.Start, range.Start);
+                    var upperBound = Math.Min(match.End, range.End);
+                    displayableRanges.Add(new DisplayableRange(range: range, depth: 0, gap: false, effectiveLowerBound: lowerBound, effectiveUpperBound: upperBound));
+                }
             }
         }
 
@@ -95,8 +104,8 @@ public partial class IpOverlapDisplay : UserControl
 
         foreach (var displayableRange in displayableRanges)
         {
-            var overlaps = OverlapAnalyzer.GetIpOverlaps([displayableRange.Range], displayableRanges.Where(item => item != displayableRange).Select(range => range.Range), consolidate: false);
-            var matching = overlaps.Select(overlap => (overlap: overlap, overlappingRanges: displayableRanges.Where(item => item.Range.Contains(overlap)).ToList()));
+            var overlaps = OverlapAnalyzer.GetIpOverlaps([displayableRange.EffectiveRange], displayableRanges.Where(item => item != displayableRange).Select(range => range.EffectiveRange), consolidate: false);
+            var matching = overlaps.Select(overlap => (overlap: overlap, overlappingRanges: displayableRanges.Where(item => item.EffectiveRange.Contains(overlap)).ToList()));
             foreach (var (overlap, overlappingRanges) in matching)
             {
                 var matched = overlapDisplayMapping.SingleOrDefault(item => item.overlap == overlap);
@@ -127,7 +136,7 @@ public partial class IpOverlapDisplay : UserControl
         // depths don't change--only the ones with later Start values, which won't be involved in an earlier overlap
         foreach (var (overlap, overlappingRanges) in overlapDisplayMapping)
         {
-            var ordered = overlappingRanges.OrderBy(item => item.Range.Start).ToList();
+            var ordered = overlappingRanges.OrderBy(item => item.EffectiveRange.Start).ToList();
             // This could more easily and clearly be a hashset indicating known depths, but I wanted to play around
             // with bitmaps and this is a side project.  So there.
             uint knownDepths = 0;
@@ -201,11 +210,12 @@ public partial class IpOverlapDisplay : UserControl
         var ratio = Math.Round(controlWidth / totalRangeSize, MaxPrecision);
 
         var adjustedMaxGapSize = Math.Round(maxGapSize * ratio, MaxPrecision);
-        var adjustedMinDisplaySize = minDisplaySize;//Math.Round(minDisplaySize * ratio, MaxPrecision);
+        var adjustedMinDisplaySize = Math.Round(minDisplaySize * ratio, MaxPrecision);
 
         var pen1 = new Pen(new SolidColorBrush(Color.FromRgb(r: 255, g: 0, b: 0)));
         var pen2 = new Pen(new SolidColorBrush(Color.FromRgb(r: 0, g: 255, b: 0)));
         var pen3 = new Pen(new SolidColorBrush(Color.FromRgb(r: 0, g: 0, b: 255)));
+        var gapPen = new Pen(new SolidColorBrush(Color.FromRgb(r: 127, g: 127, b: 127), 0.5));
         int count = 0;
 
         var completeComparisonRanges = consolidatedComparisonRanges
@@ -222,15 +232,48 @@ public partial class IpOverlapDisplay : UserControl
                 : orderedDisplayableRanges.Where(ruleRange => comparisonRange.Range.Start <= ruleRange.EffectiveLowerBound && comparisonRange.Range.End >= ruleRange.EffectiveUpperBound);
             if (!matchedRuleRanges.Any())
             {
-                //var boxStart = Math.Round(comparisonRange.EffectiveLowerBound * ratio, MaxPrecision) - offset;
-                var length = Math.Round((comparisonRange.EffectiveUpperBound - comparisonRange.EffectiveLowerBound) * ratio, MaxPrecision);
-                if (length < minDisplaySize)
+                var overlappingComparisonRanges = comparisonRange.Gap 
+                    ? [comparisonRange.Range]
+                    : ComparisonRanges.Where(range => comparisonRange.EffectiveRange.Contains(range) || range.Contains(comparisonRange.EffectiveRange));
+                var comparisonRangeMaxDistanceCovered = overlappingComparisonRanges.Max(range => 
                 {
-                    length = minDisplaySize;
-                }
-                //var boxEnd = boxStart + length;
-                
+                    var boxStart = Math.Round((range.Start - comparisonRange.EffectiveLowerBound) * ratio, MaxPrecision) + distanceCovered;
+                    var length = Math.Round((range.End - range.Start) * ratio, MaxPrecision);
+                    if (length > adjustedMaxGapSize)
+                    {
+                        length = adjustedMaxGapSize;;
+                    }
+                    if (length < adjustedMinDisplaySize)
+                    {
+                        length = adjustedMinDisplaySize;
+                    }
+                    var boxEnd = boxStart + length;
+                    if (boxEnd > (controlWidth + 1))
+                    {
+                        Logger.LogTrace("Box end {boxEnd} is {boxOverrun} greater than {controlWidth} for range {range}", boxEnd, boxEnd - controlWidth, controlWidth, range);
+                    }
+
+                    return Math.Max(boxEnd, distanceCovered);
+                });
+                var boxStart = distanceCovered;
+                var length = comparisonRangeMaxDistanceCovered - boxStart;
                 var gapLength = Math.Min(length, adjustedMaxGapSize);
+
+                IpRangeDisplay gap = new()
+                {
+                    Range = comparisonRange.Range,
+                    IsGap = true,
+                    Pen = gapPen,
+                    EffectiveLowerBound = comparisonRange.EffectiveLowerBound,
+                    EffectiveUpperBound = comparisonRange.EffectiveUpperBound,
+                    Height = RangeHeight,
+                    Width = gapLength,
+                    MinWidth = gapLength,
+                };
+                Canvas.SetLeft(gap, distanceCovered);
+                Canvas.SetTop(gap, 0);
+                RangeDisplay.Children.Add(gap);
+
                 distanceCovered += Math.Round(gapLength, MaxPrecision);
                 // Adjust offset to place us at the farthest-right element + gapSize, so the next box knows where to start correctly
                 // range end will be next range's start -1
@@ -240,22 +283,31 @@ public partial class IpOverlapDisplay : UserControl
                 continue;
             }
 
+            var maxDistanceCovered = distanceCovered;
+
             foreach (var ruleRange in matchedRuleRanges)
             {
-                var boxStart = Math.Round((ruleRange.EffectiveLowerBound - comparisonRange.EffectiveLowerBound) * ratio, MaxPrecision) + distanceCovered;
-                var length = Math.Round((ruleRange.EffectiveUpperBound - ruleRange.EffectiveLowerBound) * ratio, MaxPrecision);
-                if (length < minDisplaySize)
+                var overlappingComparisonRanges = ComparisonRanges.Where(range => ruleRange.EffectiveRange.Contains(range) || range.Contains(ruleRange.EffectiveRange));
+                var comparisonRangeMaxDistanceCovered = overlappingComparisonRanges.Max(range => 
                 {
-                    length = minDisplaySize;
-                }
-                var boxEnd = boxStart + length;
-                if (boxEnd > controlWidth)
-                {
-                    // TODO: Log?
-                    Console.Error.WriteLine($"Warning: box end {boxEnd} is {boxEnd - controlWidth} greater than {controlWidth}");
-                }
+                    var boxStart = Math.Round((range.Start - comparisonRange.EffectiveLowerBound) * ratio, MaxPrecision) + distanceCovered;
+                    var length = Math.Round((range.End - range.Start) * ratio, MaxPrecision);
+                    if (length < adjustedMinDisplaySize)
+                    {
+                        length = adjustedMinDisplaySize;
+                    }
+                    var boxEnd = boxStart + length;
+                    if (boxEnd > (controlWidth + 1))
+                    {
+                        Logger.LogTrace("Box end {boxEnd} is {boxOverrun} greater than {controlWidth} for range {range}", boxEnd, boxEnd - controlWidth, controlWidth, range);
+                    }
 
-                distanceCovered = Math.Max(boxEnd, distanceCovered);
+                    return Math.Max(boxEnd, maxDistanceCovered);
+                });
+                var boxStart = Math.Round((ruleRange.EffectiveLowerBound - comparisonRange.EffectiveLowerBound) * ratio, MaxPrecision) + distanceCovered;
+                var length = comparisonRangeMaxDistanceCovered - boxStart;
+
+                maxDistanceCovered = Math.Max(comparisonRangeMaxDistanceCovered, maxDistanceCovered);
                 var pen = (count++ % 3) switch
                 {
                     0 => pen1,
@@ -279,6 +331,9 @@ public partial class IpOverlapDisplay : UserControl
                 Canvas.SetTop(display, heightStart);
                 RangeDisplay.Children.Add(display);
             }
+
+
+            distanceCovered = maxDistanceCovered;
         }
 
         var size = base.ArrangeOverride(finalSize);
@@ -318,6 +373,7 @@ public partial class IpOverlapDisplay : UserControl
         public RuleIpRange Range { get; set; } = range;
         public int Depth { get; set; } = depth;
         public bool Gap { get; set; } = gap;
+        public RuleIpRange EffectiveRange { get; } = new RuleIpRange(effectiveLowerBound, effectiveUpperBound);
         public uint EffectiveLowerBound { get; } = effectiveLowerBound;
         public uint EffectiveUpperBound { get; } = effectiveUpperBound;
     }

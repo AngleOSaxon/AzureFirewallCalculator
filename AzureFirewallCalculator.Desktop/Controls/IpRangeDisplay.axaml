@@ -38,7 +38,7 @@
                 <controls:IpRangeToolTip />
             </ToolTip.Tip>
         </Rectangle>
-        <Ellipse x:Name="SingleIp" Classes="RangeDisplayShape" ToolTip.Placement="Bottom" ToolTip.VerticalOffset="0" Focusable="True" >
+        <Ellipse x:Name="SingleIp" HorizontalAlignment="Center" Classes="RangeDisplayShape" ToolTip.Placement="Bottom" ToolTip.VerticalOffset="0" Focusable="True" >
             <ToolTip.Tip>
                 <controls:IpRangeToolTip />
             </ToolTip.Tip>
