@@ -71,7 +71,7 @@ public readonly record struct RuleIpRange
         {
             var split = source.Split('-');
 
-            if (!IPAddress.TryParse(split[0], out var startIp) || !IPAddress.TryParse(split[1], out var endIp))
+            if (!IPAddress.TryParse(split[0].Trim(), out var startIp) || !IPAddress.TryParse(split[1].Trim(), out var endIp))
             {
                 throw new ArgumentException($"Failed to parse range '{source}'");
             }
