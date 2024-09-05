@@ -18,9 +18,6 @@
     </UserControl.Resources>
     <UserControl.Styles>
         <Style Selector="StackPanel.ComparingRule">
-            <Style Selector="^ Border">
-                <Setter Property="BorderBrush" Value="Black" />
-            </Style>
             <Style Selector="^ StackPanel.Header">
                 <Style Selector="^ TextBlock, ^ SelectableTextBlock">
                     <Setter Property="FontWeight" Value="ExtraBold" />
@@ -30,6 +27,29 @@
         <Style Selector="Grid.IpDisplay > TextBlock">
             <Setter Property="FontWeight" Value="ExtraBold" />
             <Setter Property="TextDecorations" />
+        </Style>
+        <Style Selector="StackPanel.ComparingRule, StackPanel.OverlappingRule">
+            <Style Selector="^ Border">
+                <Setter Property="BorderBrush" Value="Black" />
+            </Style>
+            <Style Selector="^ Border.IpDisplayWrapper">
+                <Setter Property="BorderThickness" Value="1, 0, 1, 1" />
+                <Setter Property="CornerRadius" Value="0, 0, 3, 3" />
+                <Setter Property="BorderBrush" Value="Black" />
+            </Style>
+            <Style Selector="^ Expander">
+                <Style Selector="^:not(:expanded) Border#ToggleButtonBackground">
+                    <Setter Property="BorderThickness" Value="1, 1, 1, 0" />
+                    <Setter Property="CornerRadius" Value="3, 3, 0, 0" />
+                </Style>
+                <Style Selector="^:expanded Border#ExpanderContent">
+                    <Setter Property="BorderThickness" Value="1, 0, 1, 0" />
+                    <Setter Property="CornerRadius" Value="0, 0, 0, 0" />
+                    <Setter Property="Background" Value="White" />
+                </Style>
+            </Style>
+        </Style>
+        <Style Selector="StackPanel.OverlappingRule">
         </Style>
     </UserControl.Styles>
     <DockPanel LastChildFill="True">
@@ -87,22 +107,24 @@
                     <SelectableTextBlock Grid.Column="5" Grid.Row="1" Text="{Binding OverlapSummary.CumulativeOverlap}" />
                 </Grid>
             </Expander>
-            <Grid Classes="IpDisplay" ColumnDefinitions="1*,1*" RowDefinitions="Auto,Auto">
-                <TextBlock Grid.Column="0" Grid.Row="0" Text="Source Ips" TextAlignment="Center" />
-                <TextBlock Grid.Column="1" Grid.Row="0" Text="Destination Ips" TextAlignment="Center" />
-                <Border Grid.Row="1" Grid.Column="0" BorderThickness="1, 2, 1, 0" CornerRadius="3,3,0,0" Margin="0,0,2,0">
-                    <controls:IpOverlapDisplay IpRanges="{Binding OverlapSummary.SourceRule.SourceIps}" ComparisonRanges="{Binding OverlapSummary.SourceRule.SourceIps}" />
-                </Border>
-                <Border Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" BorderThickness="1, 2, 1, 0" CornerRadius="3,3,0,0" Margin="2,0,0,0">
-                    <controls:IpOverlapDisplay IpRanges="{Binding OverlapSummary.SourceRule.DestinationIps}" ComparisonRanges="{Binding OverlapSummary.SourceRule.DestinationIps}" />
-                </Border>
-            </Grid>
+            <Border Classes="IpDisplayWrapper">
+                <Grid Classes="IpDisplay" ColumnDefinitions="1*,1*" RowDefinitions="Auto,Auto">
+                    <TextBlock Grid.Column="0" Grid.Row="0" Text="Source Ips" TextAlignment="Center" />
+                    <TextBlock Grid.Column="1" Grid.Row="0" Text="Destination Ips" TextAlignment="Center" />
+                    <Border Grid.Row="1" Grid.Column="0" BorderThickness="1, 2, 1, 0" CornerRadius="3,3,0,0" Margin="0,0,2,0">
+                        <controls:IpOverlapDisplay IpRanges="{Binding OverlapSummary.SourceRule.SourceIps}" ComparisonRanges="{Binding OverlapSummary.SourceRule.SourceIps}" />
+                    </Border>
+                    <Border Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" BorderThickness="1, 2, 1, 0" CornerRadius="3,3,0,0" Margin="2,0,0,0">
+                        <controls:IpOverlapDisplay IpRanges="{Binding OverlapSummary.SourceRule.DestinationIps}" ComparisonRanges="{Binding OverlapSummary.SourceRule.DestinationIps}" />
+                    </Border>
+                </Grid>
+            </Border>
         </StackPanel>
         <ScrollViewer IsVisible="{Binding OverlapSummary, Converter={x:Static ObjectConverters.IsNotNull}}">
             <ItemsRepeater ItemsSource="{Binding OverlapSummary.Overlaps}">
                 <ItemsRepeater.ItemTemplate>
                     <DataTemplate DataType="core:Overlap">
-                        <StackPanel Orientation="Vertical">
+                        <StackPanel Orientation="Vertical" Classes="OverlappingRule">
                             <Expander HorizontalAlignment="Stretch">
                                 <Expander.Header>
                                     <StackPanel Classes="Header" Orientation="Horizontal">
@@ -144,10 +166,16 @@
                                     <SelectableTextBlock Grid.Column="5" Grid.Row="1" Text="{Binding OverlapType}" />
                                 </Grid>
                             </Expander>
-                            <Grid Classes="IpDisplay" ColumnDefinitions="1*,1*" RowDefinitions="Auto,Auto">
-                                <controls:IpOverlapDisplay Grid.Column="0" Grid.Row="0" Margin="1,0,3,0" IpRanges="{Binding OverlappingRule.SourceIps}" ComparisonRanges="{Binding $parent[DockPanel].((vm:RuleOverlapViewModel)DataContext).OverlapSummary.SourceRule.SourceIps}" />
-                                <controls:IpOverlapDisplay Grid.Column="1" Grid.Row="0" Margin="3,0,1,0" IpRanges="{Binding OverlappingRule.DestinationIps}" ComparisonRanges="{Binding $parent[DockPanel].((vm:RuleOverlapViewModel)DataContext).OverlapSummary.SourceRule.DestinationIps}" />
-                            </Grid>
+                            <Border Classes="IpDisplayWrapper">
+                                <Grid Classes="IpDisplay" ColumnDefinitions="1*,1*" RowDefinitions="Auto,Auto">
+                                    <Border Grid.Column="0" Grid.Row="0" Margin="1,0,2,0" BorderThickness="0 0 1 0">
+                                        <controls:IpOverlapDisplay IpRanges="{Binding OverlappingRule.SourceIps}" ComparisonRanges="{Binding $parent[DockPanel].((vm:RuleOverlapViewModel)DataContext).OverlapSummary.SourceRule.SourceIps}" />
+                                    </Border>
+                                    <Border Grid.Column="1" Grid.Row="0" Margin="2,0,1,0" BorderThickness="1 0 0 0">
+                                        <controls:IpOverlapDisplay IpRanges="{Binding OverlappingRule.DestinationIps}" ComparisonRanges="{Binding $parent[DockPanel].((vm:RuleOverlapViewModel)DataContext).OverlapSummary.SourceRule.DestinationIps}" />
+                                    </Border>
+                                </Grid>
+                            </Border>
                         </StackPanel>
                     </DataTemplate>
                 </ItemsRepeater.ItemTemplate>
