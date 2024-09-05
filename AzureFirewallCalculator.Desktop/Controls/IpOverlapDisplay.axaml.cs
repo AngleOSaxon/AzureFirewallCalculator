@@ -28,15 +28,15 @@ public partial class IpOverlapDisplay : UserControl
         AffectsMeasure<IpOverlapDisplay>(ComparisonRangesProperty);
     }
 
-    public static readonly StyledProperty<RuleIpRange[]> IpRangesProperty = AvaloniaProperty.Register<IpOverlapDisplay, RuleIpRange[]>(nameof(IpRanges), defaultValue: []);
-    public RuleIpRange[] IpRanges
+    public static readonly StyledProperty<IEnumerable<RuleIpRange>> IpRangesProperty = AvaloniaProperty.Register<IpOverlapDisplay, IEnumerable<RuleIpRange>>(nameof(IpRanges), defaultValue: []);
+    public IEnumerable<RuleIpRange> IpRanges
     {
         get => GetValue(IpRangesProperty);
         set => SetValue(IpRangesProperty, value);
     }
 
-    public static readonly StyledProperty<RuleIpRange[]> ComparisonRangesProperty = AvaloniaProperty.Register<IpOverlapDisplay, RuleIpRange[]>(nameof(ComparisonRanges), defaultValue: []);
-    public RuleIpRange[] ComparisonRanges
+    public static readonly StyledProperty<IEnumerable<RuleIpRange>> ComparisonRangesProperty = AvaloniaProperty.Register<IpOverlapDisplay, IEnumerable<RuleIpRange>>(nameof(ComparisonRanges), defaultValue: []);
+    public IEnumerable<RuleIpRange> ComparisonRanges
     {
         get => GetValue(ComparisonRangesProperty);
         set => SetValue(ComparisonRangesProperty, value);
@@ -50,23 +50,27 @@ public partial class IpOverlapDisplay : UserControl
     {
         InitializeComponent();
         Logger = Locator.Current.GetRequiredService<ILoggerFactory>().CreateLogger<IpOverlapDisplay>();
+
+        var foo = new RuleIpRange[] { new RuleIpRange(0, uint.MaxValue) };
+        IpRanges = foo;
+        ComparisonRanges = foo;
     }
 
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
         base.OnPropertyChanged(change);
 
-        if (change.Property == IpRangesProperty && change.NewValue is RuleIpRange[] ranges)
+        if (change.Property == IpRangesProperty && change.NewValue is IEnumerable<RuleIpRange> ranges)
         {
             DisplayableRanges = InitDisplayableRanges(ranges, ComparisonRanges);
         }
-        else if (change.Property == ComparisonRangesProperty && change.NewValue is RuleIpRange[] comparisonRanges)
+        else if (change.Property == ComparisonRangesProperty && change.NewValue is IEnumerable<RuleIpRange> comparisonRanges)
         {
             DisplayableRanges = InitDisplayableRanges(IpRanges, comparisonRanges);
         }
     }
 
-    private DisplayableRange[] InitDisplayableRanges(RuleIpRange[] ranges, RuleIpRange[] comparisonRanges)
+    private DisplayableRange[] InitDisplayableRanges(IEnumerable<RuleIpRange> ranges, IEnumerable<RuleIpRange> comparisonRanges)
     {
         List<DisplayableRange> displayableRanges = [];
         var overlapsWithComparison = OverlapAnalyzer.GetIpOverlaps(sourceRanges: ranges, comparisonRanges: comparisonRanges, consolidate: true);

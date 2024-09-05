@@ -11,6 +11,10 @@ public record class NetworkRule
 
     public RuleIpRange[] DestinationIps { get; init; }
 
+    public RuleIpRange[] ResolvedDestinationFqdns { get; private set; } = [];
+
+    public IEnumerable<RuleIpRange> AllDestinationIps => DestinationIps.Concat(ResolvedDestinationFqdns);
+
     public string[] DestinationFqdns { get; init; }
 
     public RulePortRange[] DestinationPorts { get; init; }
@@ -30,6 +34,13 @@ public record class NetworkRule
         DnsResolver = dnsResolver;
     }
 
+    public async Task ResolveDestinationFqdns()
+    {
+        ResolvedDestinationFqdns = (await Task.WhenAll(DestinationFqdns.Select(DnsResolver.ResolveAddress)))
+            .SelectMany(item => item.Select(ip => new RuleIpRange(ip, ip)))
+            .ToArray();
+    }
+
     public async Task<NetworkRuleMatch> Matches(IEnumerable<NetworkRequest> requests)
     {
         List<RuleIpRange> allSourcesInRange = [];
@@ -37,9 +48,7 @@ public record class NetworkRule
         List<RulePortRange> allDestinationPorts = [];
         NetworkProtocols matchedProtocols = NetworkProtocols.None;
 
-        var resolvedFqdns = (await Task.WhenAll(DestinationFqdns.Select(DnsResolver.ResolveAddress)))
-            .SelectMany(item => item.Select(ip => new RuleIpRange(ip, ip)))
-            .ToArray();
+        await ResolveDestinationFqdns();
 
         foreach (var request in requests)
         {
@@ -50,7 +59,7 @@ public record class NetworkRule
             allSourcesInRange.AddRange(sourcesInRange);
 
             var destinationIps = DestinationIps
-                .Concat(resolvedFqdns)
+                .Concat(ResolvedDestinationFqdns)
                 .ToArray();
             
             var destinationsInRange = destination == null
@@ -75,7 +84,7 @@ public record class NetworkRule
             MatchedPorts: [.. allDestinationPorts.Distinct().OrderBy(item => item.Start)],
             Rule: this with 
             {
-                DestinationIps = [..DestinationIps.Concat(resolvedFqdns)]
+                DestinationIps = [..DestinationIps.Concat(ResolvedDestinationFqdns)]
             }
         );
     }

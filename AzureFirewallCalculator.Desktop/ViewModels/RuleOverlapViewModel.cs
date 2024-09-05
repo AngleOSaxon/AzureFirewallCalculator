@@ -88,7 +88,9 @@ public class RuleOverlapViewModel : ReactiveObject, IRoutableViewModel
 
     public async Task CalculateOverlaps(NetworkRule networkRule)
     {
+        var fqdnLoad = networkRule.ResolveDestinationFqdns();
         await CalculatingOverlaps; // Not sure that's a good idea; need to review the right way to handle this
+        await fqdnLoad;
         var overlap = await Task.Run(() =>
         {
             return OverlapAnalyzer.CheckForOverlap(networkRule, [.. NetworkRules]);

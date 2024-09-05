@@ -38,12 +38,12 @@ public static class OverlapAnalyzer
             }
             isFullOverlap &= sourceRule.SourceIps.All(item => sourceIpOverlap.Any(overlap => overlap.Start <= item.Start && overlap.End >= item.End));
 
-            var destinationIpOverlap = GetIpOverlaps(sourceRule.DestinationIps, rule.DestinationIps);
+            var destinationIpOverlap = GetIpOverlaps(sourceRule.AllDestinationIps, rule.AllDestinationIps);
             if (destinationIpOverlap.Length == 0)
             {
                 continue;
             }
-            isFullOverlap &= sourceRule.DestinationIps.All(item => destinationIpOverlap.Any(overlap => overlap.Start <= item.Start && overlap.End >= item.End));
+            isFullOverlap &= sourceRule.AllDestinationIps.All(item => destinationIpOverlap.Any(overlap => overlap.Start <= item.Start && overlap.End >= item.End));
             
             matches.Add(new Overlap(
                 OverlapType: isFullOverlap ? OverlapType.Full : OverlapType.Partial,
@@ -93,8 +93,8 @@ public static class OverlapAnalyzer
 
                 var unmatchedSourceIps = GetIpNonOverlaps(unmatched.SourceIps, overlap.OverlappingSourceRanges);
                 var matchedSourceIps = GetIpOverlaps(unmatched.SourceIps, overlap.OverlappingSourceRanges);
-                var unmatchedDestinationIps = GetIpNonOverlaps(unmatched.DestinationIps, overlap.OverlappingDestinationRanges);
-                var matchedDestinationIps = GetIpOverlaps(unmatched.DestinationIps, overlap.OverlappingDestinationRanges);
+                var unmatchedDestinationIps = GetIpNonOverlaps(unmatched.AllDestinationIps, overlap.OverlappingDestinationRanges);
+                var matchedDestinationIps = GetIpOverlaps(unmatched.AllDestinationIps, overlap.OverlappingDestinationRanges);
                 var unmatchedDestinationPorts = GetPortNonOverlaps(unmatched.DestinationPorts, overlap.OverlappingPorts);
                 var matchedDestinationPorts = GetPortOverlaps(unmatched.DestinationPorts, overlap.OverlappingPorts);
                 var unmatchedProtocols = (unmatched.NetworkProtocols ^ overlap.OverlappingProtocols) & sourceRule.NetworkProtocols;
@@ -147,7 +147,7 @@ public static class OverlapAnalyzer
             unmatchedRulePortions = newUnmatchedPortions;
         }
 
-        return unmatchedRulePortions.Any(item => item.DestinationIps.Length > 0 || item.SourceIps.Length > 0 || item.DestinationPorts.Length > 0 || item.NetworkProtocols != NetworkProtocols.None)
+        return unmatchedRulePortions.Any(item => item.AllDestinationIps.Any()  || item.SourceIps.Length > 0 || item.DestinationPorts.Length > 0 || item.NetworkProtocols != NetworkProtocols.None)
             ? OverlapType.Partial
             : OverlapType.Full;
     }

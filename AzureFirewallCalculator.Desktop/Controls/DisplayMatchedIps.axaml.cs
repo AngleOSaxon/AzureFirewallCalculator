@@ -47,17 +47,17 @@ public partial class DisplayMatchedIps : UserControl
         };
     }
 
-    public static readonly StyledProperty<RuleIpRange[]> IpsProperty = AvaloniaProperty.Register<DisplayMatchedIps, RuleIpRange[]>(nameof(Ips), []);
+    public static readonly StyledProperty<IEnumerable<RuleIpRange>> IpsProperty = AvaloniaProperty.Register<DisplayMatchedIps, IEnumerable<RuleIpRange>>(nameof(Ips), []);
 
-    public RuleIpRange[] Ips
+    public IEnumerable<RuleIpRange> Ips
     {
         get => GetValue(IpsProperty);
         set => SetValue(IpsProperty, value);
     }
 
-    public static readonly StyledProperty<RuleIpRange[]> MatchesProperty = AvaloniaProperty.Register<DisplayMatchedIps, RuleIpRange[]>(nameof(Matches), []);
+    public static readonly StyledProperty<IEnumerable<RuleIpRange>> MatchesProperty = AvaloniaProperty.Register<DisplayMatchedIps, IEnumerable<RuleIpRange>>(nameof(Matches), []);
 
-    public RuleIpRange[] Matches
+    public IEnumerable<RuleIpRange> Matches
     {
         get => GetValue(MatchesProperty);
         set => SetValue(MatchesProperty, value);
