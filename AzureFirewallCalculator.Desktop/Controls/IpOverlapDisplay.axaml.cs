@@ -240,6 +240,11 @@ public partial class IpOverlapDisplay : UserControl
         }
 
         var ratio = Math.Round(controlWidth / distanceTravelled, MaxPrecision);
+        // Skip the rounding if it will prevent anything from being shown at all
+        if (ratio == 0)
+        {
+            ratio = controlWidth / distanceTravelled;
+        }
 
         var orderedDisplayableRanges = DisplayableRanges.OrderBy(item => item.Range.Start);
         var positionedEffectiveRanges = new List<(double startPosition, double endPosition, DisplayableRange range)>();
