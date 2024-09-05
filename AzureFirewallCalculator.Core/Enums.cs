@@ -31,3 +31,11 @@ public enum OverlapType
     Partial,
     Full
 }
+
+public enum IpSourceType
+{
+    IpAddress,
+    IpGroup,
+    ServiceTag,
+    Fqdn
+}

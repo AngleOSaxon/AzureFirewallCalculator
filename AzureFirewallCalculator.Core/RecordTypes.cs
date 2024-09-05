@@ -21,6 +21,8 @@ public record class ApplicationProcessingResponse(int GroupPriority, int Priorit
 
 public record class ServiceTag(string Name, string[] AddressPrefixes);
 
+public record class IpSource(IpSourceType SourceType, string SourceName);
+
 public record Overlap(OverlapType OverlapType, NetworkRule OverlappingRule, RuleIpRange[] OverlappingSourceRanges, RuleIpRange[] OverlappingDestinationRanges, RulePortRange[] OverlappingPorts, NetworkProtocols OverlappingProtocols);
 
 public record OverlapSummary(NetworkRule SourceRule, OverlapType CumulativeOverlap, Overlap[] Overlaps);

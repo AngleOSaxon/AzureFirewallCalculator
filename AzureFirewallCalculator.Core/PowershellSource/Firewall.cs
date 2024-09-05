@@ -136,6 +136,30 @@ public record struct Firewall
         return [];
     }
 
+    private static IEnumerable<RuleIpRange> SafeGetIpGroupRules(string ipGroupId, Dictionary<string, IpGroup> ipGroups, ILogger logger)
+    {
+        if (ipGroups.TryGetValue(ipGroupId, out var ipGroup))
+        {
+            var name = ipGroupId.Split('/')[^1];
+            return ipGroup.IpAddresses.Select(item => RuleIpRange.Parse(item, IpSourceType.IpGroup, name, logger))
+                .Where(parsedRule => parsedRule != null)
+                .Cast<RuleIpRange>();
+        }
+        logger.LogWarning("Did not load IP Group '{ipGroupId}'; some IPs may be missing from rules", ipGroupId);
+        return [];
+    }
+
+    private static IEnumerable<RuleIpRange> GetAddressRules(IEnumerable<string> addresses, ILogger logger, ServiceTag[]? serviceTags = null)
+    {
+        if (serviceTags == null)
+        {
+            return addresses.Select(item => RuleIpRange.Parse(item, IpSourceType.IpAddress, item, logger))
+                .Where(parsedRule => parsedRule != null)
+                .Cast<RuleIpRange>();
+        }
+        return addresses.SelectMany(item => RuleIpRange.Parse(item, serviceTags, IpSourceType.IpAddress, item, logger));
+    }
+
     private static Func<NetworkRule, Core.NetworkRule> SetupNetworkRuleConverter(Dictionary<string, IpGroup> ipGroups, ServiceTag[] serviceTags, IDnsResolver resolver, ILogger logger)
     {
         return (NetworkRule item) => ConvertNetworkRule(item, ipGroups, serviceTags, resolver, logger);
@@ -146,16 +170,12 @@ public record struct Firewall
         (
             name: item.Name, 
             sourceIps: item.SourceIpGroups
-                .SelectMany(item => SafeGetIpGroupAddresses(item, ipGroups, logger))
-                .Concat(item.SourceAddresses)
-                .Select(item => RuleIpRange.Parse(item, logger))
-                .Where(item => item is not null)
-                .Cast<RuleIpRange>()
+                .SelectMany(item => SafeGetIpGroupRules(item, ipGroups, logger))
+                .Concat(GetAddressRules(item.SourceAddresses, logger))
                 .ToArray(), 
             destinationIps: item.DestinationIpGroups
-                .SelectMany(item => SafeGetIpGroupAddresses(item, ipGroups, logger))
-                .Concat(item.DestinationAddresses)
-                .SelectMany(item => RuleIpRange.Parse(item, serviceTags, logger))
+                .SelectMany(item => SafeGetIpGroupRules(item, ipGroups, logger))
+                .Concat(GetAddressRules(item.DestinationAddresses, logger, serviceTags))
                 .ToArray(),
             destinationFqdns: item.DestinationFqdns,
             destinationPorts: item.DestinationPorts
@@ -177,11 +197,8 @@ public record struct Firewall
         (
             name: item.Name,
             sourceIps: item.SourceIpGroups
-                .SelectMany(item => SafeGetIpGroupAddresses(item, ipGroups, logger))
-                .Concat(item.SourceAddresses)
-                .Select(item => RuleIpRange.Parse(item, logger))
-                .Where(item => item is not null)
-                .Cast<RuleIpRange>()
+                .SelectMany(item => SafeGetIpGroupRules(item, ipGroups, logger))
+                .Concat(GetAddressRules(item.SourceAddresses, logger))
                 .ToArray(),
             destinationFqdns: item.TargetFqdns,
             destinationTags: item.FqdnTags,

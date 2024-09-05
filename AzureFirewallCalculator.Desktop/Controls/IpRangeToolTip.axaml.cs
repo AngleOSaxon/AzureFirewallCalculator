@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using AzureFirewallCalculator.Core;
@@ -25,7 +26,19 @@ public partial class IpRangeToolTip : UserControl
 
         if (change.Property == RangeProperty && change.NewValue is RuleIpRange range)
         {
-            RangeText.Text += range.ToString();
+            RangeText.Text = range.ToString();
+            if (range.SourcedFrom.Length == 0)
+            {
+                SourceLabel.IsVisible = false;
+                SourceTypeLabel.IsVisible = false;
+            }
+            else
+            {
+                SourceLabel.IsVisible = true;
+                SourceTypeLabel.IsVisible = true;
+            }
+            SourceType.Text = string.Join(", ", range.SourcedFrom.Select(item => item.SourceType.ToString()));
+            Source.Text = string.Join(", ", range.SourcedFrom.Select(item => item.SourceName.ToString()));
         }
     }
 }

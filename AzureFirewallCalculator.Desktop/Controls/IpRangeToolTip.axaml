@@ -10,9 +10,13 @@
         <!--TODO: Adjust colors and opacities to work with dark mode-->
         <Polyline HorizontalAlignment="Center" Points="0,8 5,0 10,8" StrokeThickness="1" Stroke="Black" />
         <Border Classes="IpRangeDetails">
-            <Grid ColumnDefinitions="1*,4*" RowDefinitions="1*" Classes="IpRangeDetails" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+            <Grid ColumnDefinitions="1*,4*" RowDefinitions="1*, 1*, 1*" Classes="IpRangeDetails" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
                 <SelectableTextBlock Classes="TooltipRow Header" Grid.Column="0" Grid.Row="0" Text="Range: " />
                 <SelectableTextBlock x:Name="RangeText" Classes="TooltipRow Detail" Grid.Column="1" Grid.Row="0" Text="" />
+                <SelectableTextBlock x:Name="SourceTypeLabel" Classes="TooltipRow Header" Grid.Column="0" Grid.Row="1" Text="Type: " />
+                <SelectableTextBlock x:Name="SourceType" Classes="TooltipRow Detail" Grid.Column="1" Grid.Row="1" Text="" />
+                <SelectableTextBlock x:Name="SourceLabel" Classes="TooltipRow Header" Grid.Column="0" Grid.Row="2" Text="Source: " />
+                <SelectableTextBlock x:Name="Source" Classes="TooltipRow Detail" Grid.Column="1" Grid.Row="2" Text="" />
             </Grid>
         </Border>
     </StackPanel>

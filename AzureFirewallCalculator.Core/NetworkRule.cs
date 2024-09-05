@@ -36,8 +36,13 @@ public record class NetworkRule
 
     public async Task ResolveDestinationFqdns()
     {
-        ResolvedDestinationFqdns = (await Task.WhenAll(DestinationFqdns.Select(DnsResolver.ResolveAddress)))
-            .SelectMany(item => item.Select(ip => new RuleIpRange(ip, ip)))
+        ResolvedDestinationFqdns = (await Task.WhenAll(DestinationFqdns.Select(async item =>
+        {
+            var ipAddresses = await DnsResolver.ResolveAddress(item);
+            return ipAddresses.Select(ip => new RuleIpRange(ip, ip, [ new IpSource(IpSourceType.Fqdn, item) ]));
+        }
+        )))
+            .SelectMany(item => item)
             .ToArray();
     }
 

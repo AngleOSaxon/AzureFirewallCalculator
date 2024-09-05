@@ -11,7 +11,9 @@ public readonly record struct RuleIpRange
 
     public uint End { get; }
 
-    public RuleIpRange(uint start, uint end)
+    public IpSource[] SourcedFrom { get; }
+
+    public RuleIpRange(uint start, uint end, IpSource[]? sourcedFrom = null)
     {
         if (end < start)
         {
@@ -19,6 +21,7 @@ public readonly record struct RuleIpRange
         }
         Start = start;
         End = end;
+        SourcedFrom = sourcedFrom ?? [];
     }
 
     public bool Contains(RuleIpRange range)
@@ -40,9 +43,9 @@ public readonly record struct RuleIpRange
         return $"{start} - {end}";
     }
 
-    public static RuleIpRange[] Parse(string source, ServiceTag[] serviceTags, ILogger logger)
+    public static RuleIpRange[] Parse(string source, ServiceTag[] serviceTags, IpSourceType sourceType, string sourceName, ILogger logger)
     {
-        var result = Parse(source, logger);
+        var result = Parse(source, sourceType, sourceName, logger);
         if (result != null)
         {
             return [result.Value];
@@ -54,17 +57,17 @@ public readonly record struct RuleIpRange
             return [];
         }
 
-        return serviceTag.AddressPrefixes.Select((item) => Parse(item, logger))
+        return serviceTag.AddressPrefixes.Select((item) => Parse(item, IpSourceType.ServiceTag, serviceTag.Name, logger))
             .Where(item => item != null)
             .Cast<RuleIpRange>()
             .ToArray();
     }
 
-    public static RuleIpRange? Parse(string source, ILogger logger)
+    public static RuleIpRange? Parse(string source, IpSourceType sourceType, string sourceName, ILogger logger)
     {
         if (source == "*")
         {
-            return new RuleIpRange(0, uint.MaxValue);
+            return new RuleIpRange(0, uint.MaxValue, [new (sourceType, sourceName)]);
         }
 
         if (source.Contains('-'))
@@ -85,7 +88,7 @@ public readonly record struct RuleIpRange
             var start = startIp.ConvertToUint();
             var end = endIp.ConvertToUint();
 
-            return new RuleIpRange(start, end);
+            return new RuleIpRange(start, end, [new (sourceType, sourceName)]);
         }
 
         if (source.Contains('/'))
@@ -108,17 +111,17 @@ public readonly record struct RuleIpRange
             // Can't shift by more than n
             if (maskSize == 32)
             {
-                return new RuleIpRange(startIp, startIp);
+                return new RuleIpRange(startIp, startIp, [new (sourceType, sourceName)]);
             }
 
             var bitMask = uint.MaxValue >> maskSize;
             var maxIp = startIp | bitMask;
-            return new RuleIpRange(startIp, maxIp);
+            return new RuleIpRange(startIp, maxIp, [new (sourceType, sourceName)]);
         }
         else if(IPAddress.TryParse(source, out var ip))
         {
             var ipBytes = ip.ConvertToUint();
-            return new RuleIpRange(ipBytes, ipBytes);
+            return new RuleIpRange(ipBytes, ipBytes, [new (sourceType, sourceName)]);
         }
         
         logger.LogInformation("Unparsable IP range: '{unparsableIpRange}'", source);
