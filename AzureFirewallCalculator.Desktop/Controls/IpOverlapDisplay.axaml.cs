@@ -330,7 +330,10 @@ public partial class IpOverlapDisplay : UserControl
             };
             Canvas.SetLeft(display, adjustedStart);
             Canvas.SetTop(display, heightStart);
-            RangeDisplay.Children.Add(display);
+            if (!range.Gap)
+            {
+                RangeDisplay.Children.Add(display);
+            }
         }
 
         var size = base.ArrangeOverride(finalSize);
