@@ -179,6 +179,13 @@ public partial class IpOverlapDisplay : UserControl
         return updatedSize;
     }
 
+    private static readonly Pen[] pens = [
+        new Pen(new SolidColorBrush(Color.FromRgb(r: 255, g: 0, b: 0))),
+        new Pen(new SolidColorBrush(Color.FromRgb(r: 0, g: 255, b: 0))),
+        new Pen(new SolidColorBrush(Color.FromRgb(r: 127, g: 0, b: 255))),
+        new Pen(new SolidColorBrush(Color.FromRgb(r: 108, g: 223, b: 255))),
+        new Pen(new SolidColorBrush(Color.FromRgb(r: 0, g: 0, b: 255))),
+    ];
     protected override Size ArrangeOverride(Size finalSize)
     {
         RangeDisplay.Children.Clear();
@@ -286,12 +293,16 @@ public partial class IpOverlapDisplay : UserControl
             }
         }
 
-        Pen[] pens = [
-            new Pen(new SolidColorBrush(Color.FromRgb(r: 255, g: 0, b: 0))),
-            new Pen(new SolidColorBrush(Color.FromRgb(r: 0, g: 255, b: 0))),
-            new Pen(new SolidColorBrush(Color.FromRgb(r: 0, g: 0, b: 255))),
-            new Pen(new SolidColorBrush(Color.FromRgb(r: 255, g: 0, b: 255))),
-        ];
+        var consolidatedPositionedEffectiveRanges = positionedEffectiveRanges.GroupBy(item => item.range.Range).Select(item => (
+            startPosition: item.Min(item => item.startPosition), 
+            endPosition: item.Max(item => item.endPosition), 
+            range: new DisplayableRange(
+                range: item.Key,
+                depth: item.First().range.Depth,
+                gap: false,
+                effectiveRange: new RuleIpRange(item.Min(item => item.range.EffectiveRange.Start), item.Max(item => item.range.EffectiveRange.End))
+            )
+        ));
 
         Dictionary<RuleIpRange, Pen> penLookup = [];
         int penCount = 0;
@@ -307,7 +318,7 @@ public partial class IpOverlapDisplay : UserControl
             return penLookup[range];
         }
 
-        foreach (var (startPosition, endPosition, range) in positionedEffectiveRanges)
+        foreach (var (startPosition, endPosition, range) in consolidatedPositionedEffectiveRanges)
         {
             var pen = getPenByRange(range.Range);
             var heightStart = range.Depth * RangeHeight + (VerticalMargin * range.Depth);
