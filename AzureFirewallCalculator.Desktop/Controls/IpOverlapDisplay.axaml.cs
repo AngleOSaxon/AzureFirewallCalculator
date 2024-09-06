@@ -20,7 +20,6 @@ public partial class IpOverlapDisplay : UserControl
     private const double RangeHeightMultiplier = 1; // TODO: dynamically fetch based on text scaling?
     private const double RangeHeight = BaseRangeHeight * RangeHeightMultiplier;
     private const double VerticalMargin = 2;
-    private const int MaxPrecision = 3;
 
     static IpOverlapDisplay()
     {
@@ -243,12 +242,7 @@ public partial class IpOverlapDisplay : UserControl
             drawableRanges.Add((start, end, consolidatedComparison));
         }
 
-        var ratio = Math.Round(controlWidth / distanceTravelled, MaxPrecision);
-        // Skip the rounding if it will prevent anything from being shown at all
-        if (ratio == 0)
-        {
-            ratio = controlWidth / distanceTravelled;
-        }
+        var ratio = controlWidth / distanceTravelled;
 
         var orderedDisplayableRanges = DisplayableRanges.OrderBy(item => item.Range.Start);
         var positionedEffectiveRanges = new List<(double startPosition, double endPosition, DisplayableRange range)>();
@@ -259,8 +253,12 @@ public partial class IpOverlapDisplay : UserControl
                 : orderedDisplayableRanges.Where(ruleRange => comparisonRange.Range.Contains(ruleRange.EffectiveRange));
 
             // These ranges are assumed to not be additive in terms of distance travelled
-            // They may overlap each other and therefore cannot be simply added together
-            var maxDistanceTravelled = 0d;
+            // They may overlap each other and therefore cannot be simply added together.
+            // Ultimately we need this to determine whether we've overrun the size of the
+            // container and need to be adjusted to fit inside.
+            // Separate them out by depth so that ranges at one depth aren't squashed
+            // just because a range at another depth goes long
+            var maxDistanceTravelledAtDepth = new Dictionary<int, double>();
             List<(double startPosition, double endPosition, DisplayableRange range)> internalRangePositions = new();
             foreach (var matchedRuleRange in matchedRuleRanges)
             {
@@ -273,15 +271,24 @@ public partial class IpOverlapDisplay : UserControl
                 var end = start + Math.Max(length, minDisplaySize);
                 internalRangePositions.Add((start, end, matchedRuleRange));
 
-                maxDistanceTravelled = Math.Max(maxDistanceTravelled, end);
+                maxDistanceTravelledAtDepth[matchedRuleRange.Depth] = Math.Max(maxDistanceTravelledAtDepth.GetValueOrDefault(matchedRuleRange.Depth), end);
             }
-            var internalRatio = Math.Round((containerEnd - containerStart) / maxDistanceTravelled, MaxPrecision);
 
-            foreach (var (internalStartPosition, internalEndPosition, range) in internalRangePositions)
+            var positionsByDepth = internalRangePositions.ToLookup(item => item.range.Depth);
+            foreach (var positionsGroup in positionsByDepth)
             {
-                var adjustedStart = Math.Round(internalStartPosition * internalRatio, MaxPrecision);
-                var adjustedEnd = Math.Round(internalEndPosition * internalRatio, MaxPrecision);
-                positionedEffectiveRanges.Add((adjustedStart + containerStart, adjustedEnd + containerStart, range));
+                var distanceTravelledAtDepth = maxDistanceTravelledAtDepth[positionsGroup.Key];
+                // Only apply a ratio if we actually excede the size of our container
+                // Ranges smaller than the container just get right-aligned
+                var internalRatio = distanceTravelledAtDepth > (containerEnd - containerStart)
+                    ? (containerEnd - containerStart) / distanceTravelledAtDepth
+                    : 1d;
+                foreach (var (internalStartPosition, internalEndPosition, range) in positionsGroup)
+                {
+                    var adjustedStart = internalStartPosition * internalRatio;
+                    var adjustedEnd = internalEndPosition * internalRatio;
+                    positionedEffectiveRanges.Add((adjustedStart + containerStart, adjustedEnd + containerStart, range));
+                }
             }
         }
 
@@ -302,8 +309,8 @@ public partial class IpOverlapDisplay : UserControl
                         _ => pen1
                     };
             var heightStart = range.Depth * RangeHeight + (VerticalMargin * range.Depth);
-            var adjustedStart = Math.Round(startPosition * ratio, MaxPrecision);
-            var adjustedEnd = Math.Round(endPosition * ratio, MaxPrecision);
+            var adjustedStart = startPosition * ratio;
+            var adjustedEnd = endPosition * ratio;
 
             if (adjustedEnd > controlWidth + 1)
             {
@@ -339,7 +346,6 @@ public partial class IpOverlapDisplay : UserControl
         {
             if (range.End > lastRangeEnd)
             {
-                // Issue with abutting ranges; produces -1 sized gap
                 if (range.Start - 1 > lastRangeEnd)
                 {
                     gaps.Add(new (Utils.IncrementSafe(lastRangeEnd), Utils.DecrementSafe(range.Start)));
