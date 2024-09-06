@@ -277,7 +277,7 @@ public partial class IpOverlapDisplay : UserControl
                 var internalRatio = distanceTravelledAtDepth > (containerEnd - containerStart)
                     ? (containerEnd - containerStart) / distanceTravelledAtDepth
                     : 1d;
-                foreach (var (internalStartPosition, internalEndPosition, range) in positionsGroup)
+                foreach (var (internalStartPosition, internalEndPosition, range) in positionsGroup.Where(item => !item.range.Gap))
                 {
                     var adjustedStart = internalStartPosition * internalRatio;
                     var adjustedEnd = internalEndPosition * internalRatio;
@@ -348,10 +348,7 @@ public partial class IpOverlapDisplay : UserControl
             });
             Canvas.SetLeft(display, adjustedStart);
             Canvas.SetTop(display, heightStart);
-            if (!range.Gap)
-            {
-                RangeDisplay.Children.Add(display);
-            }
+            RangeDisplay.Children.Add(display);
         }
 
         var size = base.ArrangeOverride(finalSize);
