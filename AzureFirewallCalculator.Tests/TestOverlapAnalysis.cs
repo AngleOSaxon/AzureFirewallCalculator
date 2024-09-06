@@ -648,11 +648,12 @@ public class TestOverlapAnalysis
 
     private static bool OverlapEquals(Overlap? x, Overlap? y)
     {
-        return (x?.OverlapType == y?.OverlapType)
-            && (x?.OverlappingRule.Equals(y?.OverlappingRule) ?? false)
-            && (x?.OverlappingSourceRanges.OrderBy(item => item.Start).ElementByElementCompare(y.OverlappingSourceRanges.OrderBy(item => item.Start)) ?? false)
-            && (x?.OverlappingDestinationRanges.OrderBy(item => item.Start).ElementByElementCompare(y.OverlappingDestinationRanges.OrderBy(item => item.Start)) ?? false)
-            && (x?.OverlappingPorts.OrderBy(item => item.Start).ElementByElementCompare(y.OverlappingPorts.OrderBy(item => item.Start)) ?? false)
-            && (x?.OverlappingProtocols.Equals(y?.OverlappingProtocols) ?? false);
+        var equals = x?.OverlapType == y?.OverlapType;
+        equals &= x?.OverlappingRule.Equals(y?.OverlappingRule) ?? false;
+        equals &= x?.OverlappingSourceRanges.OrderBy(item => item.Start).ElementByElementCompare(y.OverlappingSourceRanges.OrderBy(item => item.Start)) ?? false;
+        equals &= x?.OverlappingDestinationRanges.OrderBy(item => item.Start).ElementByElementCompare(y.OverlappingDestinationRanges.OrderBy(item => item.Start)) ?? false;
+        equals &= x?.OverlappingPorts.OrderBy(item => item.Start).ElementByElementCompare(y.OverlappingPorts.OrderBy(item => item.Start)) ?? false;
+        equals &= x?.OverlappingProtocols.Equals(y?.OverlappingProtocols) ?? false;
+        return equals;
     }
 }

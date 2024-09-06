@@ -13,6 +13,11 @@ public readonly record struct RuleIpRange
 
     public IpSource[] SourcedFrom { get; }
 
+    public RuleIpRange()
+    {
+        SourcedFrom = [];
+    }
+
     public RuleIpRange(uint start, uint end, IpSource[]? sourcedFrom = null)
     {
         if (end < start)
