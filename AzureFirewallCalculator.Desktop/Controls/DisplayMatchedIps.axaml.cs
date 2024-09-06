@@ -80,25 +80,28 @@ public partial class DisplayMatchedIps : UserControl
         }
 
         IpDisplay.Inlines = [
-            ..Ips.Aggregate(new List<Inline>(), (controls, item) =>
-            {
-                static bool ExactMatch(IEnumerable<RuleIpRange> values, RuleIpRange item) => values.Contains(item);
-                static bool ContainedMatch(IEnumerable<RuleIpRange> values, RuleIpRange item) => values.Any(value => value.Contains(item));
-
-                Func<IEnumerable<RuleIpRange>, RuleIpRange, bool> shouldBold = ExactMatchOnly ? ExactMatch : ContainedMatch;
-
-                var weight = shouldBold(Matches, item)
-                    ? FontWeight.ExtraBold
-                    : FontWeight.Normal;
-
-                controls.Add(new Run(item.ToString())
+            ..Ips
+                .OrderBy(item => item.Start)
+                .ThenBy(item => item.End)
+                .Aggregate(new List<Inline>(), (controls, item) =>
                 {
-                    FontWeight = weight
-                });
-                controls.Add(new LineBreak());
-                return controls;
-            })
-            .SkipLast(1)
+                    static bool ExactMatch(IEnumerable<RuleIpRange> values, RuleIpRange item) => values.Contains(item);
+                    static bool ContainedMatch(IEnumerable<RuleIpRange> values, RuleIpRange item) => values.Any(value => value.Contains(item));
+
+                    Func<IEnumerable<RuleIpRange>, RuleIpRange, bool> shouldBold = ExactMatchOnly ? ExactMatch : ContainedMatch;
+
+                    var weight = shouldBold(Matches, item)
+                        ? FontWeight.ExtraBold
+                        : FontWeight.Normal;
+
+                    controls.Add(new Run(item.ToString())
+                    {
+                        FontWeight = weight
+                    });
+                    controls.Add(new LineBreak());
+                    return controls;
+                })
+                .SkipLast(1)
         ];
     }
 }

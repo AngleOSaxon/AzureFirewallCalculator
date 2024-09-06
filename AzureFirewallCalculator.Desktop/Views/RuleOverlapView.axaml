@@ -74,7 +74,7 @@
                     </StackPanel>
                 </Expander.Header>
                 <Grid ColumnDefinitions="3*,2*,2*,1*,1*,2*" RowDefinitions="Auto,Auto,Auto" Classes="Header">
-                    <TextBlock Grid.Column="1" Grid.Row="0" Text="Source Ips" />
+                    <TextBlock Grid.Column="1" Grid.Row="0" Text="Source IPs" />
                     <TextBlock Grid.Column="2" Grid.Row="0" Text="Destinations" />
                     <TextBlock Grid.Column="3" Grid.Row="0" Text="Protocols" />
                     <TextBlock Grid.Column="4" Grid.Row="0" Text="Ports" />
@@ -109,8 +109,8 @@
             </Expander>
             <Border Classes="IpDisplayWrapper">
                 <Grid Classes="IpDisplay" ColumnDefinitions="1*,1*" RowDefinitions="Auto,Auto">
-                    <TextBlock Grid.Column="0" Grid.Row="0" Text="Source Ips" TextAlignment="Center" />
-                    <TextBlock Grid.Column="1" Grid.Row="0" Text="Destination Ips" TextAlignment="Center" />
+                    <TextBlock Grid.Column="0" Grid.Row="0" Text="Source IPs" TextAlignment="Center" />
+                    <TextBlock Grid.Column="1" Grid.Row="0" Text="Destination IPs" TextAlignment="Center" />
                     <Border Grid.Row="1" Grid.Column="0" BorderThickness="1, 2, 1, 0" CornerRadius="3,3,0,0" Margin="0,0,2,0">
                         <controls:IpOverlapDisplay IpRanges="{Binding OverlapSummary.SourceRule.SourceIps}" ComparisonRanges="{Binding OverlapSummary.SourceRule.SourceIps}" />
                     </Border>
@@ -133,7 +133,7 @@
                                     </StackPanel>
                                 </Expander.Header>
                                 <Grid ColumnDefinitions="3*,2*,2*,1*,1*,2*" RowDefinitions="Auto,Auto,Auto" Classes="Header">
-                                    <TextBlock Grid.Column="1" Grid.Row="0" Text="Source Ips" />
+                                    <TextBlock Grid.Column="1" Grid.Row="0" Text="Source IPs" />
                                     <TextBlock Grid.Column="2" Grid.Row="0" Text="Destinations" />
                                     <TextBlock Grid.Column="3" Grid.Row="0" Text="Protocols" />
                                     <TextBlock Grid.Column="4" Grid.Row="0" Text="Ports" />

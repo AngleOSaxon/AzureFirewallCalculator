@@ -112,7 +112,7 @@
                     <DataTemplate DataType="core:NetworkRuleMatch">
                         <Grid ColumnDefinitions="3*,2*,2*,1*,1*" RowDefinitions="Auto,Auto" Classes="Header">
                             <TextBlock Grid.Column="0" Grid.Row="0" Text="Rule Name" />
-                            <TextBlock Grid.Column="1" Grid.Row="0" Text="Source Ips" />
+                            <TextBlock Grid.Column="1" Grid.Row="0" Text="Source IPs" />
                             <TextBlock Grid.Column="2" Grid.Row="0" Text="Destinations" />
                             <TextBlock Grid.Column="3" Grid.Row="0" Text="Protocols" />
                             <TextBlock Grid.Column="4" Grid.Row="0" Text="Ports" />
@@ -147,7 +147,7 @@
                     <DataTemplate DataType="core:ApplicationRuleMatch">
                         <Grid ColumnDefinitions="3*,2*,2*,1*,1*" RowDefinitions="Auto,Auto" Classes="Header">
                             <TextBlock Grid.Column="0" Grid.Row="0" Text="Rule Name" />
-                            <TextBlock Grid.Column="1" Grid.Row="0" Text="Source Ips" />
+                            <TextBlock Grid.Column="1" Grid.Row="0" Text="Source IPs" />
                             <TextBlock Grid.Column="2" Grid.Row="0" Text="Destinations" />
                             <TextBlock Grid.Column="3" Grid.Row="0" Text="Protocols" />
 
