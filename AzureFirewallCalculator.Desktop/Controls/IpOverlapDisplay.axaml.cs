@@ -48,10 +48,6 @@ public partial class IpOverlapDisplay : UserControl
     {
         InitializeComponent();
         Logger = Locator.Current.GetRequiredService<ILoggerFactory>().CreateLogger<IpOverlapDisplay>();
-
-        var foo = new RuleIpRange[] { new RuleIpRange(0, uint.MaxValue) };
-        IpRanges = foo;
-        ComparisonRanges = foo;
     }
 
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
