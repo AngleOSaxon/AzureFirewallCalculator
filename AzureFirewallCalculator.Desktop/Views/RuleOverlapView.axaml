@@ -81,9 +81,9 @@
                     <TextBlock Grid.Column="4" Grid.Row="0" Text="Ports" />
                     <TextBlock Grid.Column="5" Grid.Row="0" Text="Overall Overlap" />
 
-                    <controls:DisplayMatchedIps Grid.Column="1" Grid.Row="1" Ips="{Binding OverlapSummary.SourceRule.SourceIps}" ExactMatchOnly="{x:False}" />
-                    <controls:DisplayMatchedIps Grid.Column="2" Grid.Row="1" Ips="{Binding OverlapSummary.SourceRule.AllDestinationIps}" ExactMatchOnly="{x:False}" />
-                    <ContentControl Grid.Column="3" Grid.Row="1" Content="{Binding OverlapSummary}">
+                    <controls:DisplayMatchedIps Grid.Column="1" Grid.Row="1" Ips="{Binding OverlapSummary.SourceRule.SourceIps}" Matches="{Binding MatchedSources}" ExactMatchOnly="{x:False}" />
+                    <controls:DisplayMatchedIps Grid.Column="2" Grid.Row="1" Ips="{Binding OverlapSummary.SourceRule.AllDestinationIps}" Matches="{Binding MatchedDestinations}" ExactMatchOnly="{x:False}" />
+                    <ContentControl Grid.Column="3" Grid.Row="1" Content="{Binding $parent[DockPanel].((vm:RuleOverlapViewModel)DataContext)}">
                         <ContentControl.ContentTemplate>
                             <dataTemplates:MatchedNetworkProtocolTemplate />
                         </ContentControl.ContentTemplate>
@@ -92,12 +92,12 @@
                         <ItemsRepeater.ItemTemplate>
                             <DataTemplate x:CompileBindings="False">
                                 <SelectableTextBlock Text="{Binding}" x:CompileBindings="False">
-                                    <!-- <SelectableTextBlock.FontWeight>
+                                    <SelectableTextBlock.FontWeight>
                                         <MultiBinding Converter="{StaticResource MatchFontWeightConverter}">
                                             <Binding Path="." />
-                                            <Binding RelativeSource="{RelativeSource AncestorType=ItemsRepeater}" Path="DataContext.OverlappingPorts"/>
+                                            <Binding RelativeSource="{RelativeSource AncestorType=DockPanel}" Path="DataContext.MatchedPorts"/>
                                         </MultiBinding>
-                                    </SelectableTextBlock.FontWeight> -->
+                                    </SelectableTextBlock.FontWeight>
                                 </SelectableTextBlock>
                             </DataTemplate>
                         </ItemsRepeater.ItemTemplate>

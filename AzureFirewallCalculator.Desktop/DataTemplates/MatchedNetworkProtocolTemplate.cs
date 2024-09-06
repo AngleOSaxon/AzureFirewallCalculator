@@ -7,6 +7,7 @@ using Avalonia.Controls.Documents;
 using Avalonia.Controls.Templates;
 using Avalonia.Media;
 using AzureFirewallCalculator.Core;
+using AzureFirewallCalculator.Desktop.ViewModels;
 
 namespace AzureFirewallCalculator.Desktop.DataTemplates;
 
@@ -19,6 +20,7 @@ public class MatchedNetworkProtocolTemplate : IDataTemplate
             NetworkRuleMatch match => (match.Rule.NetworkProtocols, match.MatchedProtocols),
             Overlap overlap => (overlap.OverlappingRule.NetworkProtocols, overlap.OverlappingProtocols),
             OverlapSummary overlapSummary => (overlapSummary.SourceRule.NetworkProtocols, NetworkProtocols.None),
+            RuleOverlapViewModel overlapViewModel => (overlapViewModel?.SelectedRule?.NetworkProtocols ?? NetworkProtocols.None, overlapViewModel?.MatchedNetworkProtocols ?? NetworkProtocols.None),
             (NetworkProtocols suppliedProtocols, NetworkProtocols suppliedMatches) => (suppliedProtocols, suppliedMatches),
             _ => throw new InvalidOperationException($"Template {nameof(MatchedNetworkProtocolTemplate)} expects an object of type {nameof(NetworkRuleMatch)} or of type {nameof(Overlap)}, but received object of type {param?.GetType().FullName}")
         };
@@ -54,5 +56,5 @@ public class MatchedNetworkProtocolTemplate : IDataTemplate
         return block;
     }
 
-    public bool Match(object? data) => data is NetworkRuleMatch || data is Overlap || data is OverlapSummary || data is (NetworkProtocols, NetworkProtocols);
+    public bool Match(object? data) => data is NetworkRuleMatch || data is Overlap || data is OverlapSummary || data is RuleOverlapViewModel || data is (NetworkProtocols, NetworkProtocols);
 }

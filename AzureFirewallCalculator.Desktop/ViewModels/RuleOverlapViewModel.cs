@@ -57,6 +57,34 @@ public class RuleOverlapViewModel : ReactiveObject, IRoutableViewModel
         }
     }
 
+    private RuleIpRange[] matchedSources = [];
+    public RuleIpRange[] MatchedSources
+    {
+        get { return matchedSources; }
+        set { this.RaiseAndSetIfChanged(ref matchedSources, value); }
+    }
+    
+    private RuleIpRange[] matchedDestinations = [];
+    public RuleIpRange[] MatchedDestinations
+    {
+        get { return matchedDestinations; }
+        set { this.RaiseAndSetIfChanged(ref matchedDestinations, value); }
+    }
+
+    private RulePortRange[] matchedPorts = [];
+    public RulePortRange[] MatchedPorts
+    {
+        get { return matchedPorts; }
+        set { this.RaiseAndSetIfChanged(ref matchedPorts, value); }
+    }
+
+    private NetworkProtocols matchedNetworkProtocols = NetworkProtocols.None;
+    public NetworkProtocols MatchedNetworkProtocols
+    {
+        get { return matchedNetworkProtocols; }
+        set { this.RaiseAndSetIfChanged(ref matchedNetworkProtocols, value); }
+    }
+
     public RuleOverlapViewModel(Firewall firewall, IDnsResolver dnsResolver, IScreen hostScreen)
     {
         Firewall = firewall;
@@ -75,6 +103,10 @@ public class RuleOverlapViewModel : ReactiveObject, IRoutableViewModel
         {
             return OverlapAnalyzer.CheckForOverlap(networkRule, [.. NetworkRules]);
         });
+        MatchedSources = [ ..overlap.Overlaps.SelectMany(item => item.OverlappingSourceRanges).DistinctBy(item => (item.Start, item.End)) ];
+        MatchedDestinations = [ ..overlap.Overlaps.SelectMany(item => item.OverlappingDestinationRanges).DistinctBy(item => (item.Start, item.End)) ];
+        MatchedPorts = [ ..overlap.Overlaps.SelectMany(item => item.OverlappingPorts).Distinct() ];
+        MatchedNetworkProtocols = overlap.Overlaps.Aggregate(seed: NetworkProtocols.None, (matchedProtocols, overlap) => overlap.OverlappingProtocols | matchedProtocols);
         OverlapSummary = overlap;
     }
 }
