@@ -131,6 +131,16 @@ public partial class IpRangeDisplay : UserControl
         return base.MeasureOverride(availableSize);
     }
 
+    public void SetPointerOver()
+    {
+        this.PseudoClasses.Add(":pointerover");
+    }
+
+    public void UnsetPointerOver()
+    {
+        this.PseudoClasses.Remove(":pointerover");
+    }
+
     private Shape IpShape => Range.Start == Range.End ? SingleIp : IpBlock;
 
     // I want the range to appear selected once focused

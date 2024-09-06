@@ -6,11 +6,15 @@
     xmlns:controls="using:AzureFirewallCalculator.Desktop.Controls"
     x:Class="AzureFirewallCalculator.Desktop.Controls.IpRangeDisplay">
     <UserControl.Styles>
-        <Style Selector=":is(Shape).RangeDisplayShape">
+        <Style Selector="controls|IpRangeDisplay">
             <Style Selector="^:pointerover, ^.Selected">
-                <Setter Property="Opacity" Value="0.5" />
-                <Setter Property="OpacityMask" Value="Black" />
+                <Style Selector="^ :is(Shape).RangeDisplayShape">
+                    <Setter Property="Opacity" Value="0.5" />
+                    <Setter Property="OpacityMask" Value="Black" />
+                </Style>
             </Style>
+        </Style>
+        <Style Selector=":is(Shape).RangeDisplayShape">
             <Style Selector="^.Selected">
                 <Setter Property="StrokeThickness" Value="1" />
                 <Setter Property="Stroke" Value="Black" />
@@ -32,7 +36,7 @@
             <Setter Property="BorderBrush" Value="Black" />
         </Style>
     </UserControl.Styles>
-    <Panel>
+    <Panel x:Name="IpShapeContainer">
         <Rectangle x:Name="IpBlock" Classes="RangeDisplayShape" ToolTip.Placement="Bottom" ToolTip.VerticalOffset="0" Focusable="True">
             <ToolTip.Tip>
                 <controls:IpRangeToolTip />

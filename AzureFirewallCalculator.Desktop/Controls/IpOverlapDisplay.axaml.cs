@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Numerics;
 using Avalonia;
@@ -201,7 +200,7 @@ public partial class IpOverlapDisplay : UserControl
         // for a drawable range region.
         // We position the Displayable range according to its EffectiveRange (ie, the range after it has been bounded
         // to fit inside the comparison range) inside the drawable region, working out the appropriate sizing ratio
-        // to apply so that the resulting range positions will take up all available space inside the drawable range region but
+        // to apply so that the resulting range positions may take up all available space inside the drawable range region but
         // not go beyond it.  Positions are then assigned to each EffectiveRange relative to the start point of the Canvas.
         // Once that is completed for all DisplayableRanges, we go through each one and apply the ratio for the total drawable
         // region and give them their final positions on the Canvas.
@@ -209,7 +208,6 @@ public partial class IpOverlapDisplay : UserControl
         // This prevents the drawn ranges from drifting due to inconsistencies in how minimum display sizes, gap sizes, 
         // and large numbers of rules are handled.  Particularly it ensures rules will display IPs in the same
         // position relative to other rules, so long as the control width is consistent.
-
 
         var controlWidth = finalSize.Width;
 
@@ -292,22 +290,30 @@ public partial class IpOverlapDisplay : UserControl
             }
         }
 
-        var pen1 = new Pen(new SolidColorBrush(Color.FromRgb(r: 255, g: 0, b: 0)));
-        var pen2 = new Pen(new SolidColorBrush(Color.FromRgb(r: 0, g: 255, b: 0)));
-        var pen3 = new Pen(new SolidColorBrush(Color.FromRgb(r: 0, g: 0, b: 255)));
-        var gapPen = new Pen(new SolidColorBrush(Color.FromRgb(r: 127, g: 127, b: 127), 0));
-        int count = 0;
+        Pen[] pens = [
+            new Pen(new SolidColorBrush(Color.FromRgb(r: 255, g: 0, b: 0))),
+            new Pen(new SolidColorBrush(Color.FromRgb(r: 0, g: 255, b: 0))),
+            new Pen(new SolidColorBrush(Color.FromRgb(r: 0, g: 0, b: 255))),
+            new Pen(new SolidColorBrush(Color.FromRgb(r: 255, g: 0, b: 255))),
+        ];
+
+        Dictionary<RuleIpRange, Pen> penLookup = [];
+        int penCount = 0;
+        Pen getPenByRange(RuleIpRange range)
+        {
+            var hash = range.GetHashCode();
+            if (penLookup.TryGetValue(range, out Pen? value))
+            {
+                return value;
+            }
+            penLookup[range] = pens[penCount++ % pens.Length];
+
+            return penLookup[range];
+        }
+
         foreach (var (startPosition, endPosition, range) in positionedEffectiveRanges)
         {
-            var pen = range.Gap 
-                ? gapPen 
-                : (count++ % 3) switch
-                    {
-                        0 => pen1,
-                        1 => pen2,
-                        2 => pen3,
-                        _ => pen1
-                    };
+            var pen = getPenByRange(range.Range);
             var heightStart = range.Depth * RangeHeight + (VerticalMargin * range.Depth);
             var adjustedStart = startPosition * ratio;
             var adjustedEnd = endPosition * ratio;
@@ -328,6 +334,22 @@ public partial class IpOverlapDisplay : UserControl
                 Height = RangeHeight,
                 Width = length
             };
+            display.AddHandler(PointerEnteredEvent, (sender, e) =>
+            {
+                var displaysForRange = RangeDisplay.Children.Where(item => item is IpRangeDisplay rangeDisplay && rangeDisplay.Range == display.Range).Cast<IpRangeDisplay>();
+                foreach (var rangeDisplay in displaysForRange)
+                {
+                    rangeDisplay.SetPointerOver();
+                }
+            });
+            display.AddHandler(PointerExitedEvent, (sender, e) =>
+            {
+                var displaysForRange = RangeDisplay.Children.Where(item => item is IpRangeDisplay rangeDisplay && rangeDisplay.Range == display.Range).Cast<IpRangeDisplay>();
+                foreach (var rangeDisplay in displaysForRange)
+                {
+                    rangeDisplay.UnsetPointerOver();
+                }
+            });
             Canvas.SetLeft(display, adjustedStart);
             Canvas.SetTop(display, heightStart);
             if (!range.Gap)
@@ -361,12 +383,14 @@ public partial class IpOverlapDisplay : UserControl
     }
 
     /// <summary>
-    /// Contains the necessary information to display a range so that its overlaps with other
-    /// IP ranges will be visible
+    /// Contains the necessary information to display a range at a given depth and contained inside
+    /// a comparison range.  A single range may be broken up into multiple <see cref="DisplayableRange"/> 
+    /// instances if it crosses multiple comparison ranges
     /// </summary>
     /// <param name="range">The IP range that will be displayed</param>
     /// <param name="depth">What depth the <paramref name="range"/> needs to appear at, to avoid being drawn on top of other ranges</param>
     /// <param name="gap">Whether this merely represents a gap between ranges</param>
+    /// <param name="effectiveRange">The portion of the <paramref name="range"/> that fits inside the relevant comparison range
     private class DisplayableRange(RuleIpRange range, int depth, bool gap, RuleIpRange effectiveRange)
     {
         public RuleIpRange Range { get; set; } = range;
