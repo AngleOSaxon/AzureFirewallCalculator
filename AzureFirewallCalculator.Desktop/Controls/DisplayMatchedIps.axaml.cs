@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Avalonia;
+using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Controls;
 using Avalonia.Controls.Documents;
@@ -79,29 +80,45 @@ public partial class DisplayMatchedIps : UserControl
             return;
         }
 
-        IpDisplay.Inlines = [
-            ..Ips
-                .OrderBy(item => item.Start)
-                .ThenBy(item => item.End)
-                .Aggregate(new List<Inline>(), (controls, item) =>
-                {
-                    static bool ExactMatch(IEnumerable<RuleIpRange> values, RuleIpRange item) => values.Contains(item);
-                    static bool ContainedMatch(IEnumerable<RuleIpRange> values, RuleIpRange item) => values.Any(value => value.Contains(item));
+        IpDisplay.Children.Clear();
+        foreach (var ip in Ips.OrderBy(item => item.Start).ThenBy(item => item.End))
+        {
+            static bool ExactMatch(IEnumerable<RuleIpRange> values, RuleIpRange item) => values.Contains(item);
+            static bool ContainedMatch(IEnumerable<RuleIpRange> values, RuleIpRange item) => values.Any(value => value.Contains(item));
 
-                    Func<IEnumerable<RuleIpRange>, RuleIpRange, bool> shouldBold = ExactMatchOnly ? ExactMatch : ContainedMatch;
+            Func<IEnumerable<RuleIpRange>, RuleIpRange, bool> shouldBold = ExactMatchOnly ? ExactMatch : ContainedMatch;
 
-                    var weight = shouldBold(Matches, item)
-                        ? FontWeight.ExtraBold
-                        : FontWeight.Normal;
+            var weight = shouldBold(Matches, ip)
+                ? FontWeight.ExtraBold
+                : FontWeight.Normal;
 
-                    controls.Add(new Run(item.ToString())
-                    {
-                        FontWeight = weight
-                    });
-                    controls.Add(new LineBreak());
-                    return controls;
-                })
-                .SkipLast(1)
-        ];
+            var panel = new StackPanel
+            {
+                Orientation = Orientation.Horizontal
+            };
+
+            var rangeText = new SelectableTextBlock()
+            {
+                Text = ip.ToString(),
+                FontWeight = weight
+            };
+            
+            panel.Children.Add(rangeText);
+
+            var icon = new PathIcon()
+            {
+                Data = Icons.Notepad
+            };
+
+            var tooltip = new IpRangeToolTip()
+            {
+                Range = ip
+            };
+
+            ToolTip.SetTip(icon, tooltip);
+            panel.Children.Add(icon);
+
+            IpDisplay.Children.Add(panel);
+        }
     }
 }

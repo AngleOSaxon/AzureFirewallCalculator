@@ -2,9 +2,14 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using:AzureFirewallCalculator.Desktop.Controls"
     mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
     x:Class="AzureFirewallCalculator.Desktop.Controls.DisplayMatchedIps">
   <UserControl.Styles>
-    </UserControl.Styles>
-    <SelectableTextBlock Name="IpDisplay" />
+    <Style Selector="controls|IpRangeToolTip Polyline.IpRangePointer">
+      <Setter Property="IsVisible" Value="{x:False}" />
+    </Style>
+  </UserControl.Styles>
+  <StackPanel x:Name="IpDisplay" Orientation="Vertical">
+  </StackPanel>
 </UserControl>

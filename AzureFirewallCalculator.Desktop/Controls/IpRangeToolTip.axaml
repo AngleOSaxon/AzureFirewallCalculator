@@ -8,7 +8,7 @@
     <StackPanel Orientation="Vertical" x:Name="IpRangeDetails" Focusable="True">
         <!--TODO: Overlap these slightly to produce a nicer point, *or* draw a better polygon that doubles as a border-->
         <!--TODO: Adjust colors and opacities to work with dark mode-->
-        <Polyline HorizontalAlignment="Center" Points="0,8 5,0 10,8" StrokeThickness="1" Stroke="Black" />
+        <Polyline Classes="IpRangePointer" HorizontalAlignment="Center" Points="0,8 5,0 10,8" StrokeThickness="1" Stroke="Black" />
         <Border Classes="IpRangeDetails">
             <Grid ColumnDefinitions="1*,4*" RowDefinitions="1*, 1*, 1*" Classes="IpRangeDetails" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
                 <SelectableTextBlock Classes="TooltipRow Header" Grid.Column="0" Grid.Row="0" Text="Range: " />
