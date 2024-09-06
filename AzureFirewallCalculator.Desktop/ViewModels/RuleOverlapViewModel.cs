@@ -31,9 +31,6 @@ public class RuleOverlapViewModel : ReactiveObject, IRoutableViewModel
 
     public RoutingState Router { get; } = new RoutingState();
 
-    // public AvaloniaList<object> OverlapSummaries { get; } = [];
-
-    //public OverlapSummary? OverlapSummary { get; set; }
     private OverlapSummary? overlapSummary;
     public OverlapSummary? OverlapSummary
     {
@@ -43,11 +40,6 @@ public class RuleOverlapViewModel : ReactiveObject, IRoutableViewModel
             this.RaiseAndSetIfChanged(ref overlapSummary, value);
         }
     }
-    
-
-    public AutoCompleteFilterPredicate<object?> AutoCompleteFilterPredicate { get; init; }
-
-    public AutoCompleteSelector<object?> AutoCompleteSelector { get; init; }
 
     private Task CalculatingOverlaps = Task.CompletedTask;
 
@@ -70,20 +62,8 @@ public class RuleOverlapViewModel : ReactiveObject, IRoutableViewModel
         Firewall = firewall;
         DnsResolver = dnsResolver;
         HostScreen = hostScreen;
-        AutoCompleteFilterPredicate = new AutoCompleteFilterPredicate<object?>(Filter);
-        AutoCompleteSelector = new AutoCompleteSelector<object?>((searchText, item) => (item as NetworkRule)?.Name ?? "Unknown type");
 
         NetworkRules.AddRange(firewall.NetworkRuleCollections.SelectMany(item => item.Rules));
-    }
-
-    public bool Filter(string? searchText, object? rule)
-    {
-        if (string.IsNullOrWhiteSpace(searchText))
-        {
-            return false;
-        }
-
-        return (rule as NetworkRule)?.Name.Contains(searchText, StringComparison.CurrentCultureIgnoreCase) ?? false;
     }
 
     public async Task CalculateOverlaps(NetworkRule networkRule)

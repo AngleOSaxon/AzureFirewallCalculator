@@ -56,7 +56,8 @@
         <Grid DockPanel.Dock="Top" ColumnDefinitions="150,300" RowDefinitions="Auto">
             <TextBlock Grid.Column="0" Grid.Row="0" Text="Select rule: " />
             <AutoCompleteBox Grid.Column="1" Grid.Row="1" 
-                ItemsSource="{Binding NetworkRules}" FilterMode="Custom" ItemSelector="{Binding AutoCompleteSelector}" ItemFilter="{Binding AutoCompleteFilterPredicate}"
+                ValueMemberBinding="{Binding Name, x:DataType=core:NetworkRule}"
+                ItemsSource="{Binding NetworkRules}" FilterMode="ContainsOrdinal"
                 SelectedItem="{Binding SelectedRule}">
                 <AutoCompleteBox.ItemTemplate>
                     <DataTemplate x:DataType="core:NetworkRule">
