@@ -176,7 +176,8 @@ public class LoadFromArmViewModel : ReactiveObject, IRoutableViewModel, IScreen
 
         await Load("Loading firewall...", async () =>
         {
-            var ipGroups = await ArmService.GetIpGroups(firewall);
+            var policyRules = await ArmService.GetFirewallPolicyRulesAsync(firewall);
+            var ipGroups = await ArmService.GetIpGroups(firewall, policyRules);
             var serviceTags = await ArmService.GetServiceTags(Subscription, firewall.Location);
 
             serviceTags ??= await Core.Tags.ServiceTagImporter.GetServiceTags(DateTimeOffset.UtcNow);
@@ -186,7 +187,7 @@ public class LoadFromArmViewModel : ReactiveObject, IRoutableViewModel, IScreen
                 Logger.LogError("Unable to load service tags.  Rules using service tags will not be processed properly.");
             }
 
-            ConvertedFirewall = await ArmService.ConvertToFirewall(firewall, ipGroups, serviceTags ?? Array.Empty<ServiceTag>());
+            ConvertedFirewall = await ArmService.ConvertToFirewall(firewall, ipGroups, policyRules, serviceTags ?? Array.Empty<ServiceTag>());
             await Router.NavigateAndReset.Execute(new LoadedFirewallViewModel(ConvertedFirewall, DnsResolver, this));
         });
     }

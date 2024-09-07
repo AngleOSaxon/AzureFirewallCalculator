@@ -2,6 +2,7 @@ using Azure.ResourceManager;
 using Azure.ResourceManager.Resources;
 using Azure.ResourceManager.Network;
 using Azure.ResourceManager.Network.Models;
+using ArmNetworkModels = Azure.ResourceManager.Network.Models;
 using Azure.Core;
 using AzureFirewallCalculator.Core.Dns;
 using AzureFirewallCalculator.Core.Tags;
@@ -66,9 +67,73 @@ public class ArmService(ArmClient client, CachingResolver dnsResolver, ILogger<A
         })) ?? [];
     }
 
-    public async Task<List<IPGroupData>> GetIpGroups(AzureFirewallData firewall)
+    public async Task<List<(FirewallPolicyRuleCollectionGroupData collectionGroup, List<FirewallPolicyFilterRuleCollectionInfo> rules)>> GetFirewallPolicyRulesAsync(AzureFirewallData firewall)
     {
-        return (await Cache.GetOrCreateAsync(firewall, async (entry) =>
+        // If firewall policy not in use, FirewallPolicyId will be null regardless of what the type system says
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
+        if (firewall.FirewallPolicyId == ResourceIdentifier.Root || firewall.FirewallPolicyId == null)
+        {
+            return [];
+        }
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
+        return await Cache.GetOrCreateAsync(firewall.FirewallPolicyId, async (entry) =>
+        {
+            try
+            {
+                entry.ExpirationTokens.Add(new CancellationChangeToken(cacheEviction.Token));
+                var policyResource = Client.GetFirewallPolicyResource(firewall.FirewallPolicyId);
+                var policy = (await policyResource.GetAsync()).Value.Data;
+                var policyChildren = await Task.WhenAll(policy.ChildPolicies.Select(item => policyResource.GetAsync(item.Id)));
+
+                var ruleCollectionGroupsTasks = policy.RuleCollectionGroups.Select(item => policyResource.GetFirewallPolicyRuleCollectionGroupAsync(item.Id.Name))
+                    // TODO: Recursion.  Nothing stopping child policies from having children
+                    .Concat(policyChildren.SelectMany(childPolicy => childPolicy.Value.Data.RuleCollectionGroups.Select(ruleCollection => Client.GetFirewallPolicyResource(childPolicy.Value.Id).GetFirewallPolicyRuleCollectionGroupAsync(ruleCollection.Id.Name))));
+                
+                var ruleCollectionGroups = await Task.WhenAll(ruleCollectionGroupsTasks);
+
+                return ruleCollectionGroups.Select(item =>
+                {
+                    List<FirewallPolicyFilterRuleCollectionInfo> rules = [];
+                    foreach (var ruleCollection in item.Value.Data.RuleCollections)
+                    {
+                        if (ruleCollection is not FirewallPolicyFilterRuleCollectionInfo filterRuleCollection)
+                        {
+                            continue;
+                        }
+
+                        rules.Add(filterRuleCollection);
+                    }
+                    return (item.Value.Data, rules);
+                }).ToList();
+            }
+            catch (Exception e)
+            {
+                Logger.LogError(e, "Error loading Firewall Policy");
+                return [];
+            }
+        }) ?? [];
+    }
+
+    public async Task<List<IPGroupData>> GetIpGroups(AzureFirewallData firewall, List<(FirewallPolicyRuleCollectionGroupData collectionGroup, List<FirewallPolicyFilterRuleCollectionInfo> rules)> policyRules)
+    {
+        static IEnumerable<ResourceIdentifier> GetIpGroupsFromPolicyRules(FirewallPolicyFilterRuleCollectionInfo ruleCollection)
+        {
+            return ruleCollection.Rules.SelectMany(rule =>
+            {
+                if (rule is Azure.ResourceManager.Network.Models.NetworkRule networkRule)
+                {
+                    return networkRule.SourceIPGroups.Concat(networkRule.DestinationIPGroups);
+                }
+                else if (rule is Azure.ResourceManager.Network.Models.ApplicationRule applicationRule)
+                {
+                    return applicationRule.SourceIPGroups;
+                }
+                return [];
+            })
+            .Distinct()
+            .Select(item => new ResourceIdentifier(item));
+        }
+        return (await Cache.GetOrCreateAsync((firewall, policyRules), async (entry) =>
         {
             entry.ExpirationTokens.Add(new CancellationChangeToken(cacheEviction.Token));
             var ipGroups = new List<IPGroupData>();
@@ -89,6 +154,7 @@ public class ArmService(ArmClient client, CachingResolver dnsResolver, ILogger<A
                         .SelectMany(item => item.SourceIPGroups.Select(item => new ResourceIdentifier(item).SubscriptionId))
                         )
                     )
+                .Concat(policyRules.SelectMany(item => item.rules.SelectMany(item => GetIpGroupsFromPolicyRules(item)).Select(item => item.SubscriptionId)))
                 .Distinct();
             var subscriptions = Client.GetSubscriptions();
             foreach (var subscriptionId in referencedSubscriptions)
@@ -135,9 +201,9 @@ public class ArmService(ArmClient client, CachingResolver dnsResolver, ILogger<A
         })) ?? [];
     }
 
-    public async Task<Firewall> ConvertToFirewall(AzureFirewallData firewallData, List<IPGroupData> allIpGroups, ServiceTag[] serviceTags)
+    public async Task<Firewall> ConvertToFirewall(AzureFirewallData firewallData, List<IPGroupData> allIpGroups, List<(FirewallPolicyRuleCollectionGroupData collectionGroup, List<FirewallPolicyFilterRuleCollectionInfo> rules)> policyRules, ServiceTag[] serviceTags)
     {
-        return await Cache.GetOrCreateAsync((firewallData, allIpGroups, serviceTags), async (entry) =>
+        return await Cache.GetOrCreateAsync((firewallData, allIpGroups, policyRules, serviceTags), async (entry) =>
         {
             entry.ExpirationTokens.Add(new CancellationChangeToken(cacheEviction.Token));
             var ipGroups = allIpGroups.ToDictionary(item => item.Id.ToString(), StringComparer.CurrentCultureIgnoreCase);
@@ -203,6 +269,32 @@ public class ArmService(ArmClient client, CachingResolver dnsResolver, ILogger<A
                                 );
                             })]
                     ));
+            var policyNetworkCollections = policyRules.SelectMany(item => item.rules.Select(collection => new NetworkRuleCollection
+            (
+                name: collection.Name,
+                priority: collection.Priority ?? 0,
+                action: GetRuleAction(collection.ActionType),
+                rules: [.. collection.Rules.Where(rule => rule.GetType() == typeof(ArmNetworkModels.NetworkRule)).Cast<ArmNetworkModels.NetworkRule>().Select(rule => new NetworkRule(
+                    name: rule.Name,
+                    sourceIps: rule.SourceIPGroups
+                        .SelectMany(SafeGetIpGroupRules)
+                        .Concat(GetAddressRules(rule.SourceAddresses))
+                        .ToArray(),
+                    destinationIps: rule.DestinationIPGroups
+                        .SelectMany(SafeGetIpGroupRules)
+                        .Concat(GetAddressRules(rule.DestinationAddresses, serviceTags))
+                        .ToArray(),
+                    destinationFqdns: [.. rule.DestinationFqdns],
+                    destinationPorts: rule.DestinationPorts
+                        .Select(item => RulePortRange.Parse(item, Logger)!)
+                        .Where(item => item is not null)
+                        .Cast<RulePortRange>()
+                        .ToArray(),
+                    networkProtocols: Utils.ParseNetworkProtocols(rule.IPProtocols.Select(item => item.ToString()).ToArray()),
+                    dnsResolver: DnsResolver
+                ))]
+            )));
+
 
             var applicationRuleCollections = firewallData.ApplicationRuleCollections
                 .Select(collection => new ApplicationRuleCollection
@@ -224,9 +316,26 @@ public class ArmService(ArmClient client, CachingResolver dnsResolver, ILogger<A
                         )).ToArray())
                 ).ToArray();
 
+            var policyApplicationCollections = policyRules.SelectMany(item => item.rules.Select(collection => new ApplicationRuleCollection
+            (
+                name: collection.Name,
+                priority: collection.Priority ?? 0,
+                action: GetRuleAction(collection.ActionType),
+                rules: [.. collection.Rules.Where(rule => rule.GetType() == typeof(ArmNetworkModels.ApplicationRule)).Cast<ArmNetworkModels.ApplicationRule>().Select(item => new ApplicationRule(
+                    name: item.Name,
+                    sourceIps: item.SourceIPGroups
+                        .SelectMany(SafeGetIpGroupRules)
+                        .Concat(GetAddressRules(item.SourceAddresses))
+                        .ToArray(),
+                    destinationFqdns: item.TargetFqdns.ToArray(),
+                    destinationTags: item.FqdnTags.ToArray(),
+                    protocols: item.Protocols.Select(item => new ApplicationProtocolPort(Protocol: GetApplicationProtocol(item.ProtocolType), Port: (ushort)(item.Port ?? 0))).ToArray()
+                ))]
+            )));
+
             return new Firewall(
-                NetworkRuleCollections: [.. networkRuleCollections],
-                ApplicationRuleCollections: [.. applicationRuleCollections]
+                NetworkRuleCollections: [.. networkRuleCollections.Concat(policyNetworkCollections)],
+                ApplicationRuleCollections: [.. applicationRuleCollections.Concat(policyApplicationCollections)]
             );
         }) ?? throw new NullReferenceException("This shouldn't be possible");
     }
@@ -251,6 +360,19 @@ public class ArmService(ArmClient client, CachingResolver dnsResolver, ILogger<A
         throw new ArgumentException($"Unexpected Action '{action}'");
     }
 
+    private static RuleAction GetRuleAction(FirewallPolicyFilterRuleCollectionActionType? action)
+    {
+        if (action == FirewallPolicyFilterRuleCollectionActionType.Allow)
+        {
+            return RuleAction.Allow;
+        }
+        else if (action == FirewallPolicyFilterRuleCollectionActionType.Deny)
+        {
+            return RuleAction.Deny;
+        }
+        throw new ArgumentException($"Unexpected Action '{action}'");
+    }
+
     private static ApplicationProtocol GetApplicationProtocol(AzureFirewallApplicationRuleProtocolType? protocolType)
     {
         if (protocolType == AzureFirewallApplicationRuleProtocolType.Mssql)
@@ -262,6 +384,24 @@ public class ArmService(ArmClient client, CachingResolver dnsResolver, ILogger<A
             return ApplicationProtocol.Https;
         }
         else if (protocolType == AzureFirewallApplicationRuleProtocolType.Http)
+        {
+            return ApplicationProtocol.Http;
+        }
+
+        throw new ArgumentException($"Unexpected Application Protocol '{protocolType}'");
+    }
+
+    private static ApplicationProtocol GetApplicationProtocol(FirewallPolicyRuleApplicationProtocolType? protocolType)
+    {
+        if (protocolType == "Mssql") // No constant defined for this one, apparently
+        {
+            return ApplicationProtocol.Mssql;
+        }
+        else if (protocolType == FirewallPolicyRuleApplicationProtocolType.Https)
+        {
+            return ApplicationProtocol.Https;
+        }
+        else if (protocolType == FirewallPolicyRuleApplicationProtocolType.Http)
         {
             return ApplicationProtocol.Http;
         }
