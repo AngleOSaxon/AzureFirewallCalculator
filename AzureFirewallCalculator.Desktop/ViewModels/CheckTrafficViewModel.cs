@@ -62,6 +62,10 @@ public class CheckTrafficViewModel : ReactiveObject, IRoutableViewModel, INotify
         ResolvedIps.Clear();
         Warnings.Clear();
 
+        Source = Source.Trim();
+        Destination = Destination.Trim();
+        DestinationPort = DestinationPort.Trim();
+
         var sourceIpValidationResult = await ValidateIpAddress(Source);
         (IEnumerable<uint?>? numericSourceIps, bool sourceIpDnsResolved) = sourceIpValidationResult.Match(
             errors => 
