@@ -17,7 +17,7 @@ public class MatchFontWeightConverter : IMultiValueConverter
         {
             throw new ArgumentException($"Invalid input values for '{nameof(MatchFontWeightConverter)}'. ({(values == null ? "null" : values.Count)}) values.");
         }
-        if (values[0]?.GetType() == typeof(UnsetValueType) || values[1]?.GetType() == typeof(UnsetValueType))
+        if (values.Any(item => item == null || item.GetType() == typeof(UnsetValueType)))
         {
             return FontWeight.Regular;
         }
