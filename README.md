@@ -8,7 +8,7 @@ A cross-platform desktop app that will load an Azure Firewall instance, allow yo
 that will be hit and why they will be hit.  I built it because my day job has a large and complex set of rules and I wanted a way to figure
 out what rules would be applied and why without needing to actually generate traffic.
 
-Only supports Classic Rules currently, not Firewall Manager.
+Only supports Classic Rules currently, with preliminary support for Firewall Policies.
 
 ## How do I use it?
 
@@ -33,15 +33,12 @@ Load a firewall's configuration one of two ways:
 - Resolves names in Source and Destination fields
 - Wildcard searches (using `*`) in Source and Destination
 - Static DNS configuration
+- Displays overlap between rules
 
 ### Missing features
 
 - Does not support any rule-matching related to TargetUrl in HTTP requests
-- Does not support Firewall Manager rulesets
-- Does not support [FQDN Tags](https://learn.microsoft.com/en-us/azure/firewall/fqdn-tags), primarily because I can't find a source to load the tag values from
-
-## Other Notes
-
-The working version of the app is an AvaloniaUI app in `AzureFirewallCalculator.Desktop`.  There is another (WebAssembly-based) version over in `AzureFirewallCalculator.BlazorWasm` 
-that has most of the same functionality, but cannot perform internal DNS lookups due to browser restrictions.  This limits its usefulness for dealing with heavily FQDN-based 
-network rules.
+- Ignores the rule collection group level and associated priority
+- Does not support loading individual policies
+- Does not recursively load child policies; only the immediate decendants of a firewall policy
+- Does not support [FQDN Tags](https://learn.microsoft.com/en-us/azure/firewall/fqdn-tags)
