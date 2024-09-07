@@ -74,39 +74,41 @@
                         <SelectableTextBlock Text="{Binding OverlapSummary.SourceRule.Name}" />
                     </StackPanel>
                 </Expander.Header>
-                <Grid ColumnDefinitions="3*,2*,2*,1*,1*,2*" RowDefinitions="Auto,Auto,Auto" Classes="Header">
-                    <TextBlock Grid.Column="1" Grid.Row="0" Text="Source IPs" />
-                    <TextBlock Grid.Column="2" Grid.Row="0" Text="Destinations" />
-                    <TextBlock Grid.Column="3" Grid.Row="0" Text="Protocols" />
-                    <TextBlock Grid.Column="4" Grid.Row="0" Text="Ports" />
-                    <TextBlock Grid.Column="5" Grid.Row="0" Text="Overall Overlap" />
+                <ScrollViewer MaxHeight="300">
+                    <Grid ColumnDefinitions="2*,2*,2*,1*,1*,2*" RowDefinitions="Auto,Auto" Classes="Header">
+                        <TextBlock Grid.Column="1" Grid.Row="0" Text="Source IPs" />
+                        <TextBlock Grid.Column="2" Grid.Row="0" Text="Destinations" />
+                        <TextBlock Grid.Column="3" Grid.Row="0" Text="Protocols" />
+                        <TextBlock Grid.Column="4" Grid.Row="0" Text="Ports" />
+                        <TextBlock Grid.Column="5" Grid.Row="0" Text="Overall Overlap" />
 
-                    <controls:DisplayMatchedIps Grid.Column="1" Grid.Row="1" Ips="{Binding OverlapSummary.SourceRule.SourceIps}" Matches="{Binding MatchedSources}" ExactMatchOnly="{x:False}" />
-                    <controls:DisplayMatchedIps Grid.Column="2" Grid.Row="1" Ips="{Binding OverlapSummary.SourceRule.AllDestinationIps}" Matches="{Binding MatchedDestinations}" ExactMatchOnly="{x:False}" />
-                    <ContentControl Grid.Column="3" Grid.Row="1" Content="{Binding $parent[DockPanel].((vm:RuleOverlapViewModel)DataContext)}">
-                        <ContentControl.ContentTemplate>
-                            <dataTemplates:MatchedNetworkProtocolTemplate />
-                        </ContentControl.ContentTemplate>
-                    </ContentControl>
-                    <ItemsRepeater Grid.Column="4" Grid.Row="1" x:Name="RuleDestinationPorts" ItemsSource="{Binding OverlapSummary.SourceRule.DestinationPorts}" x:CompileBindings="False">
-                        <ItemsRepeater.ItemTemplate>
-                            <DataTemplate x:CompileBindings="False">
-                                <SelectableTextBlock Text="{Binding}" x:CompileBindings="False">
-                                    <SelectableTextBlock.FontWeight>
-                                        <MultiBinding Converter="{StaticResource MatchFontWeightConverter}">
-                                            <Binding Path="." />
-                                            <Binding RelativeSource="{RelativeSource AncestorType=DockPanel}" Path="DataContext.MatchedPorts"/>
-                                        </MultiBinding>
-                                    </SelectableTextBlock.FontWeight>
-                                </SelectableTextBlock>
-                            </DataTemplate>
-                        </ItemsRepeater.ItemTemplate>
-                        <ItemsRepeater.Layout>
-                            <StackLayout Orientation="Vertical" />
-                        </ItemsRepeater.Layout>
-                    </ItemsRepeater>
-                    <SelectableTextBlock Grid.Column="5" Grid.Row="1" Text="{Binding OverlapSummary.CumulativeOverlap}" />
-                </Grid>
+                        <controls:DisplayMatchedIps Grid.Column="1" Grid.Row="1" Ips="{Binding OverlapSummary.SourceRule.SourceIps}" Matches="{Binding MatchedSources}" ExactMatchOnly="{x:False}" />
+                        <controls:DisplayMatchedIps Grid.Column="2" Grid.Row="1" Ips="{Binding OverlapSummary.SourceRule.AllDestinationIps}" Matches="{Binding MatchedDestinations}" ExactMatchOnly="{x:False}" />
+                        <ContentControl Grid.Column="3" Grid.Row="1" Content="{Binding $parent[DockPanel].((vm:RuleOverlapViewModel)DataContext)}">
+                            <ContentControl.ContentTemplate>
+                                <dataTemplates:MatchedNetworkProtocolTemplate />
+                            </ContentControl.ContentTemplate>
+                        </ContentControl>
+                        <ItemsRepeater Grid.Column="4" Grid.Row="1" x:Name="RuleDestinationPorts" ItemsSource="{Binding OverlapSummary.SourceRule.DestinationPorts}" x:CompileBindings="False">
+                            <ItemsRepeater.ItemTemplate>
+                                <DataTemplate x:CompileBindings="False">
+                                    <SelectableTextBlock Text="{Binding}" x:CompileBindings="False">
+                                        <SelectableTextBlock.FontWeight>
+                                            <MultiBinding Converter="{StaticResource MatchFontWeightConverter}">
+                                                <Binding Path="." />
+                                                <Binding RelativeSource="{RelativeSource AncestorType=DockPanel}" Path="DataContext.MatchedPorts"/>
+                                            </MultiBinding>
+                                        </SelectableTextBlock.FontWeight>
+                                    </SelectableTextBlock>
+                                </DataTemplate>
+                            </ItemsRepeater.ItemTemplate>
+                            <ItemsRepeater.Layout>
+                                <StackLayout Orientation="Vertical" />
+                            </ItemsRepeater.Layout>
+                        </ItemsRepeater>
+                        <SelectableTextBlock Grid.Column="5" Grid.Row="1" Text="{Binding OverlapSummary.CumulativeOverlap}" />
+                    </Grid>
+                </ScrollViewer>
             </Expander>
             <Border Classes="IpDisplayWrapper">
                 <Grid Classes="IpDisplay" ColumnDefinitions="1*,1*" RowDefinitions="Auto,Auto">
@@ -133,7 +135,7 @@
                                         <SelectableTextBlock Text="{Binding OverlappingRule.Name}" />
                                     </StackPanel>
                                 </Expander.Header>
-                                <Grid ColumnDefinitions="3*,2*,2*,1*,1*,2*" RowDefinitions="Auto,Auto,Auto" Classes="Header">
+                                <Grid ColumnDefinitions="2*,2*,2*,1*,1*,2*" RowDefinitions="Auto,Auto,Auto" Classes="Header">
                                     <TextBlock Grid.Column="1" Grid.Row="0" Text="Source IPs" />
                                     <TextBlock Grid.Column="2" Grid.Row="0" Text="Destinations" />
                                     <TextBlock Grid.Column="3" Grid.Row="0" Text="Protocols" />
