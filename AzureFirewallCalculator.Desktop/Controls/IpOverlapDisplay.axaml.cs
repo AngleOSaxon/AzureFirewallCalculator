@@ -70,10 +70,16 @@ public partial class IpOverlapDisplay : UserControl
     {
         RangeDisplay.Children.Clear();
         MaxDistanceTravelled = 0;
+
+        if (!ranges.Any() || !comparisonRanges.Any())
+        {
+            return [];
+        }
         
         var displayableRanges = CalculateDisplayableRangeDepths(ranges: ranges, comparisonRanges: comparisonRanges);
 
-        displayableRanges = CalculateRelativePositions(ranges: displayableRanges, comparisonRanges: comparisonRanges, maxDistanceTravelled: ref MaxDistanceTravelled);
+        (displayableRanges, var distanceTravelled) = CalculateRelativePositions(ranges: displayableRanges, comparisonRanges: comparisonRanges);
+        MaxDistanceTravelled = distanceTravelled;
 
         return [.. displayableRanges];
     }
@@ -275,7 +281,7 @@ public partial class IpOverlapDisplay : UserControl
         return displayableRanges;
     }
 
-    public static IEnumerable<DisplayableRange> CalculateRelativePositions(IEnumerable<DisplayableRange> ranges, IEnumerable<RuleIpRange> comparisonRanges, ref double maxDistanceTravelled)
+    public static (IEnumerable<DisplayableRange>, double maxDistanceTravelled) CalculateRelativePositions(IEnumerable<DisplayableRange> ranges, IEnumerable<RuleIpRange> comparisonRanges)
     {
         // Basic goal: to arrange all IP ranges horizontally so that they're proportionate to each other
         // and to the comparison ranges in use.  This allows them to be compared by stacking the range displays
@@ -311,7 +317,7 @@ public partial class IpOverlapDisplay : UserControl
             .Concat(comparisonRangeGaps)
             .OrderBy(item => item.EffectiveRange.Start);
         
-        maxDistanceTravelled = 0d;
+        var maxDistanceTravelled = 0d;
         List<(double startPosition, double endPosition, DisplayableRange range)> drawableRanges = new(combinedConsolidatedComparisons.Count());
         foreach (var consolidatedComparison in combinedConsolidatedComparisons)
         {
@@ -387,7 +393,7 @@ public partial class IpOverlapDisplay : UserControl
             }
         );
 
-        return consolidatedPositionedEffectiveRanges;
+        return (consolidatedPositionedEffectiveRanges, maxDistanceTravelled);
     }
 
     /// <summary>
