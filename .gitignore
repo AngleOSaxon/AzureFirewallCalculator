@@ -5,3 +5,5 @@ bin/
 Data/
 output/
 .DS_Store
+*.speedscope.json
+*.nettrace
