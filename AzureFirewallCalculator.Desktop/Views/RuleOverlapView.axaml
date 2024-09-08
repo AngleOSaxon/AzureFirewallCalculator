@@ -30,12 +30,12 @@
         </Style>
         <Style Selector="StackPanel.ComparingRule, StackPanel.OverlappingRule">
             <Style Selector="^ Border">
-                <Setter Property="BorderBrush" Value="Black" />
+                <Setter Property="BorderBrush" Value="{DynamicResource TextControlBorderBrush}" />
             </Style>
             <Style Selector="^ Border.IpDisplayWrapper">
                 <Setter Property="BorderThickness" Value="1, 0, 1, 1" />
                 <Setter Property="CornerRadius" Value="0, 0, 3, 3" />
-                <Setter Property="BorderBrush" Value="Black" />
+                <Setter Property="BorderBrush" Value="{DynamicResource TextControlBorderBrush}" />
             </Style>
             <Style Selector="^ Expander">
                 <Style Selector="^:not(:expanded) Border#ToggleButtonBackground">
@@ -45,7 +45,7 @@
                 <Style Selector="^:expanded Border#ExpanderContent">
                     <Setter Property="BorderThickness" Value="1, 0, 1, 0" />
                     <Setter Property="CornerRadius" Value="0, 0, 0, 0" />
-                    <Setter Property="Background" Value="White" />
+                    <Setter Property="Background" Value="{DynamicResource Background}" />
                 </Style>
             </Style>
         </Style>

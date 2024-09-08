@@ -5,10 +5,22 @@
     mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
     xmlns:controls="using:AzureFirewallCalculator.Desktop.Controls"
     x:Class="AzureFirewallCalculator.Desktop.Controls.IpRangeToolTip">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key='Light'>
+                    <SolidColorBrush x:Key='PolylineColor'>Black</SolidColorBrush>
+                </ResourceDictionary>
+                <ResourceDictionary x:Key='Dark'>
+                    <SolidColorBrush x:Key='PolylineColor'>White</SolidColorBrush>
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
     <StackPanel Orientation="Vertical" x:Name="IpRangeDetails" Focusable="True">
         <!--TODO: Overlap these slightly to produce a nicer point, *or* draw a better polygon that doubles as a border-->
         <!--TODO: Adjust colors and opacities to work with dark mode-->
-        <Polyline Classes="IpRangePointer" HorizontalAlignment="Center" Points="0,8 5,0 10,8" StrokeThickness="1" Stroke="Black" />
+        <Polyline Classes="IpRangePointer" HorizontalAlignment="Center" Points="0,8 5,0 10,8" StrokeThickness="1" Stroke="{DynamicResource PolylineColor}" />
         <Border Classes="IpRangeDetails">
             <Grid ColumnDefinitions="1*,4*" RowDefinitions="1*, 1*, 1*" Classes="IpRangeDetails" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
                 <SelectableTextBlock Classes="TooltipRow Header" Grid.Column="0" Grid.Row="0" Text="Range: " />

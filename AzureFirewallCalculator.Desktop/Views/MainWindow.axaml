@@ -21,10 +21,41 @@
         <vm:MainWindowViewModel/>
     </Design.DataContext>
     <Window.Resources>
-        <Converters:LogLevelConverter x:Key="LogLevelConverter"/>
-        <Converters:BoolBrushConverter x:Key="BoolBrushConverter"/>
-        <Converters:AdditionConverter x:Key="AdditionConverter"/>
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key='Light'>
+                    <SolidColorBrush x:Key='FilterButtonBackground'>LightGray</SolidColorBrush>
+                    <SolidColorBrush x:Key='InactiveFilterButtonBackground'>Transparent</SolidColorBrush>
+                    <SolidColorBrush x:Key='FilterButtonBorder'>Transparent</SolidColorBrush>
+                    <SolidColorBrush x:Key='InactiveFilterButtonBorder'>Black</SolidColorBrush>
+                    <SolidColorBrush x:Key='LogDisplayBackground'>Transparent</SolidColorBrush>
+                </ResourceDictionary>
+                <ResourceDictionary x:Key='Dark'>
+                    <SolidColorBrush x:Key='FilterButtonBackground'>#FF767676</SolidColorBrush>
+                    <SolidColorBrush x:Key='InactiveFilterButtonBackground'>Transparent</SolidColorBrush>
+                    <SolidColorBrush x:Key='FilterButtonBorder'>Transparent</SolidColorBrush>
+                    <SolidColorBrush x:Key='InactiveFilterButtonBorder'>White</SolidColorBrush>
+                    <SolidColorBrush x:Key='LogDisplayBackground'>#FF2B2B2B</SolidColorBrush>
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+            <Converters:LogLevelConverter x:Key="LogLevelConverter"/>
+            <Converters:BoolBrushConverter x:Key="BoolBrushConverter"/>
+            <Converters:AdditionConverter x:Key="AdditionConverter"/>
+        </ResourceDictionary>
     </Window.Resources>
+    <Window.Styles>
+        <Style Selector="Button.Filter">
+            <Setter Property="Background" Value="{DynamicResource InactiveFilterButtonBackground}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource InactiveFilterButtonBorder}" />
+        </Style>
+        <Style Selector="Button.Filter.Active">
+            <Setter Property="Background" Value="{DynamicResource FilterButtonBackground}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource FilterButtonBorder}" />
+        </Style>
+        <Style Selector="Border#LogDisplay">
+        <Setter Property="Background" Value="{DynamicResource LogDisplayBackground}" />
+        </Style>
+    </Window.Styles>
     <DockPanel>
         <Border Width="125" BorderBrush="Gray" BorderThickness="0,0,1,0" DockPanel.Dock="Left">
             <DockPanel LastChildFill="False">
@@ -45,38 +76,38 @@
                 <DockPanel>
                     <WrapPanel Orientation="Horizontal" DockPanel.Dock="Top">
                         <Button 
-                            Command="{Binding FilterLogsCommand}" 
-                            Background="{Binding ErrorFilterActive, Converter={StaticResource BoolBrushConverter}, ConverterParameter=LightGray;Transparent;1.0, Mode=OneWay}}"
-                            BorderBrush="{Binding ErrorFilterActive, Converter={StaticResource BoolBrushConverter}, ConverterParameter=Transparent;Black;1.0, Mode=OneWay}}"
-                            CommandParameter="Error" >
+                            Command="{Binding FilterLogsCommand}"
+                            Classes="Filter"
+                            Classes.Active="{Binding ErrorFilterActive}"
+                            CommandParameter="Error">
                             ERR
                         </Button>
                         <Button 
                             Command="{Binding FilterLogsCommand}"
-                            CommandParameter="Warning"
-                            Background="{Binding WarningFilterActive, Converter={StaticResource BoolBrushConverter}, ConverterParameter=LightGray;Transparent;1.0, Mode=OneWay}}"
-                            BorderBrush="{Binding WarningFilterActive, Converter={StaticResource BoolBrushConverter}, ConverterParameter=Transparent;Black;1.0, Mode=OneWay}}">
+                            Classes="Filter"
+                            Classes.Active="{Binding WarningFilterActive}"
+                            CommandParameter="Warning">
                             WRN
                         </Button>
                         <Button 
                             Command="{Binding FilterLogsCommand}" 
-                            CommandParameter="Debug"
-                            Background="{Binding DebugFilterActive, Converter={StaticResource BoolBrushConverter}, ConverterParameter=LightGray;Transparent;1.0, Mode=OneWay}}"
-                            BorderBrush="{Binding DebugFilterActive, Converter={StaticResource BoolBrushConverter}, ConverterParameter=Transparent;Black;1.0, Mode=OneWay}}">
+                            Classes="Filter"
+                            Classes.Active="{Binding DebugFilterActive}"
+                            CommandParameter="Debug">
                             DBG
                         </Button>
                         <Button 
-                            Command="{Binding FilterLogsCommand}" 
-                            CommandParameter="Information"
-                            Background="{Binding InformationFilterActive, Converter={StaticResource BoolBrushConverter}, ConverterParameter=LightGray;Transparent;1.0, Mode=OneWay}}"
-                            BorderBrush="{Binding InformationFilterActive, Converter={StaticResource BoolBrushConverter}, ConverterParameter=Transparent;Black;1.0, Mode=OneWay}}">
+                            Command="{Binding FilterLogsCommand}"
+                            Classes="Filter"
+                            Classes.Active="{Binding InformationFilterActive}"
+                            CommandParameter="Information">
                             INF
                         </Button>
                         <Button 
                             Command="{Binding FilterLogsCommand}" 
-                            CommandParameter="Trace"
-                            Background="{Binding TraceFilterActive, Converter={StaticResource BoolBrushConverter}, ConverterParameter=LightGray;Transparent;1.0, Mode=OneWay}}"
-                            BorderBrush="{Binding TraceFilterActive, Converter={StaticResource BoolBrushConverter}, ConverterParameter=Transparent;Black;1.0, Mode=OneWay}}">
+                            Classes="Filter"
+                            Classes.Active="{Binding TraceFilterActive}"
+                            CommandParameter="Trace">
                             TRC
                         </Button>
                     </WrapPanel>

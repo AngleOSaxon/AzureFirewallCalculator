@@ -5,6 +5,20 @@
     mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
     xmlns:controls="using:AzureFirewallCalculator.Desktop.Controls"
     x:Class="AzureFirewallCalculator.Desktop.Controls.IpRangeDisplay">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key='Light'>
+                    <SolidColorBrush x:Key='TooltipBackground'>White</SolidColorBrush>
+                    <SolidColorBrush x:Key='TooltipBorder'>Black</SolidColorBrush>
+                </ResourceDictionary>
+                <ResourceDictionary x:Key='Dark'>
+                    <SolidColorBrush x:Key='TooltipBackground'>Black</SolidColorBrush>
+                    <SolidColorBrush x:Key='TooltipBorder'>White</SolidColorBrush>
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
     <UserControl.Styles>
         <Style Selector="controls|IpRangeDisplay">
             <Style Selector="^:pointerover, ^.Selected">
@@ -21,7 +35,7 @@
             </Style>
             <Style Selector="^ ToolTip">
                 <Setter Property="CornerRadius" Value="0" />
-                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="Background" Value="{DynamicResource TooltipBackground}" />
                 <Style Selector="^:open Border">
                     <Setter Property="BorderThickness" Value="0" />
                 </Style>
@@ -31,9 +45,9 @@
             <Setter Property="Margin" Value="10" />
         </Style>
         <Style Selector="StackPanel#IpRangeDetails > Border.IpRangeDetails">
-            <Setter Property="Background" Value="White" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="BorderBrush" Value="Black" />
+            <Setter Property="Background" Value="{DynamicResource TooltipBackground}" />
+            <Setter Property="BorderThickness" Value="{DynamicResource BorderThickness}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorderLowBrush}" />
         </Style>
     </UserControl.Styles>
     <Panel x:Name="IpShapeContainer">
