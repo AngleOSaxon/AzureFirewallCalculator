@@ -20,7 +20,7 @@
         </StackPanel>
         <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
             <TextBlock Margin="20,0,5,0" Text="Loaded Firewall: " IsVisible="{Binding FirewallLoaded}" />
-            <TextBlock Margin="0,0,20,0" Text="{Binding Firewall.Value.Name}" IsVisible="{Binding FirewallLoaded}" />
+            <TextBlock Margin="0,0,20,0" Text="{Binding Firewall.Name}" IsVisible="{Binding FirewallLoaded}" />
             <TextBlock Text="IP Group Count:" IsVisible="{Binding IpGroupsLoaded}" />
             <TextBlock Margin="0,0,20,0" Text="{Binding IpGroups.Length}" IsVisible="{Binding IpGroupsLoaded}" />
             <TextBlock Text="Policy Count:" IsVisible="{Binding PoliciesLoaded}" />

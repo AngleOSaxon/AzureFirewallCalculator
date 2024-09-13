@@ -1,36 +1,37 @@
+using Azure.Core;
 using AzureFirewallCalculator.Core.Dns;
 using AzureFirewallCalculator.Core.Tags;
 using Microsoft.Extensions.Logging;
 
 namespace AzureFirewallCalculator.Core.PowershellSource;
 
-public record struct Firewall
+public record class Firewall
 {
-    public string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
 
-    public NetworkRuleCollection[] NetworkRuleCollections { get; set; }
+    public NetworkRuleCollection[] NetworkRuleCollections { get; set; } = [];
 
-    public ApplicationRuleCollection[] ApplicationRuleCollections { get; set; }
+    public ApplicationRuleCollection[] ApplicationRuleCollections { get; set; } = [];
 
-    public ResourceId FirewallPolicy { get; set; }
+    public ResourceId? FirewallPolicy { get; set; }
 
-    public readonly async Task<Core.Firewall> ConvertToFirewall(Dictionary<string, IpGroup> ipGroups, CachingResolver resolver, ILogger logger)
+    public async Task<Core.Firewall> ConvertToFirewall(Dictionary<string, IpGroup> ipGroups, CachingResolver resolver, ILogger logger)
     {
         var serviceTags = await ServiceTagImporter.GetServiceTags(DateTimeOffset.UtcNow);
         return await ConvertToFirewall(ipGroups, [], resolver, serviceTags, logger);
     }
 
-    public readonly async Task<Core.Firewall> ConvertToFirewall(Dictionary<string, IpGroup> ipGroups, Dictionary<string, Policy> policies, Dictionary<string, RuleCollectionGroup> ruleCollectionGroups, CachingResolver resolver, ILogger logger)
+    public async Task<Core.Firewall> ConvertToFirewall(Dictionary<string, IpGroup> ipGroups, Dictionary<string, Policy> policies, Dictionary<string, RuleCollectionGroup> ruleCollectionGroups, CachingResolver resolver, ILogger logger)
     {
         var serviceTags = await ServiceTagImporter.GetServiceTags(DateTimeOffset.UtcNow);
 
         return await ConvertToFirewall(ipGroups, policies, ruleCollectionGroups, resolver, serviceTags, logger);
     }
 
-    public readonly async Task<Core.Firewall> ConvertToFirewall(Dictionary<string, IpGroup> ipGroups, Dictionary<string, Policy> policies, Dictionary<string, RuleCollectionGroup> ruleCollectionGroups, CachingResolver resolver, ServiceTag[] serviceTags, ILogger logger)
+    public async Task<Core.Firewall> ConvertToFirewall(Dictionary<string, IpGroup> ipGroups, Dictionary<string, Policy> policies, Dictionary<string, RuleCollectionGroup> ruleCollectionGroups, CachingResolver resolver, ServiceTag[] serviceTags, ILogger logger)
     {
         RuleCollectionGroup[] ruleCollectionGroupsFromPolicy = [];
-        if (policies.TryGetValue(FirewallPolicy.Id, out var policy))
+        if (policies.TryGetValue(FirewallPolicy?.Id ?? string.Empty, out var policy))
         {
             ruleCollectionGroupsFromPolicy = policy.RuleCollectionGroups.Select(item => 
             {
@@ -46,13 +47,13 @@ public record struct Firewall
         }
         else
         {
-            logger.LogError("Unable to find Policy with id {policyId}.  Rules from this policy will not be loaded.", FirewallPolicy.Id);
+            logger.LogError("Unable to find Policy with id {policyId}.  Rules from this policy will not be loaded.", FirewallPolicy?.Id ?? "null");
         }
 
         return await ConvertToFirewall(ipGroups, ruleCollectionGroupsFromPolicy, resolver, serviceTags, logger);
     }
 
-    public readonly async Task<Core.Firewall> ConvertToFirewall(Dictionary<string, IpGroup> ipGroups,
+    public async Task<Core.Firewall> ConvertToFirewall(Dictionary<string, IpGroup> ipGroups,
                                                                 RuleCollectionGroup[] ruleCollectionGroups,
                                                                 CachingResolver resolver,
                                                                 ServiceTag[] serviceTags,

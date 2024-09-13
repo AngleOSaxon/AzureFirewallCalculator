@@ -252,7 +252,7 @@ public class LoadFromFileViewModel : ReactiveObject, IRoutableViewModel, IScreen
 
     private async Task CheckAndConvert()
     {
-        if (ipGroups == null || firewall == null || serviceTags == null || policies == null || ruleCollectionGroups == null)
+        if (ipGroups == null || firewall == null || serviceTags == null)
         {
             Logger.LogInformation("Unable to load firewall. {nullResource} was not loaded", ipGroups == null 
                 ? "IPGroups"
@@ -270,7 +270,7 @@ public class LoadFromFileViewModel : ReactiveObject, IRoutableViewModel, IScreen
             var ipGroupDictionary = ipGroups.ToDictionary(item => item.Id, StringComparer.CurrentCultureIgnoreCase);
             var policyDictionary = policies?.ToDictionary(item => item.Id, StringComparer.CurrentCultureIgnoreCase);
             var ruleCollectionGroupDictionary = ruleCollectionGroups?.ToDictionary(item => item.Properties.Id, StringComparer.CurrentCultureIgnoreCase);
-            var convertedFirewall = await firewall.Value.ConvertToFirewall(ipGroupDictionary, policyDictionary ?? [], ruleCollectionGroupDictionary ?? [], DnsResolver, serviceTags, LoggerFactory.CreateLogger<Firewall>());
+            var convertedFirewall = await firewall.ConvertToFirewall(ipGroupDictionary, policyDictionary ?? [], ruleCollectionGroupDictionary ?? [], DnsResolver, serviceTags, LoggerFactory.CreateLogger<Firewall>());
             Dispatcher.UIThread.Invoke(() => Router.Navigate.Execute(new LoadedFirewallViewModel(convertedFirewall, DnsResolver, this)));
         });
     }
