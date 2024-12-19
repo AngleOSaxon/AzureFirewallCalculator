@@ -44,7 +44,7 @@ public partial class App : Application
         Locator.CurrentMutable.RegisterLazySingleton<IMemoryCache>(() => new MemoryCache(Options.Create(new MemoryCacheOptions())));
         Locator.CurrentMutable.RegisterViewsForViewModels(Assembly.GetExecutingAssembly());
         Locator.CurrentMutable.RegisterLazySingleton(() => new Config());
-        Locator.CurrentMutable.RegisterLazySingleton(() => new AuthenticationService(loggerFactory.CreateLogger<AuthenticationService>(), Locator.Current.GetRequiredService<Config>()));
+        Locator.CurrentMutable.RegisterLazySingleton(() => new AuthenticationService(loggerFactory.CreateLogger<AuthenticationService>(), Locator.Current.GetRequiredService<Config>(), ApplicationLifetime));
         Locator.CurrentMutable.RegisterLazySingleton(() => new StaticDnsResolver());
         Locator.CurrentMutable.RegisterLazySingleton(() => new ArmService(
             client: new Azure.ResourceManager.ArmClient(Locator.Current.GetRequiredService<AuthenticationService>().GetAuthenticationToken()),

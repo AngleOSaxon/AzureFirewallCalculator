@@ -4,9 +4,13 @@ using System.Linq;
 using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Threading;
 using Azure.Core;
+using Microsoft.Extensions.Hosting.Internal;
 using Microsoft.Extensions.Logging;
 using Microsoft.Identity.Client;
+using Microsoft.Identity.Client.Broker;
 using Microsoft.Identity.Client.Extensibility;
 using Microsoft.Identity.Client.Extensions.Msal;
 using Microsoft.IdentityModel.LoggingExtensions;
@@ -15,11 +19,13 @@ namespace AzureFirewallCalculator.Desktop.Authentication;
 
 public class AuthenticationService
 {
-    public AuthenticationService(ILogger<AuthenticationService> logger, Config config)
+    public AuthenticationService(ILogger<AuthenticationService> logger, Config config, IApplicationLifetime applicationLifetime)
     {
         IdentityClient = PublicClientApplicationBuilder.Create("5fb5bdf1-9e6f-4a5a-a0cd-390f7fe43ec9") // TODO: Move this to config file
             .WithAuthority(AzureCloudInstance.AzurePublic, "common")
             .WithRedirectUri("http://localhost")
+            .WithBroker(new BrokerOptions(BrokerOptions.OperatingSystems.Windows))
+            .WithParentActivityOrWindow(() => Dispatcher.UIThread.Invoke(() => (applicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow?.TryGetPlatformHandle()?.Handle))
             // .WithLogging(new IdentityLoggerAdapter(logger))
             .Build();
         Logger = logger;
