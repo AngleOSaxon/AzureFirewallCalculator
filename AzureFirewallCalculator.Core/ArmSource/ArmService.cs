@@ -333,9 +333,12 @@ public class ArmService(ArmClient client, CachingResolver dnsResolver, ILogger<A
                 ))]
             )));
 
+            var convertedGroups = ipGroups.Select(item => new IpGroup(Name: item.Value.Name, Ips: [.. SafeGetIpGroupRules(ipGroupId: item.Value.Id!) ]));
+
             return new Firewall(
                 NetworkRuleCollections: [.. networkRuleCollections.Concat(policyNetworkCollections)],
-                ApplicationRuleCollections: [.. applicationRuleCollections.Concat(policyApplicationCollections)]
+                ApplicationRuleCollections: [.. applicationRuleCollections.Concat(policyApplicationCollections)],
+                IpGroups: [.. convertedGroups ]
             );
         }) ?? throw new NullReferenceException("This shouldn't be possible");
     }

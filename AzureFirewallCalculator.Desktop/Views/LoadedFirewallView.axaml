@@ -13,6 +13,7 @@
             <TabStrip>
                 <TabItem Header="Check Traffic" PointerReleased="TabStripItem_CheckTrafficClicked"></TabItem>
                 <TabItem Header="Rule Overlap" PointerReleased="TabStripItem_RuleOverlapClicked"></TabItem>
+                <TabItem Header="IP Group Overlap" PointerReleased="TabStripItem_IpGroupOverlapClicked"></TabItem>
             </TabStrip>
         </StackPanel>
         <rxui:RoutedViewHost Router="{Binding Router}">

@@ -1,0 +1,127 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:AzureFirewallCalculator.Desktop.ViewModels"
+             xmlns:v="using:AzureFirewallCalculator.Desktop.Views"
+             xmlns:core="using:AzureFirewallCalculator.Core"
+             xmlns:dataTemplates="using:AzureFirewallCalculator.Desktop.DataTemplates"
+             xmlns:controls="using:AzureFirewallCalculator.Desktop.Controls"
+             xmlns:Converters="using:AzureFirewallCalculator.Desktop.Converters" xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:rxui="clr-namespace:Avalonia.ReactiveUI;assembly=Avalonia.ReactiveUI"
+             xmlns:local="using:AzureFirewallCalculator.Desktop.Views"
+             xmlns:i="clr-namespace:Avalonia.Xaml.Interactivity;assembly=Avalonia.Xaml.Interactivity"
+             xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Avalonia.Xaml.Interactions"
+             x:DataType="vm:IpGroupOverlapViewModel"
+             x:Class="AzureFirewallCalculator.Desktop.Views.IpGroupOverlapView">
+    <UserControl.Resources>
+        <Converters:MatchFontWeightConverter x:Key="MatchFontWeightConverter" />
+        <Converters:ListConcatConverter x:Key="ListConcatConverter" />
+    </UserControl.Resources>
+    <UserControl.Styles>
+        <Style Selector="StackPanel.ComparingGroup">
+            <Style Selector="^ StackPanel.Header">
+                <Style Selector="^ TextBlock, ^ SelectableTextBlock">
+                    <Setter Property="FontWeight" Value="ExtraBold" />
+                </Style>
+            </Style>
+        </Style>
+        <Style Selector="Grid.IpDisplay > TextBlock">
+            <Setter Property="FontWeight" Value="ExtraBold" />
+            <Setter Property="TextDecorations" />
+        </Style>
+        <Style Selector="StackPanel.ComparingGroup, StackPanel.OverlappingRule">
+            <Style Selector="^ Border">
+                <Setter Property="BorderBrush" Value="{DynamicResource TextControlBorderBrush}" />
+            </Style>
+            <Style Selector="^ Border.IpDisplayWrapper">
+                <Setter Property="BorderThickness" Value="1, 0, 1, 1" />
+                <Setter Property="CornerRadius" Value="0, 0, 3, 3" />
+                <Setter Property="BorderBrush" Value="{DynamicResource TextControlBorderBrush}" />
+            </Style>
+            <Style Selector="^ Expander">
+                <Style Selector="^:not(:expanded) Border#ToggleButtonBackground">
+                    <Setter Property="BorderThickness" Value="1, 1, 1, 0" />
+                    <Setter Property="CornerRadius" Value="3, 3, 0, 0" />
+                </Style>
+                <Style Selector="^:expanded Border#ExpanderContent">
+                    <Setter Property="BorderThickness" Value="1, 0, 1, 0" />
+                    <Setter Property="CornerRadius" Value="0, 0, 0, 0" />
+                    <Setter Property="Background" Value="{DynamicResource Background}" />
+                </Style>
+            </Style>
+        </Style>
+        <Style Selector="StackPanel.OverlappingRule">
+        </Style>
+    </UserControl.Styles>
+    <DockPanel LastChildFill="True">
+        <Grid DockPanel.Dock="Top" ColumnDefinitions="150,300" RowDefinitions="Auto">
+            <TextBlock Grid.Column="0" Grid.Row="0" Text="Select group: " />
+            <AutoCompleteBox Grid.Column="1" Grid.Row="1" 
+                ValueMemberBinding="{Binding Name, x:DataType=core:IpGroup}"
+                ItemsSource="{Binding Firewall.IpGroups}" FilterMode="ContainsOrdinal"
+                SelectedItem="{Binding SelectedIpGroup}">
+                <AutoCompleteBox.ItemTemplate>
+                    <DataTemplate x:DataType="core:IpGroup">
+                        <TextBlock Text="{Binding Name}" />
+                    </DataTemplate>
+                </AutoCompleteBox.ItemTemplate>
+            </AutoCompleteBox>
+        </Grid>
+        <StackPanel Orientation="Vertical" Classes="ComparingGroup" DockPanel.Dock="Top" IsVisible="{Binding !!Overlaps.Length}">
+            <Expander HorizontalAlignment="Stretch">
+                <Expander.Header>
+                    <StackPanel Classes="Header" Orientation="Horizontal">
+                        <TextBlock Text="Group Name: " />
+                        <SelectableTextBlock Text="{Binding SelectedIpGroup.Name}" />
+                    </StackPanel>
+                </Expander.Header>
+                <ScrollViewer MaxHeight="300">
+                    <Grid ColumnDefinitions="1*" RowDefinitions="Auto,Auto" Classes="Header">
+                        <TextBlock Grid.Column="0" Grid.Row="0" Text="IPs" />
+
+                        <controls:DisplayMatchedIps Grid.Column="0" Grid.Row="1" Ips="{Binding SelectedIpGroup.Ips}" Matches="{Binding SelectedIpGroup.Ips}" ExactMatchOnly="{x:False}" />
+                    </Grid>
+                </ScrollViewer>
+            </Expander>
+            <Border Classes="IpDisplayWrapper">
+                <Grid Classes="IpDisplay" ColumnDefinitions="1*" RowDefinitions="Auto,Auto">
+                    <TextBlock Grid.Column="0" Grid.Row="0" Text="Source IPs" TextAlignment="Center" />
+                    <Border Grid.Row="1" Grid.Column="0" BorderThickness="1, 2, 1, 0" CornerRadius="3,3,0,0" Margin="0,0,2,0">
+                        <controls:IpOverlapDisplay IpRanges="{Binding SelectedIpGroup.Ips}" ComparisonRanges="{Binding SelectedIpGroup.Ips}" />
+                    </Border>
+                </Grid>
+            </Border>
+        </StackPanel>
+        <ScrollViewer IsVisible="{Binding !!Overlaps.Length}">
+            <ItemsRepeater ItemsSource="{Binding Overlaps}">
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate DataType="core:IpGroupOverlap">
+                        <StackPanel Orientation="Vertical" Classes="ComparingGroup" DockPanel.Dock="Top">
+                            <Expander HorizontalAlignment="Stretch">
+                                <Expander.Header>
+                                    <StackPanel Classes="Header" Orientation="Horizontal">
+                                        <TextBlock Text="Group Name: " />
+                                        <SelectableTextBlock Text="{Binding OverlappingGroup.Name}" />
+                                    </StackPanel>
+                                </Expander.Header>
+                                <ScrollViewer MaxHeight="300">
+                                    <Grid ColumnDefinitions="1*" RowDefinitions="Auto,Auto" Classes="Header">
+                                        <TextBlock Grid.Column="0" Grid.Row="0" Text="IPs" />
+                                        <controls:DisplayMatchedIps Grid.Column="0" Grid.Row="1" Ips="{Binding OverlappingGroup.Ips}" Matches="{Binding OverlappingRanges}" ExactMatchOnly="{x:False}" />
+                                    </Grid>
+                                </ScrollViewer>
+                            </Expander>
+                            <Border Classes="IpDisplayWrapper">
+                                <Grid Classes="IpDisplay" ColumnDefinitions="1*" RowDefinitions="Auto,Auto">
+                                    <TextBlock Grid.Column="0" Grid.Row="0" Text="IPs" TextAlignment="Center" />
+                                    <Border Grid.Row="1" Grid.Column="0" BorderThickness="1, 2, 1, 0" CornerRadius="3,3,0,0" Margin="0,0,2,0">
+                                        <controls:IpOverlapDisplay IpRanges="{Binding OverlappingGroup.Ips}" ComparisonRanges="{Binding $parent[DockPanel].((vm:IpGroupOverlapViewModel)DataContext).SelectedIpGroup.Ips}" />
+                                    </Border>
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
+        </ScrollViewer>
+    </DockPanel>
+</UserControl>

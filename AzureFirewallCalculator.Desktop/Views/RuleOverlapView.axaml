@@ -126,7 +126,7 @@
         <ScrollViewer IsVisible="{Binding OverlapSummary, Converter={x:Static ObjectConverters.IsNotNull}}">
             <ItemsRepeater ItemsSource="{Binding OverlapSummary.Overlaps}">
                 <ItemsRepeater.ItemTemplate>
-                    <DataTemplate DataType="core:Overlap">
+                    <DataTemplate DataType="core:NetworkRuleOverlap">
                         <StackPanel Orientation="Vertical" Classes="OverlappingRule">
                             <Expander HorizontalAlignment="Stretch">
                                 <Expander.Header>

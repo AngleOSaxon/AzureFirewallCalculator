@@ -120,10 +120,12 @@ public record class Firewall
                 )
             );
 
-        return new Core.Firewall
-        (
+        var convertedGroups = ipGroups.Select(item => new Core.IpGroup(Name: item.Value.Id.Split('/')[^1], Ips: [.. SafeGetIpGroupRules(ipGroups: ipGroups, ipGroupId: item.Value.Id!, logger: logger) ]));
+
+        return new Core.Firewall(
             NetworkRuleCollections: [.. networkRuleCollections],
-            ApplicationRuleCollections: [.. applicationRuleCollections]
+            ApplicationRuleCollections: [.. applicationRuleCollections],
+            IpGroups: [.. convertedGroups ]
         );
     }
 

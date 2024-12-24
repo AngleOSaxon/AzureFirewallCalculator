@@ -43,7 +43,7 @@ public class TestOverlapAnalysis
             dnsResolver: DummyDnsResolver.DummyResolver
         );
 
-    private static readonly Overlap BaseOverlap = new(
+    private static readonly NetworkRuleOverlap BaseOverlap = new(
         OverlapType: OverlapType.Partial,
         OverlappingRule: BaseRule,
         OverlappingSourceRanges: [ new RuleIpRange() ],
@@ -149,8 +149,8 @@ public class TestOverlapAnalysis
         var results = OverlapAnalyzer.CheckForOverlap(sourceRule, [comparisonRule]);
 
         var baseOverlapSummary = new OverlapSummary(BaseRule, OverlapType.Partial, []);
-        var baseOverlap = new Overlap(OverlapType.Full, BaseRule, [new()], [new()], [new()], NetworkProtocols.Any);
-        Overlap[] expected = [baseOverlap with { OverlapType = expectedOverlapType, OverlappingRule = comparisonRule, OverlappingPorts = expectedMatch }];
+        var baseOverlap = new NetworkRuleOverlap(OverlapType.Full, BaseRule, [new()], [new()], [new()], NetworkProtocols.Any);
+        NetworkRuleOverlap[] expected = [baseOverlap with { OverlapType = expectedOverlapType, OverlappingRule = comparisonRule, OverlappingPorts = expectedMatch }];
 
         Assert.True(expected.ElementByElementCompare(results.Overlaps, OverlapEquals));
     }
@@ -272,8 +272,8 @@ public class TestOverlapAnalysis
         var results = OverlapAnalyzer.CheckForOverlap(sourceRule, [comparisonRule]);
 
         var baseOverlapSummary = new OverlapSummary(BaseRule, OverlapType.Partial, []);
-        var baseOverlap = new Overlap(OverlapType.Full, BaseRule, [new()], [new()], [new()], NetworkProtocols.Any);
-        Overlap[] expected = [baseOverlap with { OverlapType = expectedOverlapType, OverlappingRule = comparisonRule, OverlappingSourceRanges = expectedMatch }];
+        var baseOverlap = new NetworkRuleOverlap(OverlapType.Full, BaseRule, [new()], [new()], [new()], NetworkProtocols.Any);
+        NetworkRuleOverlap[] expected = [baseOverlap with { OverlapType = expectedOverlapType, OverlappingRule = comparisonRule, OverlappingSourceRanges = expectedMatch }];
 
         Assert.True(expected.ElementByElementCompare(results.Overlaps, OverlapEquals));
     }
@@ -287,8 +287,8 @@ public class TestOverlapAnalysis
         var results = OverlapAnalyzer.CheckForOverlap(sourceRule, [comparisonRule]);
 
         var baseOverlapSummary = new OverlapSummary(BaseRule, OverlapType.Partial, []);
-        var baseOverlap = new Overlap(OverlapType.Full, BaseRule, [new()], [new()], [new()], NetworkProtocols.Any);
-        Overlap[] expected = [baseOverlap with { OverlapType = expectedOverlapType, OverlappingRule = comparisonRule, OverlappingDestinationRanges = expectedMatch }];
+        var baseOverlap = new NetworkRuleOverlap(OverlapType.Full, BaseRule, [new()], [new()], [new()], NetworkProtocols.Any);
+        NetworkRuleOverlap[] expected = [baseOverlap with { OverlapType = expectedOverlapType, OverlappingRule = comparisonRule, OverlappingDestinationRanges = expectedMatch }];
 
         Assert.True(expected.ElementByElementCompare(results.Overlaps, OverlapEquals));
     }
@@ -359,7 +359,7 @@ public class TestOverlapAnalysis
         yield return new object[]
         {
             BaseRule with { NetworkProtocols = NetworkProtocols.Any },
-            Array.Empty<Overlap>(),
+            Array.Empty<NetworkRuleOverlap>(),
             OverlapType.None
         };
         yield return new object[]
@@ -646,7 +646,7 @@ public class TestOverlapAnalysis
         Assert.True(expected.Overlaps.ElementByElementCompare(actual.Overlaps, OverlapEquals));
     }
 
-    private static bool OverlapEquals(Overlap? x, Overlap? y)
+    private static bool OverlapEquals(NetworkRuleOverlap? x, NetworkRuleOverlap? y)
     {
         var equals = x?.OverlapType == y?.OverlapType;
         equals &= x?.OverlappingRule.Equals(y?.OverlappingRule) ?? false;

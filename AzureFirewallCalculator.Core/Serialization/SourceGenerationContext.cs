@@ -12,7 +12,7 @@ namespace AzureFirewallCalculator.Core.Serialization;
 [JsonSerializable(typeof(ServiceTag[]))]
 [JsonSerializable(typeof(ServiceTag))]
 [JsonSerializable(typeof(GoogleDnsResponse))]
-[JsonSerializable(typeof(IpGroup[]))]
+[JsonSerializable(typeof(PowershellSource.IpGroup[]))]
 [JsonSerializable(typeof(Policy[]))]
 [JsonSerializable(typeof(RuleCollectionGroup[]))]
 [JsonSerializable(typeof(PowershellSource.Firewall))]

@@ -5,7 +5,9 @@ public record struct ApplicationProtocolPort(ApplicationProtocol Protocol, ushor
     public override readonly string ToString() => $"{Protocol}:{Port?.ToString() ?? "*"}";
 }
 
-public record class Firewall(NetworkRuleCollection[] NetworkRuleCollections, ApplicationRuleCollection[] ApplicationRuleCollections);
+public record class Firewall(NetworkRuleCollection[] NetworkRuleCollections, ApplicationRuleCollection[] ApplicationRuleCollections, IpGroup[] IpGroups);
+
+public record class IpGroup(string Name, RuleIpRange[] Ips);
 
 public record class NetworkRuleMatch(bool Matched, RuleIpRange[] MatchedSourceIps, RuleIpRange[] MatchedDestinationIps, NetworkProtocols MatchedProtocols, RulePortRange[] MatchedPorts, NetworkRule Rule);
 
@@ -23,6 +25,8 @@ public record class ServiceTag(string Name, string[] AddressPrefixes);
 
 public record class IpSource(IpSourceType SourceType, string SourceName);
 
-public record Overlap(OverlapType OverlapType, NetworkRule OverlappingRule, RuleIpRange[] OverlappingSourceRanges, RuleIpRange[] OverlappingDestinationRanges, RulePortRange[] OverlappingPorts, NetworkProtocols OverlappingProtocols);
+public record class IpGroupOverlap(OverlapType OverlapType, IpGroup OverlappingGroup, RuleIpRange[] OverlappingRanges);
 
-public record OverlapSummary(NetworkRule SourceRule, OverlapType CumulativeOverlap, Overlap[] Overlaps);
+public record class NetworkRuleOverlap(OverlapType OverlapType, NetworkRule OverlappingRule, RuleIpRange[] OverlappingSourceRanges, RuleIpRange[] OverlappingDestinationRanges, RulePortRange[] OverlappingPorts, NetworkProtocols OverlappingProtocols);
+
+public record class OverlapSummary(NetworkRule SourceRule, OverlapType CumulativeOverlap, NetworkRuleOverlap[] Overlaps);

@@ -1,15 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
-using System.Net;
-using System.Reactive;
 using System.Reactive.Linq;
-using System.Security.Cryptography;
-using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Collections;
-using Avalonia.Controls;
 using AzureFirewallCalculator.Core;
 using AzureFirewallCalculator.Core.Dns;
 using ReactiveUI;

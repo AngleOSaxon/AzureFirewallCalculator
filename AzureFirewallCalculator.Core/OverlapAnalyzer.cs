@@ -9,7 +9,7 @@ public static class OverlapAnalyzer
 {
     public static OverlapSummary CheckForOverlap(NetworkRule sourceRule, NetworkRule[] comparisonRules)
     {
-        var matches = new List<Overlap>();
+        var matches = new List<NetworkRuleOverlap>();
         foreach (var rule in comparisonRules)
         {
             if (rule == sourceRule)
@@ -45,7 +45,7 @@ public static class OverlapAnalyzer
             }
             isFullOverlap &= sourceRule.AllDestinationIps.All(item => destinationIpOverlap.Any(overlap => overlap.Start <= item.Start && overlap.End >= item.End));
             
-            matches.Add(new Overlap(
+            matches.Add(new NetworkRuleOverlap(
                 OverlapType: isFullOverlap ? OverlapType.Full : OverlapType.Partial,
                 OverlappingRule: rule,
                 OverlappingSourceRanges: sourceIpOverlap,
@@ -62,7 +62,7 @@ public static class OverlapAnalyzer
         );
     }
 
-    public static OverlapType GetCumulativeOverlap(NetworkRule sourceRule, IEnumerable<Overlap> matches)
+    public static OverlapType GetCumulativeOverlap(NetworkRule sourceRule, IEnumerable<NetworkRuleOverlap> matches)
     {
         var overlapType = matches.Any() ? matches.Max(item => item.OverlapType) : OverlapType.None;
         if (overlapType == OverlapType.Full || overlapType == OverlapType.None)
@@ -150,6 +150,30 @@ public static class OverlapAnalyzer
         return unmatchedRulePortions.Any(item => item.AllDestinationIps.Any()  || item.SourceIps.Length > 0 || item.DestinationPorts.Length > 0 || item.NetworkProtocols != NetworkProtocols.None)
             ? OverlapType.Partial
             : OverlapType.Full;
+    }
+
+    public static IpGroupOverlap[] CheckForOverlap(IpGroup sourceGroup, IpGroup[] comparisonGroups)
+    {
+        var matches = new List<IpGroupOverlap>();
+        foreach (var comparisonGroup in comparisonGroups)
+        {
+            if (sourceGroup == comparisonGroup)
+            {
+                continue;
+            }
+            var overlaps = GetIpOverlaps(sourceGroup.Ips, comparisonGroup.Ips);
+            if (overlaps.Length > 0)
+            {
+                var isFullOverlap = sourceGroup.Ips.All(item => overlaps.Any(overlap => overlap.Start <= item.Start && overlap.End >= item.End));
+                matches.Add(new IpGroupOverlap(
+                    OverlapType: isFullOverlap ? OverlapType.Full : OverlapType.Partial,
+                    OverlappingGroup: comparisonGroup,
+                    OverlappingRanges: overlaps
+                ));
+            }
+        }
+
+        return [.. matches ];
     }
 
     public static RuleIpRange[] GetIpOverlaps(IEnumerable<RuleIpRange> sourceRanges, IEnumerable<RuleIpRange> comparisonRanges, bool consolidate = true)
