@@ -53,6 +53,16 @@ public class LoadFromFileViewModel : ReactiveObject, IRoutableViewModel, IScreen
     public ReactiveCommand<Unit, Unit> LoadRuleCollectionGroupsCommand { get; }
     public ReactiveCommand<Unit, Unit> LoadServiceTagsCommand { get; }
     public ReactiveCommand<Unit, Unit> SaveFirewallExportScriptCommand { get; }
+    private bool policyFirewall;
+    public bool PolicyFirewall
+    {
+        get { return policyFirewall; }
+        set
+        {
+            this.RaiseAndSetIfChanged(ref policyFirewall, value);
+        }
+    }
+    
     private string? firewallFileName;
     public string? FirewallFileName
     {
@@ -72,6 +82,7 @@ public class LoadFromFileViewModel : ReactiveObject, IRoutableViewModel, IScreen
         set
         {
             this.RaiseAndSetIfChanged(ref firewall, value);
+            PolicyFirewall = firewall?.FirewallPolicy != null;
             FirewallLoaded = value != default;
         }
     }
@@ -81,8 +92,8 @@ public class LoadFromFileViewModel : ReactiveObject, IRoutableViewModel, IScreen
         get { return firewallLoaded; }
         set { this.RaiseAndSetIfChanged(ref firewallLoaded, value); }
     }
-    private IpGroup[]? ipGroups;
-    public IpGroup[]? IpGroups
+    private Core.PowershellSource.IpGroup[]? ipGroups;
+    public Core.PowershellSource.IpGroup[]? IpGroups
     {
         get { return ipGroups; }
         set
@@ -265,6 +276,15 @@ public class LoadFromFileViewModel : ReactiveObject, IRoutableViewModel, IScreen
                             : "Rule Collection Groups");
             return;
         }
+
+        if (firewall.FirewallPolicy != null && (policies == null || ruleCollectionGroups == null))
+        {
+            Logger.LogInformation("Unable to load firewall. {nullResource} was not loaded", policies == null
+                ? "Policies"
+                : "Rule Collection Groups");
+            return;
+        }
+
         await Load("Importing firewall", async () =>
         {
             var ipGroupDictionary = ipGroups.ToDictionary(item => item.Id, StringComparer.CurrentCultureIgnoreCase);

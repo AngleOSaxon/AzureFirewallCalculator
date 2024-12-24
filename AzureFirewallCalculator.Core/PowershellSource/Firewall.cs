@@ -45,7 +45,7 @@ public record class Firewall
             .Where(item => item != null)
             .ToArray();
         }
-        else
+        else if (FirewallPolicy?.Id != null)
         {
             logger.LogError("Unable to find Policy with id {policyId}.  Rules from this policy will not be loaded.", FirewallPolicy?.Id ?? "null");
         }
