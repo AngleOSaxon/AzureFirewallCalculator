@@ -43,6 +43,7 @@ public class LoadedFirewallViewModel : ReactiveObject, IRoutableViewModel, IScre
             CheckTrafficViewModel.CheckTrafficUrlPathSegment => new CheckTrafficViewModel(Firewall, DnsResolver, this),
             RuleOverlapViewModel.RuleOverlapUrlPathSegment => new RuleOverlapViewModel(Firewall, DnsResolver, this),
             IpGroupOverlapViewModel.IpGroupOverlapUrlPathSegment => new IpGroupOverlapViewModel(Firewall, DnsResolver, this),
+            RangeRuleComparisonViewModel.RangeRuleComparisonUrlPathSegment => new RangeRuleComparisonViewModel(Firewall, DnsResolver, this),
             _ => throw new InvalidOperationException($"Unknown view '{tabName}'"),
         };
         await Router.Navigate.Execute(newDestination);

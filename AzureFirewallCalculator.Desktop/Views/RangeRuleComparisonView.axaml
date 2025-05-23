@@ -1,0 +1,68 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:AzureFirewallCalculator.Desktop.ViewModels"
+             xmlns:v="using:AzureFirewallCalculator.Desktop.Views"
+             xmlns:rxui="clr-namespace:Avalonia.ReactiveUI;assembly=Avalonia.ReactiveUI"
+             xmlns:core="using:AzureFirewallCalculator.Core"
+             xmlns:local="using:AzureFirewallCalculator.Desktop.Views"
+             xmlns:dataTemplates="using:AzureFirewallCalculator.Desktop.DataTemplates"
+             xmlns:controls="using:AzureFirewallCalculator.Desktop.Controls"
+             x:DataType="vm:RangeRuleComparisonViewModel"
+             x:Class="AzureFirewallCalculator.Desktop.Views.RangeRuleComparisonView">
+    <UserControl.DataTemplates>
+        <DataTemplate DataType="core:NetworkRule">
+            <controls:NetworkRule RuleName="{Binding Name}"
+                SourceIps="{Binding SourceIps}"
+                DestinationIps="{Binding DestinationIps}"
+                DestinationPorts="{Binding DestinationPorts}"
+                NetworkProtocols="{Binding NetworkProtocols}"
+            />
+        </DataTemplate>
+        <DataTemplate DataType="core:ApplicationRule">
+            <controls:ApplicationRule SourceIps="{Binding SourceIps}"
+                DestinationFqdns="{Binding DestinationFqdns}"
+                Protocols="{Binding Protocols}"
+            />
+        </DataTemplate>
+    </UserControl.DataTemplates>
+    <UserControl.Styles>
+        <Style Selector="Grid.SearchOptions > TextBox">
+            <Setter Property="VerticalAlignment" Value="Top" />
+        </Style>
+        <Style Selector="Grid.SearchOptions > Button">
+            <Setter Property="VerticalAlignment" Value="Bottom" />
+        </Style>
+        <Style Selector="TextBlock.InfoDisplay">
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="TextBlock.InfoDisplay.Hidden">
+            <Setter Property="IsVisible" Value="False" />
+        </Style>
+    </UserControl.Styles>
+    <DockPanel LastChildFill="True">
+        <Grid Classes="SearchOptions" DockPanel.Dock="Top" ColumnDefinitions="4*,4*,1*" RowDefinitions="Auto,Auto" KeyUp="FirewallRuleSearch">
+            <TextBlock Grid.Row="0" VerticalAlignment="Top" Grid.Column="0" Text="First range:" />
+            <TextBlock Grid.Row="0" VerticalAlignment="Top" Grid.Column="1" Text="Second range:" />
+            <TextBox Grid.Row="1" Grid.Column="0" Text="{Binding FirstRange, Mode=TwoWay}" Watermark="10.0.0.0/24"/>
+            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding SecondRange, Mode=TwoWay}" Watermark="10.0.0.10/24"/>
+            <Button Grid.Row="1" Grid.Column="2" Command="{Binding CompareCommand}">Compare</Button>
+        </Grid>
+        <TabStrip Name="DisplaySelectionTab" DockPanel.Dock="Top">
+            <TabItem Name="OnlyFirst" Header="Only Applied To First" PointerReleased="TabStripItem_Clicked"></TabItem>
+            <TabItem Name="OnlySecond" Header="Only Applied To Second" PointerReleased="TabStripItem_Clicked"></TabItem>
+            <TabItem Name="OnlyBoth" Header="Applied To Both" PointerReleased="TabStripItem_Clicked"></TabItem>
+        </TabStrip>
+        <TextBlock Classes="InfoDisplay" Classes.Hidden="{Binding DisplayedRange.Count}" DockPanel.Dock="Top" Text="Select a tab to view the rules that only apply to that range" IsVisible="{Binding SelectedDisplay, Converter={x:Static StringConverters.IsNullOrEmpty}}" />
+        <TextBlock Classes="InfoDisplay" DockPanel.Dock="Top" Text="Enter two IP ranges and compare them to see what rules apply to only the first, only the second, or to both" IsVisible="{Binding !DisplayedRange.Count}" />
+        <ScrollViewer>
+            <ItemsRepeater ItemsSource="{Binding DisplayedRange}" Name="Display" IsVisible="{Binding DisplayedRange.Count}">
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate>
+                        <ContentControl Content="{Binding .}" />
+                    </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
+        </ScrollViewer>
+    </DockPanel>
+</UserControl>

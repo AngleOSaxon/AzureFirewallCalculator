@@ -28,4 +28,9 @@ public partial class LoadedFirewallView : ReactiveUserControl<LoadedFirewallView
     {
         await this.ViewModel!.NavigateTo(IpGroupOverlapViewModel.IpGroupOverlapUrlPathSegment);
     }
+
+    public async void TabStripItem_RangeRuleComparisonClicked(object sender, PointerReleasedEventArgs args)
+    {
+        await this.ViewModel!.NavigateTo(RangeRuleComparisonViewModel.RangeRuleComparisonUrlPathSegment);
+    }
 }

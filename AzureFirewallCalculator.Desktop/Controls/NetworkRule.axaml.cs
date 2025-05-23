@@ -101,44 +101,44 @@ public partial class NetworkRule : UserControl
     {
         base.OnPropertyChanged(change);
 
-        if (change.Property == RuleNameProperty)
+        if (change.Property == RuleNameProperty && RuleNameTextBlock != null)
         {
             this.RuleNameTextBlock.Text = (string)(change.NewValue ?? string.Empty);
         }
-        else if (change.Property == BoldExactMatchOnlyProperty)
+        else if (change.Property == BoldExactMatchOnlyProperty && SourceIpDisplay != null && DestinationIpDisplay != null)
         {
             this.SourceIpDisplay.ExactMatchOnly = (bool)(change.NewValue ?? false);
             this.DestinationIpDisplay.ExactMatchOnly = (bool)(change.NewValue ?? false);
         }
-        else if (change.Property == SourceIpsProperty)
+        else if (change.Property == SourceIpsProperty && SourceIpDisplay != null)
         {
             this.SourceIpDisplay.Ips = (RuleIpRange[])(change.NewValue ?? Array.Empty<RuleIpRange>());
         }
-        else if (change.Property == SourceIpMatchesProperty)
+        else if (change.Property == SourceIpMatchesProperty && SourceIpDisplay != null)
         {
             this.SourceIpDisplay.Matches = (RuleIpRange[])(change.NewValue ?? Array.Empty<RuleIpRange>());
         }
-        else if (change.Property == DestinationIpsProperty)
+        else if (change.Property == DestinationIpsProperty && DestinationIpDisplay != null)
         {
             this.DestinationIpDisplay.Ips = (RuleIpRange[])(change.NewValue ?? Array.Empty<RuleIpRange>());
         }
-        else if (change.Property == DestinationIpMatchesProperty)
+        else if (change.Property == DestinationIpMatchesProperty && DestinationIpDisplay != null)
         {
             this.DestinationIpDisplay.Matches = (RuleIpRange[])(change.NewValue ?? Array.Empty<RuleIpRange>());
         }
-        else if (change.Property == NetworkProtocolsProperty)
+        else if (change.Property == NetworkProtocolsProperty && NetworkProtocolsDisplay != null)
         {
             this.NetworkProtocolsDisplay.Content = ((NetworkProtocols)(change.NewValue ?? NetworkProtocols.None), NetworkProtocolMatches);
         }
-        else if (change.Property == NetworkProtocolMatchesProperty)
+        else if (change.Property == NetworkProtocolMatchesProperty && NetworkProtocolsDisplay != null)
         {
             this.NetworkProtocolsDisplay.Content = (NetworkProtocols, (NetworkProtocols)(change.NewValue ?? NetworkProtocols.None));
         }
-        else if (change.Property == DestinationPortsProperty)
+        else if (change.Property == DestinationPortsProperty && RuleDestinationPortsRepeater != null)
         {
             this.RuleDestinationPortsRepeater.ItemsSource = (RulePortRange[])(change.NewValue ?? Array.Empty<RulePortRange>());
         }
-        else if (change.Property == DestinationPortMatchesProperty)
+        else if (change.Property == DestinationPortMatchesProperty && RuleDestinationPortsRepeater != null)
         {
             RuleDestinationPortsRepeater.DataContext = change.NewValue;
         }
