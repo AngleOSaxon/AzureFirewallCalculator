@@ -82,12 +82,19 @@ public class ArmService(ArmClient client, CachingResolver dnsResolver, ILogger<A
             {
                 entry.ExpirationTokens.Add(new CancellationChangeToken(cacheEviction.Token));
                 var policyResource = Client.GetFirewallPolicyResource(firewall.FirewallPolicyId);
-                var policy = (await policyResource.GetAsync()).Value.Data;
-                var policyChildren = await Task.WhenAll(policy.ChildPolicies.Select(item => policyResource.GetAsync(item.Id)));
+                var initialPolicy = await policyResource.GetAsync();
+                var policy = initialPolicy.Value.Data;
+                List<FirewallPolicyData> ancestry = [];
+                Azure.Response<FirewallPolicyResource>? parentPolicy = initialPolicy;
+                while (!(parentPolicy?.Value?.Data?.BasePolicyId?.Equals(null)) ?? false)
+                {
+                    var resc = Client.GetFirewallPolicyResource(parentPolicy!.Value.Data.BasePolicyId);
+                    parentPolicy = await resc.GetAsync();
+                    ancestry.Add(parentPolicy.Value.Data);
+                }
 
                 var ruleCollectionGroupsTasks = policy.RuleCollectionGroups.Select(item => policyResource.GetFirewallPolicyRuleCollectionGroupAsync(item.Id.Name))
-                    // TODO: Recursion.  Nothing stopping child policies from having children
-                    .Concat(policyChildren.SelectMany(childPolicy => childPolicy.Value.Data.RuleCollectionGroups.Select(ruleCollection => Client.GetFirewallPolicyResource(childPolicy.Value.Id).GetFirewallPolicyRuleCollectionGroupAsync(ruleCollection.Id.Name))));
+                    .Concat(ancestry.SelectMany(parentPolicy => parentPolicy.RuleCollectionGroups.Select(ruleCollection => Client.GetFirewallPolicyResource(parentPolicy.Id).GetFirewallPolicyRuleCollectionGroupAsync(ruleCollection.Id.Name))));
                 
                 var ruleCollectionGroups = await Task.WhenAll(ruleCollectionGroupsTasks);
 
